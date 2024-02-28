@@ -5,7 +5,7 @@ export default function Home() {
 	return (
 		<div className="h-screen">
 			<Navbar />
-			<p>Home</p>
+			<p>Coming Soon</p>
 		</div>
 	);
 }
