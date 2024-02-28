@@ -1,4 +1,3 @@
-import { UserButton } from "@clerk/nextjs";
 import Navbar from "@/app/Components/Navbar/Navbar";
 
 export default function Home() {
@@ -6,7 +5,7 @@ export default function Home() {
 		<>
 			<Navbar />
 			<div className="flex h-screen justify-center items-center">
-				<h1 className="text-3xl">Home Page</h1>
+				<h1 className="text-3xl">Laboratory</h1>
 			</div>
 		</>
 	);
