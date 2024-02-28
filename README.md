@@ -1,6 +1,6 @@
 ### Live Stream
 
-[Link](https://tariktunc.vercel.app/)
+[tariktunc.com](https://tariktunc.vercel.app/)
 
 # Project Name: Personal Portfolio Website
 
@@ -35,16 +35,16 @@ This project is an open-source template that can be used to create a personal po
    npm run dev
    ```
 
-   The project will run at [http://localhost:3000](http://localhost:3000)
+4. The project will run at [http://localhost:3000](http://localhost:3000)
 
-4. Create an env file and add the required keys into it. You will place the keys in this file.
+5. Create an env file and add the required keys into it. You will place the keys in this file.
 
 For example, create a file named `.env.local` and add the following content:
 
 ```plaintext
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_public_key_here
 CLERK_SECRET_KEY=your_secret_key_here
-
+```
 
 ## Customization
 1. Add your personal information by editing the files in the src/data directory.
@@ -61,7 +61,4 @@ If you want to contribute to this project, please submit a pull request. Your co
 
 This project is licensed under the MIT license. For detailed information, refer to the LICENSE file.
 
----
-
-This project can be your starting point for creating your personal portfolio website. If you have any questions or suggestions, feel free to contact us!
-```
+#### This project can be your starting point for creating your personal portfolio website. If you have any questions or suggestions, feel free to contact us!
