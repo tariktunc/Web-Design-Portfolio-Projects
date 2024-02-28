@@ -1,9 +1,11 @@
-import Image from "next/image";
+import { UserButton } from "@clerk/nextjs";
+import Navbar from "@/app/Components/Navbar/Navbar";
 
 export default function Home() {
 	return (
-		<main>
-			<h1>Home Page</h1>
-		</main>
+		<div className="h-screen">
+			<Navbar />
+			<p>Home</p>
+		</div>
 	);
 }
