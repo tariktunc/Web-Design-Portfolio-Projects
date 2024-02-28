@@ -1,6 +1,6 @@
 ### Live Stream
 
-[tariktunc.com](https://tariktunc.vercel.app/)
+#### [Portfolio Web Site](https://tariktunc.vercel.app/)
 
 # Project Name: Personal Portfolio Website
 
@@ -12,6 +12,7 @@ This project is an open-source template that can be used to create a personal po
 -  [React](https://reactjs.org/) - JavaScript library used for building user interfaces.
 -  [Redux](https://redux.js.org/) - JavaScript library used for state management.
 -  [Radix](https://radix-ui.com/) - Creating UI components using the component-first design system.
+-  [Clerk](https://clerk.com/) - Fast and customizable CSS framework.
 -  [Tailwind CSS](https://tailwindcss.com/) - Fast and customizable CSS framework.
 
 ## Installation
@@ -35,8 +36,10 @@ This project is an open-source template that can be used to create a personal po
    npm run dev
    ```
 
-4. The project will run at [http://localhost:3000](http://localhost:3000)
-
+4. The project will [run](http://localhost:3000) at
+   ```plaintext
+   http://localhost:3000
+   ```
 5. Create an env file and add the required keys into it. You will place the keys in this file.
 
 For example, create a file named `.env.local` and add the following content:
