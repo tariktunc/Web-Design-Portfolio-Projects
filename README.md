@@ -1,58 +1,67 @@
 ### Live Stream
 
-[Link](https://www.google.com)
+[Link](https://tariktunc.vercel.app/)
 
-# Proje Adı: Kendi Portföy Web Sitesi
+# Project Name: Personal Portfolio Website
 
-Bu proje, kişisel portföy web sitesi oluşturmak için kullanılabilecek bir açık kaynaklı projedir. Aşağıda, projeyi başlatmak ve kişiselleştirmek için adım adım bilgiler bulunmaktadır.
+This project is an open-source template that can be used to create a personal portfolio website. Below are step-by-step instructions for initializing and customizing the project.
 
-## Teknolojiler
+## Technologies
 
--  [Next.js](https://nextjs.org/) - React tabanlı bir web uygulama çerçevesi.
--  [React](https://reactjs.org/) - Kullanıcı arayüzü oluşturmak için kullanılan bir JavaScript kütüphanesi.
--  [Redux](https://redux.js.org/) - Durum yönetimi için kullanılan bir JavaScript kütüphanesi.
--  [Radix](https://radix-ui.com/) - Component-first tasarım sistemini kullanarak UI component'leri oluşturmak için.
--  [Tailwind CSS](https://tailwindcss.com/) - Hızlı ve özelleştirilebilir CSS framework'ü.
+-  [Next.js](https://nextjs.org/) - React-based web application framework.
+-  [React](https://reactjs.org/) - JavaScript library used for building user interfaces.
+-  [Redux](https://redux.js.org/) - JavaScript library used for state management.
+-  [Radix](https://radix-ui.com/) - Creating UI components using the component-first design system.
+-  [Tailwind CSS](https://tailwindcss.com/) - Fast and customizable CSS framework.
 
-## Kurulum
+## Installation
 
-1. Projeyi klonlayın:
+1. Clone the project:
 
    ```bash
-   git clone https://github.com/kullanici/adiniz-portfoy.git
-   cd adiniz-portfoy
+   git clone https://github.com/username/your-name-portfolio.git
+   cd your-name-portfolio
    ```
 
-2. Gerekli bağımlılıkları yükleyin:
+2. Install the necessary dependencies:
 
    ```bash
    npm install
    ```
 
-3. Projeyi başlatın:
+3. Start the project:
 
    ```bash
    npm run dev
    ```
 
-   Proje [http://localhost:3000](http://localhost:3000) adresinde çalışacaktır.
+   The project will run at [http://localhost:3000](http://localhost:3000)
 
-## Kişiselleştirme
+4. Create an env file and add the required keys into it. You will place the keys in this file.
 
-1. `src/data` dizinindeki dosyaları düzenleyerek kişisel bilgilerinizi ekleyin.
+For example, create a file named `.env.local` and add the following content:
 
-2. `src/pages` dizinindeki sayfaları düzenleyerek kendi içeriğinizi ekleyin.
+```plaintext
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_public_key_here
+CLERK_SECRET_KEY=your_secret_key_here
 
-3. Projeyi istediğiniz gibi özelleştirebilir ve yeni bileşenler ekleyebilirsiniz.
 
-## Katkıda Bulunma
+## Customization
+1. Add your personal information by editing the files in the src/data directory.
 
-Eğer bu projeye katkıda bulunmak istiyorsanız, lütfen bir çekme isteği gönderin. Katkılarınızı bekliyoruz!
+2. Add your own content by editing the pages in the src/pages directory.
 
-## Lisans
+3. Customize the project as you wish and add new components.
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylı bilgi için [LICENSE](LICENSE) dosyasını inceleyebilirsiniz.
+## Contribution
+
+If you want to contribute to this project, please submit a pull request. Your contributions are welcome!
+
+## License
+
+This project is licensed under the MIT license. For detailed information, refer to the LICENSE file.
 
 ---
 
-Bu proje, kişisel portföy web sitenizi oluşturmak için başlangıç ​​noktanız olabilir. Herhangi bir sorunuz veya öneriniz varsa, lütfen iletişime geçmekten çekinmeyin!
+This project can be your starting point for creating your personal portfolio website. If you have any questions or suggestions, feel free to contact us!
+```
