@@ -10,7 +10,7 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Home() {
 	return (
-		<nav className="grid grid-cols-3 h-20 bg-[radial-gradient(circle_500px_at_50%_200px,#3e3e3e,transparent)]">
+		<nav className="grid grid-cols-3 h-16  shadow-md">
 			{/* LOGO */}
 			<Flex justify={"center"}>
 				<Link

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-
 // Clerk
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
@@ -25,9 +24,9 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={inter.className}>
-				<ClerkProvider localization={enUS} appearance={{ baseTheme: dark }}>
+				<ClerkProvider localization={enUS}>
 					<Theme
-						appearance="dark"
+						appearance="light"
 						accentColor="orange"
 						grayColor="slate"
 						radius="small"
