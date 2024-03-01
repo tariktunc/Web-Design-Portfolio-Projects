@@ -4,6 +4,8 @@ import "./globals.css";
 
 // Clerk
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
+import { enUS, trTR } from "@clerk/localizations";
 // Radix UI
 import "@radix-ui/themes/styles.css";
 import { Theme, ThemePanel } from "@radix-ui/themes";
@@ -21,9 +23,9 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<ClerkProvider>
-			<html lang="en" suppressHydrationWarning>
-				<body className={inter.className}>
+		<html lang="en" suppressHydrationWarning>
+			<body className={inter.className}>
+				<ClerkProvider localization={enUS} appearance={{ baseTheme: dark }}>
 					<Theme
 						appearance="dark"
 						accentColor="orange"
@@ -32,8 +34,8 @@ export default function RootLayout({
 					>
 						{children}
 					</Theme>
-				</body>
-			</html>
-		</ClerkProvider>
+				</ClerkProvider>
+			</body>
+		</html>
 	);
 }

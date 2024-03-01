@@ -1,10 +1,18 @@
-import { Button } from "@radix-ui/themes";
+// React
+import { Suspense } from "react";
+// Next
 import Link from "next/link";
-import { Text } from "@radix-ui/themes";
+// Radix
+import { Button, Text, Flex } from "@radix-ui/themes";
+// Clerk
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+// Components
+
 export default function Home() {
 	return (
-		<nav className="grid grid-cols-3 h-20  bg-orange-900">
-			<div className="flex justify-center">
+		<nav className="grid grid-cols-3 h-20 bg-[radial-gradient(circle_500px_at_50%_200px,#3e3e3e,transparent)]">
+			{/* LOGO */}
+			<Flex justify={"center"}>
 				<Link
 					href="/"
 					className="flex flex-col justify-center items-center"
@@ -12,36 +20,40 @@ export default function Home() {
 					<Text size={"6"}>tariktunc</Text>
 					<Text size={"1"}>operated by blakfy</Text>
 				</Link>
-			</div>
-			<div className="h-full flex justify-center items-center gap-5">
-				<Link href="/whoami">
-					<Button variant="ghost" size={"3"}>
-						Who am I ?
-					</Button>
-				</Link>
-				<Link href="/works">
-					<Button variant="ghost" size={"3"}>
-						Works
-					</Button>
-				</Link>
-				<Link href="/laboratory">
-					<Button variant="ghost" size={"3"}>
-						Laboratory
-					</Button>
-				</Link>
-				<Link href="/weblog">
-					<Button variant="ghost" size={"3"}>
-						WeBlog
-					</Button>
-				</Link>
-			</div>
-			<div className="flex justify-center items-center">
-				<Link href="/sign-in">
-					<Button variant="outline" size={"2"}>
-						Sign In
-					</Button>
-				</Link>
-			</div>
+			</Flex>
+			{/* NAVIGATION */}
+			<Flex justify={"center"} align={"center"} gap={"5"} height={"100%"}>
+				<Button asChild variant="ghost" size={"3"}>
+					<Link href="/whoami">Who am I ?</Link>
+				</Button>
+				<Button asChild variant="ghost" size={"3"}>
+					<Link href="/works">Works</Link>
+				</Button>
+				<Button asChild variant="ghost" size={"3"}>
+					<Link href="/laboratory">Laboratory</Link>
+				</Button>
+				<Button asChild variant="ghost" size={"3"}>
+					<Link href="/weblog">WeBlog</Link>
+				</Button>
+			</Flex>
+			{/* USER */}
+			<Flex justify={"center"} align={"center"}>
+				<Suspense fallback={<Text size={"9"}>Loading...</Text>}>
+					<SignedIn>
+						<UserButton />
+						<Text size={"3"} m={"2"}>
+							<Button asChild variant="ghost">
+								<Link href="/user-profile">Profil</Link>
+							</Button>
+						</Text>
+					</SignedIn>
+					<SignedOut>
+						<Button asChild>
+							<Link href="/sign-in">Sign In</Link>
+						</Button>
+					</SignedOut>
+				</Suspense>
+			</Flex>
 		</nav>
 	);
 }
