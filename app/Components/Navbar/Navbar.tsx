@@ -1,14 +1,38 @@
+"use client";
 // React
 import { Suspense } from "react";
+import React, { useEffect } from "react";
 // Next
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 // Radix
 import { Button, Text, Flex } from "@radix-ui/themes";
 // Clerk
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 // Components
+import SelectLanguage from "./SelectLanguage";
 
-export default function Home() {
+//----------------------------------------------------------------
+
+export default function Navbar() {
+	const pathname = usePathname();
+	const lang = "tr";
+
+	useEffect(() => {
+		const pathSegments = pathname.split("/");
+		const lang = pathSegments[1];
+		if (["tr", "en"].includes(lang)) {
+			console.log(lang);
+		}
+	}, [pathname]);
+
+	const navItems = [
+		{ label: "Who am I ?", href: `/${lang}/whoami` },
+		{ label: "Works", href: `/${lang}/works` },
+		{ label: "Laboratory", href: `/${lang}/laboratory` },
+		{ label: "WeBlog", href: `/${lang}/weblog` },
+	];
+
 	return (
 		<nav className="grid grid-cols-3 h-16  shadow-md">
 			{/* LOGO */}
@@ -23,18 +47,11 @@ export default function Home() {
 			</Flex>
 			{/* NAVIGATION */}
 			<Flex justify={"center"} align={"center"} gap={"5"} height={"100%"}>
-				<Button asChild variant="ghost" size={"3"}>
-					<Link href="/whoami">Who am I ?</Link>
-				</Button>
-				<Button asChild variant="ghost" size={"3"}>
-					<Link href="/works">Works</Link>
-				</Button>
-				<Button asChild variant="ghost" size={"3"}>
-					<Link href="/laboratory">Laboratory</Link>
-				</Button>
-				<Button asChild variant="ghost" size={"3"}>
-					<Link href="/weblog">WeBlog</Link>
-				</Button>
+				{navItems.map((item) => (
+					<Button asChild variant="ghost" size={"3"} key={item.label}>
+						<Link href={item.href}>{item.label}</Link>
+					</Button>
+				))}
 			</Flex>
 			{/* USER */}
 			<Flex justify={"center"} align={"center"}>
@@ -52,6 +69,7 @@ export default function Home() {
 							<Link href="/sign-in">Sign In</Link>
 						</Button>
 					</SignedOut>
+					<SelectLanguage />
 				</Suspense>
 			</Flex>
 		</nav>
