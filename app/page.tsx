@@ -1,6 +1,8 @@
-import { UserButton } from "@clerk/nextjs";
-import Navbar from "@/app/Components/Navbar/Navbar";
+// next
 import type { Metadata } from "next";
+// Components
+import Navbar from "@/app/Components/Navbar/Navbar";
+// ------------------------------
 
 export const metadata: Metadata = {
 	title: "Heello :)",
@@ -15,6 +17,7 @@ export default function Home() {
 				<h1 className="text-3xl">
 					Home Page{metadata.title?.toString() || "Başlik Yok"}
 				</h1>
+				<p>Metin ingilizce</p>
 			</div>
 		</>
 	);
