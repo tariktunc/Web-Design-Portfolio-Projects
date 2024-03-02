@@ -12,8 +12,9 @@ This project is an open-source template that can be used to create a personal po
 -  [React](https://reactjs.org/) - JavaScript library used for building user interfaces.
 -  [Redux](https://redux.js.org/) - JavaScript library used for state management.
 -  [Radix](https://radix-ui.com/) - Creating UI components using the component-first design system.
--  [Clerk](https://clerk.com/) - Fast and customizable CSS framework.
+-  [Clerk](https://clerk.com/) - Clerk is a complete suite of embeddable UIs, flexible APIs, and admin dashboards to authenticate and manage your users.
 -  [Tailwind CSS](https://tailwindcss.com/) - Fast and customizable CSS framework.
+-  [i18next](https://www.i18next.com/) - i18next is an internationalization-framework written in and for JavaScript.
 
 ## Installation
 
@@ -50,6 +51,7 @@ CLERK_SECRET_KEY=your_secret_key_here
 ```
 
 ## Customization
+
 1. Add your personal information by editing the files in the src/data directory.
 
 2. Add your own content by editing the pages in the src/pages directory.
