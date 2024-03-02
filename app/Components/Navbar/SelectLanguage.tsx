@@ -1,7 +1,12 @@
-import * as React from "react";
 import { Select, Box } from "@radix-ui/themes";
+import { useAppSelector, useAppDispatch } from "@/app/hooks";
 
 export default function SelectLanguage() {
+	// The `state` arg is correctly typed as `RootState` already
+	const count = useAppSelector((state) => state.language.value);
+	const dispatch = useAppDispatch();
+	console.log(count);
+
 	return (
 		<Box mx={"3"}>
 			<Select.Root defaultValue="en">
