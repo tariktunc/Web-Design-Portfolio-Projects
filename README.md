@@ -2,7 +2,7 @@
 
 #### [Portfolio Web Site](https://tariktunc.vercel.app/)
 
-# Project Name: Personal Portfolio Website
+## Project Name: Personal Portfolio Website
 
 This project is an open-source template that can be used to create a personal portfolio website. Below are step-by-step instructions for initializing and customizing the project.
 
@@ -16,7 +16,7 @@ This project is an open-source template that can be used to create a personal po
 -  [Tailwind CSS](https://tailwindcss.com/) - Fast and customizable CSS framework.
 -  [i18next](https://www.i18next.com/) - i18next is an internationalization-framework written in and for JavaScript.
 
-## Installation
+# Installation
 
 1. Clone the project:
 
@@ -43,12 +43,15 @@ This project is an open-source template that can be used to create a personal po
    ```
 5. Create an env file and add the required keys into it. You will place the keys in this file.
 
-For example, create a file named `.env.local` and add the following content:
+- For example, create a file named `.env.local` and add the following content:
 
+- Deployment (Vercel, etc.):
+- In your Vercel project settings, add these environment variables:
 ```plaintext
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_public_key_here
 CLERK_SECRET_KEY=your_secret_key_here
 ```
+- Remember: Safely store and avoid sharing your environment variables.
 
 ## Customization
 
