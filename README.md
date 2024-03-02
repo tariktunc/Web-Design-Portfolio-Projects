@@ -12,9 +12,9 @@ This project is an open-source template that can be used to create a personal po
 -  [React](https://reactjs.org/) - JavaScript library used for building user interfaces.
 -  [Redux](https://redux.js.org/) - JavaScript library used for state management.
 -  [Radix](https://radix-ui.com/) - Creating UI components using the component-first design system.
--  [Clerk](https://clerk.com/) - Clerk is a complete suite of embeddable UIs, flexible APIs, and admin dashboards to authenticate and manage your users.
+-  [Clerk](https://clerk.com/docs) - Clerk is a complete suite of embeddable UIs, flexible APIs, and admin dashboards to authenticate and manage your users.
 -  [Tailwind CSS](https://tailwindcss.com/) - Fast and customizable CSS framework.
--  [i18next](https://www.i18next.com/) - i18next is an internationalization-framework written in and for JavaScript.
+-  [react-i18next](https://react.i18next.com/) - react-i18next is an internationalization-framework written in and for JavaScript.
 
 # Installation
 
