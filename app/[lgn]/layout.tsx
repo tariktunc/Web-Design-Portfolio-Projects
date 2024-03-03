@@ -1,6 +1,7 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
+
 const Languagei18next = ({ children }: { children: React.ReactNode }) => {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -11,7 +12,7 @@ const Languagei18next = ({ children }: { children: React.ReactNode }) => {
 		if (!["tr", "en"].includes(lang)) {
 			router.push("/");
 		}
-	}, [pathname]);
+	}, [pathname, router]);
 	return <>{children}</>;
 };
 
