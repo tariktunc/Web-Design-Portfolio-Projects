@@ -4,20 +4,12 @@ export default authMiddleware({
 	// Routes that can be accessed while signed out
 	publicRoutes: [
 		"/",
-		"/tr",
-		"/tr/whoami",
-		"/tr/works",
-		"/tr/weblog",
-		"/tr/laboratory",
-		"/tr/sign-in",
-		"/tr/sign-up",
-		"/en",
-		"/en/whoami",
-		"/en/works",
-		"/en/weblog",
-		"/en/laboratory",
-		"/en/sign-in",
-		"/en/sign-up",
+		"/whoami",
+		"/works",
+		"/weblog",
+		"/laboratory",
+		"/sign-in",
+		"/sign-up",
 	],
 	// Routes that can always be accessed, and have
 	// no authentication information

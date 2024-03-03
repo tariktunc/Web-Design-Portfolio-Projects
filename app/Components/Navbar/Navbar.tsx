@@ -27,10 +27,10 @@ export default function Navbar() {
 	}, [pathname]);
 
 	const navItems = [
-		{ label: "Who am I ?", href: `/${lang}/whoami` },
-		{ label: "Works", href: `/${lang}/works` },
-		{ label: "Laboratory", href: `/${lang}/laboratory` },
-		{ label: "WeBlog", href: `/${lang}/weblog` },
+		{ label: "Who am I ?", href: `/whoami` },
+		{ label: "Works", href: `/works` },
+		{ label: "Laboratory", href: `/laboratory` },
+		{ label: "WeBlog", href: `/weblog` },
 	];
 
 	return (
@@ -69,7 +69,7 @@ export default function Navbar() {
 							<Link href="/sign-in">Sign In</Link>
 						</Button>
 					</SignedOut>
-					<SelectLanguage />
+					{/* <SelectLanguage /> */}
 				</Suspense>
 			</Flex>
 		</nav>
