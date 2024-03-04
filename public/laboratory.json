@@ -1,0 +1,25 @@
+{
+	"laboratory": [
+		{
+			"title": "Where to Watch",
+			"description": "Where to Watch, The Movie Database (TMDb) API'sini kullanarak kullanıcılara film ve dizi arama, kategori bazında seçim yapma ve en çok izlenen içerikleri keşfetme imkanı sunan bir web sitesidir. Bu platform, kullanıcılara her bir film ve dizinin hangi yayın platformlarında bulunduğunu ve ilgili diğer bilgileri göstererek, izlemek istedikleri içeriği nerede bulabileceklerini kolayca öğrenmelerini sağlar.",
+			"link": "https://proje1linki.com",
+			"image": "https://proje1resmi.com/resim.jpg",
+			"github": "https://github.com/tariktunc/Where-to-Watch"
+		},
+		{
+			"title": "Multi-Stream Viewer",
+			"description": "This open-source project aims to provide a platform where users can simultaneously watch multiple live streams from platforms like Twitch and YouTube. It is designed for an audience that wishes to monitor and engage with several broadcasts at once, whether for entertainment, research, or any other purpose.",
+			"link": "https://proje2linki.com",
+			"image": "https://proje2resmi.com/resim.jpg",
+			"github": "https://github.com/tariktunc/Multi-Stream-Viewer"
+		},
+		{
+			"title": "Pomodoro Study Timer with To-Do List",
+			"description": "The Pomodoro Study Timer is a productivity tool designed to help users implement the Pomodoro Technique for time management. The application features a customizable timer with focus session lengths, short and long break intervals, and a dynamic to-do list to track tasks.",
+			"link": "https://proje3linki.com",
+			"image": "https://proje3resmi.com/resim.jpg",
+			"github": "https://github.com/tariktunc/Study-Timer"
+		}
+	]
+}

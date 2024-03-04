@@ -1,17 +1,21 @@
 "use client";
+// React
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import React from "react";
+import { ThemeProvider, useTheme, ThemeContext } from "@/utils/context";
 // Redux
 import { Provider } from "react-redux";
 import store from "@/app/store";
 // Clerk
 import { ClerkProvider } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import { enUS, trTR } from "@clerk/localizations";
+import { dark } from "@clerk/themes"; // clerk dark light mode, default light olarak geliyor.
+import { enUS, trTR } from "@clerk/localizations"; // clerk dil seçeneği
 // Radix UI
-import "@radix-ui/themes/styles.css";
-import { Theme, ThemePanel } from "@radix-ui/themes";
+import "@radix-ui/themes/styles.css"; // Radix UI theme
+import "./theme-config.css";
+import { Theme, ThemePanel } from "@radix-ui/themes"; // Radix UI theme
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,20 +31,23 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={inter.className}>
-				<Provider store={store}>
-					<ClerkProvider localization={enUS}>
-						<Theme
-							appearance="light"
-							accentColor="orange"
-							grayColor="slate"
-							radius="small"
-						>
-							{children}
-						</Theme>
-					</ClerkProvider>
-				</Provider>
-			</body>
+			<Provider store={store}>
+				<ThemeProvider>
+					<body className={inter.className}>
+						<ClerkProvider localization={enUS}>
+							<Theme
+								appearance="light"
+								accentColor="orange"
+								grayColor="slate"
+								panelBackground="solid"
+								radius="small"
+							>
+								{children}
+							</Theme>
+						</ClerkProvider>
+					</body>
+				</ThemeProvider>
+			</Provider>
 		</html>
 	);
 }
