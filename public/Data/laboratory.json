@@ -1,0 +1,39 @@
+{
+	"laboratory": [
+		{
+			"title": "Where to Watch",
+			"description": "Where to Watch, The Movie Database (TMDb) API'sini kullanarak kullanıcılara film ve dizi arama, kategori bazında seçim yapma ve en çok izlenen içerikleri keşfetme imkanı sunan bir web sitesidir. Bu platform, kullanıcılara her bir film ve dizinin hangi yayın platformlarında bulunduğunu ve ilgili diğer bilgileri göstererek, izlemek istedikleri içeriği nerede bulabileceklerini kolayca öğrenmelerini sağlar.",
+			"link": "https://where-to-watch-blakfy.netlify.app/",
+			"imageAdress": "/LabImage/wheretowatch.png",
+			"github": "https://github.com/tariktunc/Where-to-Watch"
+		},
+		{
+			"title": "Multi-Stream Viewer",
+			"description": "This open-source project aims to provide a platform where users can simultaneously watch multiple live streams from platforms like Twitch and YouTube. It is designed for an audience that wishes to monitor and engage with several broadcasts at once, whether for entertainment, research, or any other purpose.",
+			"link": "https://multichannels.netlify.app/ ",
+			"imageAdress": "/LabImage/multichannels.png",
+			"github": "https://github.com/tariktunc/Multi-Stream-Viewer"
+		},
+		{
+			"title": "Pomodoro Study Timer with To-Do List",
+			"description": "The Pomodoro Study Timer is a productivity tool designed to help users implement the Pomodoro Technique for time management. The application features a customizable timer with focus session lengths, short and long break intervals, and a dynamic to-do list to track tasks.",
+			"link": "https://studytimerr.netlify.app/",
+			"imageAdress": "/LabImage/studytimerr.png",
+			"github": "https://github.com/tariktunc/Study-Timer"
+		},
+		{
+			"title": "42 Echole Piscine",
+			"description": "42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir.42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir.",
+			"link": "https://github.com/tariktunc/42-piscine",
+			"imageAdress": "/LabImage/42Logo.png",
+			"github": "https://github.com/tariktunc/42-piscine"
+		},
+		{
+			"title": "FreeCodeCamp Projects",
+			"description": "Free Code Camp de yaptığım javascript ve react projeleri",
+			"link": "https://github.com/tariktunc/FreeCodeCamp-Projects",
+			"imageAdress": "/LabImage/freecodecamp.png",
+			"github": "https://github.com/tariktunc/FreeCodeCamp-Projects"
+		}
+	]
+}
