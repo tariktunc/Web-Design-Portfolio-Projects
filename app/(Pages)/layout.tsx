@@ -1,5 +1,7 @@
 import Navbar from "@/app/Components/Navbar/Navbar";
 import { Container } from "@radix-ui/themes";
+import type { Metadata } from "next";
+import { Suspense } from "react";
 
 export default function Home({ children }: { children: React.ReactNode }) {
 	return (

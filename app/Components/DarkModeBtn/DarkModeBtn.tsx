@@ -10,7 +10,20 @@ const DarkModeToggle: React.FC = () => {
 
 	const toggleDarkMode = () => {
 		setIsDarkMode(!isDarkMode);
-		document.documentElement.classList.toggle("dark");
+		if (themes === "dark") {
+			document.documentElement.classList.remove("light"); // `<html>` etiketine "dark" class'ını ekler
+			document.body.classList.remove("light"); // `<body>` etiketine "dark" class'ını ekler
+			document.documentElement.style.colorScheme = "dark";
+			document.documentElement.classList.add("dark"); // `<html>` etiketine "dark" class'ını ekler
+			document.body.classList.add("dark"); // `<body>` etiketine "dark" class'ını ekler
+		} else {
+			document.documentElement.classList.remove("dark"); // `<html>` etiketine "dark" class'ını ekler
+			document.body.classList.remove("dark"); // `<body>` etiketine "dark" class'ını ekler
+			document.documentElement.style.colorScheme = "light";
+			document.documentElement.classList.add("light"); // `<html>` etiketine "dark" class'ını ekler
+			document.body.classList.add("light"); // `<body>` etiketine "dark" class'ını ekler
+		}
+
 		// Add logic to toggle dark mode here
 	};
 
