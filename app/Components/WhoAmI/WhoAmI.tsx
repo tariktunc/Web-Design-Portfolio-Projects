@@ -52,7 +52,7 @@ export default function Home() {
 				<Flex direction={"column"} justify={"end"} gap="2">
 					<Heading as="h1">Who Am I?</Heading>
 					<Text as="p" size={"4"}>
-						Hello there! I'm <Strong>Tarik Tunc</Strong>, a passionate
+						Hello there! I am <Strong>Tarik Tunc</Strong>, a passionate
 						junior software developer based in Turkey. With a zeal for
 						solving product-related problems, I am deeply committed to
 						continuous learning and sharing knowledge with peers. Being a
