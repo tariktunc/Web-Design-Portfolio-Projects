@@ -124,7 +124,7 @@ export default function Home() {
 
 			{/* Lest Connect */}
 			<Section size={"2"}>
-				<Heading as="h6">Let's Connect!</Heading>
+				<Heading as="h6">Let&apos;s Connect!</Heading>
 				<Text as="p">
 					Discover the platform that gives you the freedom to create,
 					design, manage and develop your online presence exactly the way

@@ -130,8 +130,8 @@ export default function Home() {
 					When creativity and technology come together, we have the power
 					to transform our dreams into reality. Explore our projects and
 					see how we can push the boundaries of creativity in the digital
-					world together. Let's inspire each other on this journey and look
-					towards the future with hope.
+					world together. Let&apos;s inspire each other on this journey and
+					look towards the future with hope.
 				</Text>
 			</Section>
 			<Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-6">
