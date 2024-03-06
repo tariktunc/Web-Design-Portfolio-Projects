@@ -12,9 +12,8 @@ import {
 	Text,
 	Flex,
 	Container,
-	Grid,
 	Box,
-	Section,
+	VisuallyHidden,
 } from "@radix-ui/themes";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 // Clerk

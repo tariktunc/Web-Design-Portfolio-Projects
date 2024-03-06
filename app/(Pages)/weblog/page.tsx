@@ -1,6 +1,7 @@
-import { Flex, Text, Container, Avatar, Grid, Box } from "@radix-ui/themes";
-import Image from "next/image";
-import Link from "next/link";
+"use client";
+import { Flex, Text, Avatar, Box } from "@radix-ui/themes";
+import { Project } from "next/dist/build/swc";
+import React from "react";
 
 export default function Home() {
 	type DateProps = {
@@ -68,38 +69,89 @@ export default function Home() {
 			/>
 		);
 	};
+	type ArticaleCardProps = {
+		src?: string;
+		alt?: string;
+		date?: string;
+		categories?: string;
+		title?: string;
+		summary?: string;
+	};
 
-	const ArticleCard = () => {
+	const ArticleCard = (props: ArticaleCardProps) => {
 		return (
 			<Flex gap={"4"}>
 				<AvatarImage
-					src="/public/WeBlog/reactjs.webp"
-					alt="avatar"
+					src={props.src || "/blakfy-orginal-icon.jpg"}
+					alt={props.alt || "blakfy"}
 					fallback="IMG"
 				/>
 				<Box>
 					<Flex gap={"2"} wrap={"wrap"}>
-						<ArticleDate date="Mar 5, 2024" />
-						<ArticleCategories category="Technology" />
+						<ArticleDate date={props.date || "Mar 01 2024"} />
+						<ArticleCategories
+							category={props.categories || "Technology"}
+						/>
 					</Flex>
 
 					<Flex direction={"column"} gap={"2"}>
-						<ArticleTitle title="The future of technology" />
-						<ArticleSummary summary="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the." />
+						<ArticleTitle
+							title={props.title || "The future of technology"}
+						/>
+						<ArticleSummary
+							summary={props.summary || "This is summary"}
+						/>
 					</Flex>
 				</Box>
 			</Flex>
 		);
 	};
+
+	type WeBlogDatas = {
+		src?: string;
+		alt?: string;
+		date?: string;
+		categories?: string;
+		title?: string;
+		summary?: string;
+	};
+
+	const [weBlogData, setWeBlogData] = React.useState<WeBlogDatas[]>([]);
+	const [loading, setLoading] = React.useState(false);
+
+	React.useEffect(() => {
+		const fetchProjects = async () => {
+			try {
+				const response = await fetch("/weblog/data/blog.json");
+				const data = await response.json();
+				setWeBlogData(data.weBlog);
+				setLoading(true);
+			} catch (error) {
+				console.error("Fetching projects failed:", error);
+				setLoading(false);
+			}
+		};
+
+		fetchProjects();
+	}, []);
+
 	return (
 		<Flex direction={"column"} gap={"9"}>
-			<ArticleCard />
-			<ArticleCard />
-			<ArticleCard />
-			<ArticleCard />
-			<ArticleCard />
-			<ArticleCard />
-			<ArticleCard />
+			{loading ? (
+				weBlogData.map((data) => (
+					<ArticleCard
+						key={data.title}
+						src={data.src}
+						alt={data.alt}
+						categories={data.categories}
+						date={data.date}
+						title={data.title}
+						summary={data.summary}
+					/>
+				))
+			) : (
+				<p>Loading...</p>
+			)}
 		</Flex>
 	);
 }
