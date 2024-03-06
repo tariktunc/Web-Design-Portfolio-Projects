@@ -1,15 +1,5 @@
 // Radix
-import Link from "next/link";
-import Image from "next/image";
-import {
-	Section,
-	Text,
-	Heading,
-	Container,
-	Flex,
-	Avatar,
-	Strong,
-} from "@radix-ui/themes";
+import { Container } from "@radix-ui/themes";
 // next
 // Components
 import Navbar from "@/app/Components/Navbar/Navbar";

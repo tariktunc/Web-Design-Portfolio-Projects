@@ -31,7 +31,6 @@ export default function Navbar() {
 			mt={"3"}
 			mb={"7"}
 			style={{ paddingLeft: "5%", paddingRight: "5%" }}
-			className="min-w-[480px]"
 		>
 			<Grid
 				className="border-b"
