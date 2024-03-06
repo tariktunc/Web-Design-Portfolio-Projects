@@ -28,8 +28,10 @@ export default function Navbar() {
 	return (
 		<Container
 			size="4"
-			my={"3"}
+			mt={"3"}
+			mb={"7"}
 			style={{ paddingLeft: "5%", paddingRight: "5%" }}
+			className="min-w-[480px]"
 		>
 			<Grid
 				className="border-b"
@@ -49,7 +51,9 @@ export default function Navbar() {
 				<Flex justify={"center"} align={"center"} gap={"2"}>
 					<Image
 						src={
-							themes === "dark" ? "/Monochrome.webp" : "/Grayscale.webp"
+							themes === "dark"
+								? "/Logo/Monochrome.webp"
+								: "/Logo/Grayscale.webp"
 						}
 						alt="blakfy"
 						width={40}
