@@ -1,51 +1,121 @@
-import { Flex, Text, Box, Avatar, Heading, Container } from "@radix-ui/themes";
+import { Flex, Text, Box, Heading, Container } from "@radix-ui/themes";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
-	return (
-		<Container size={"2"}>
-			<article className="flex border-box items-center">
-				<Container mr={"3"}>
-					<Avatar
-						size={"9"}
+	const Articals = () => {
+		return (
+			<Flex
+				justify={"center"}
+				align={"center"}
+				width={"auto"}
+				mx={"auto"}
+				mb={"8"}
+			>
+				<Box className="w-[200px] h-full">
+					<Image
+						width={200}
+						height={200}
 						src="/WeBlog/Image/reactjs.webp"
-						fallback="A"
+						alt="ReactJS Logo"
+						className="flex-none w-full h-full aspect-square rounded-lg"
 					/>
-				</Container>
-				<Box width={"100%"}>
-					<Flex direction={"column"}>
-						<Flex gap={"3"} my={"2"} width={"max-content"}>
-							<Text as="span" size={"2"} className="opacity-70 ">
-								MAR 5, 2024
-							</Text>
-							<Text as="span" size={"2"} weight={"bold"}>
-								<Link
-									href="/"
-									className="px-1 text-blue-900 hover:opacity-80"
-								>
-									PONDERINGS,
-								</Link>
-								<Link
-									href="/"
-									className="px-1 text-blue-900 hover:opacity-80"
-								>
-									PERSONAL
-								</Link>
-							</Text>
-						</Flex>
-						<Heading my={"3"} as="h2" size={"8"} weight={"bold"}>
-							Closure
-						</Heading>
-						<Text as="p">
-							In the here and now, the concept of completeness arises
-							from the limitations of our conscious mind to distinguish
-							the indivisible unity of matter. When completeness is
-							fragmented, it ceases to exist as a whole.
+				</Box>
+
+				<Flex direction={"column"} ml={"4"} className="w-fit h-fit">
+					<Flex justify={"start"} align={"center"} gap={"3"} mb={"2"}>
+						<Text
+							as="p"
+							weight={"medium"}
+							size={"2"}
+							className="min-w-fit"
+						>
+							Mar 5, 2024
+						</Text>
+						<Text
+							as="p"
+							weight={"bold"}
+							size={"1"}
+							className="px-2 py-1 rounded min-w-fit"
+							color="blue"
+						>
+							PONDERINGS
+						</Text>
+						<Text
+							as="p"
+							weight={"bold"}
+							size={"1"}
+							className="px-2 py-1 rounded min-w-fit"
+							color="blue"
+						>
+							PERSONAL
 						</Text>
 					</Flex>
-				</Box>
-			</article>
-		</Container>
+
+					<Text className="text-2xl font-bold mb-4">Closure</Text>
+
+					<Text className="hidden md:flex">
+						In the here and now, the concept of completeness arises from
+						the limitations of our conscious mind to distinguish the
+						indivisible unity of matter. When completeness is fragmented,
+						it ceases to exist as a whole.
+					</Text>
+				</Flex>
+			</Flex>
+		);
+	};
+	return (
+		<Flex
+			justify={"center"}
+			align={"center"}
+			width={"auto"}
+			mx={"auto"}
+			mb={"8"}
+		>
+			<Box className="w-[200px] h-full">
+				<Image
+					width={200}
+					height={200}
+					src="/WeBlog/Image/reactjs.webp"
+					alt="ReactJS Logo"
+					className="flex-none w-full h-full aspect-square rounded-lg"
+				/>
+			</Box>
+
+			<Flex direction={"column"} ml={"4"} className="w-fit h-fit">
+				<Flex justify={"start"} align={"center"} gap={"3"} mb={"2"}>
+					<Text as="p" weight={"medium"} size={"2"} className="min-w-fit">
+						Mar 5, 2024
+					</Text>
+					<Text
+						as="p"
+						weight={"bold"}
+						size={"1"}
+						className="px-2 py-1 rounded min-w-fit"
+						color="blue"
+					>
+						PONDERINGS
+					</Text>
+					<Text
+						as="p"
+						weight={"bold"}
+						size={"1"}
+						className="px-2 py-1 rounded min-w-fit"
+						color="blue"
+					>
+						PERSONAL
+					</Text>
+				</Flex>
+
+				<Text className="text-2xl font-bold mb-4">Closure</Text>
+
+				<Text className="hidden md:flex">
+					In the here and now, the concept of completeness arises from the
+					limitations of our conscious mind to distinguish the indivisible
+					unity of matter. When completeness is fragmented, it ceases to
+					exist as a whole.
+				</Text>
+			</Flex>
+		</Flex>
 	);
 }

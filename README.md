@@ -1,6 +1,6 @@
 ### Live Stream
 
-#### [Portfolio Web Site](https://tariktunc.vercel.app/)
+#### [Portfolio Web Site](https://tariktunc-com.vercel.app/)
 
 ## Project Name: Personal Portfolio Website
 
@@ -43,15 +43,17 @@ This project is an open-source template that can be used to create a personal po
    ```
 5. Create an env file and add the required keys into it. You will place the keys in this file.
 
-- For example, create a file named `.env.local` and add the following content:
+-  For example, create a file named `.env.local` and add the following content:
 
-- Deployment (Vercel, etc.):
-- In your Vercel project settings, add these environment variables:
+-  Deployment (Vercel, etc.):
+-  In your Vercel project settings, add these environment variables:
+
 ```plaintext
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_public_key_here
 CLERK_SECRET_KEY=your_secret_key_here
 ```
-- Remember: Safely store and avoid sharing your environment variables.
+
+-  Remember: Safely store and avoid sharing your environment variables.
 
 ## Customization
 
