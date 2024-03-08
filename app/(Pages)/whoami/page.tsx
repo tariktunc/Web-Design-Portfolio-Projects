@@ -1,20 +1,20 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Section, Text, Heading, Flex } from "@radix-ui/themes";
+import { Section, Text, Heading, Flex, Container, Box } from "@radix-ui/themes";
 
 import WhoAmI from "@/app/Components/WhoAmI/WhoAmI";
 
 export default function Home() {
 	return (
-		<>
+		<Container size={"1"}>
 			{/* HEADER WHO AM I IMAGE  */}
 			<Flex align={"center"} gap={"5"} justify={"center"}>
 				<Image
 					src="/whoami.webp"
-					width={1000}
-					height={1000}
+					width={800}
+					height={800}
 					alt="blakfy.com"
-					className="rounded-lg w-full h-full"
+					className="rounded-lg"
 				/>
 			</Flex>
 			{/* WHO AM I ?  */}
@@ -124,26 +124,20 @@ export default function Home() {
 			</Section>
 
 			{/* Lest Connect */}
-			<Section size={"2"}>
+			<Box>
 				<Heading as="h6">Let&apos;s Connect!</Heading>
-				<Text as="p">
-					Discover the platform that gives you the freedom to create,
-					design, manage and develop your online presence exactly the way
-					you want.
+				<Text as="p" weight={"light"}>
+					You can also email me at{" "}
+					<Link href="mailto:me@tariktunc.com?subject=Web%20Sitemiz%20Hakkında&body=Merhaba,%20web%20sitenizle%20ilgili%20bir%20soruyum%20var.">
+						<b>me@tariktunc.com</b>
+					</Link>{" "}
+					however, don&apos;t expect an immediate reply (or a reply at
+					all).
 				</Text>
-				<Link href="https://blakfy.com">
-					<Image
-						src="/blakfy-orginal-icon.jpg"
-						width={"70"}
-						height={"70"}
-						alt="blakfy.com"
-					/>
-				</Link>
-				<Text as="p">
-					Join me on this journey as we explore the vast possibilities of
-					technology together!
+				<Text as="p" weight={"light"}>
+					Thanks for stopping by. May the source be with you 🦄, Tarik.
 				</Text>
-			</Section>
-		</>
+			</Box>
+		</Container>
 	);
 }
