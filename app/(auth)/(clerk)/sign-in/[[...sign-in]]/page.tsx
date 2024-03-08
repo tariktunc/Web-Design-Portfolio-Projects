@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { SignIn } from "@clerk/nextjs";
+import { ThemeProvider, useTheme, ThemeContext } from "@/utils/context";
+import { dark, neobrutalism, shadesOfPurple } from "@clerk/themes"; // clerk dark light mode, default light olarak geliyor.
 
 export const metadata: Metadata = {
 	title: "Sign In",

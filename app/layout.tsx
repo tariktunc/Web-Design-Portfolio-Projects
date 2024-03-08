@@ -1,16 +1,15 @@
 "use client";
 // React
+import React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import React from "react";
 import { ThemeProvider, useTheme, ThemeContext } from "@/utils/context";
 // Redux
 import { Provider } from "react-redux";
 import store from "@/app/store";
 // Clerk
 import { ClerkProvider } from "@clerk/nextjs";
-import { dark } from "@clerk/themes"; // clerk dark light mode, default light olarak geliyor.
 import { enUS, trTR } from "@clerk/localizations"; // clerk dil seçeneği
 // Radix UI
 import "@radix-ui/themes/styles.css"; // Radix UI theme
@@ -30,7 +29,14 @@ export default function RootLayout({
 			<ThemeProvider>
 				<html lang="en" suppressHydrationWarning>
 					<body className={"light"}>
-						<ClerkProvider localization={enUS}>
+						<ClerkProvider
+							appearance={{
+								variables: {
+									colorPrimary: "#FC6A03",
+								},
+							}}
+							localization={enUS}
+						>
 							<Theme
 								appearance="light"
 								accentColor="orange"

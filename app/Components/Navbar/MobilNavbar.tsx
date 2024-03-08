@@ -10,70 +10,45 @@ import AuthButtons from "./Components/AuthButtons";
 export default function Home() {
 	const [openMenu, setOpenMenu] = React.useState(false);
 	return (
-		<>
+		<Box height={"100%"} width={"100%"} className="shadow-md xs:hidden">
 			{openMenu && (
-				<Theme panelBackground="translucent" scaling="110%">
-					<Box mb={"5"} width={"100%"}>
-						<Flex
-							justify={"end"}
-							align={"center"}
-							gap={"5"}
-							px={"2"}
-							py={"3"}
-						>
-							<Button
-								onClick={() => setOpenMenu(false)}
-								variant="surface"
-							>
-								<HamburgerMenuIcon width={"25"} height={"25"} /> Menu
-							</Button>
-						</Flex>
-					</Box>
-				</Theme>
+				<Flex justify={"end"} align={"center"} gap={"5"} px={"2"} py={"3"}>
+					<Button onClick={() => setOpenMenu(false)} variant="surface">
+						<HamburgerMenuIcon width={"25"} height={"25"} /> Menu
+					</Button>
+				</Flex>
 			)}
 			{!openMenu && (
-				<Theme panelBackground="translucent" scaling="110%">
-					<Box
-						position={"sticky"}
-						height={"100%"}
-						width={"100%"}
-						px={"2"}
-						py={"3"}
-						className="shadow-md bg-white dark:bg-slate-950"
+				<Box
+					px={"2"}
+					py={"3"}
+					width={"100%"}
+					className=" bg-white dark:bg-slate-950"
+				>
+					<Flex justify={"end"} align={"center"} gap={"5"}>
+						<Button onClick={() => setOpenMenu(true)} variant="surface">
+							<Cross1Icon width={"25"} height={"25"} /> Menu
+						</Button>
+					</Flex>
+
+					<Flex direction={"column"} align={"center"} gap={"5"} pr={"4"}>
+						<DynamicNavButtons />
+					</Flex>
+
+					<Flex
+						direction={"column"}
+						justify={"center"}
+						py={"5"}
+						align={"center"}
+						gap={"5"}
+						pr={"4"}
 					>
-						<Flex justify={"end"} align={"center"} gap={"5"}>
-							<Button
-								onClick={() => setOpenMenu(true)}
-								variant="surface"
-							>
-								<Cross1Icon width={"25"} height={"25"} /> Menu
-							</Button>
-						</Flex>
-
-						<Flex
-							direction={"column"}
-							align={"center"}
-							gap={"5"}
-							pr={"4"}
-						>
-							<DynamicNavButtons />
-						</Flex>
-
-						<Flex
-							direction={"column"}
-							justify={"center"}
-							py={"5"}
-							align={"center"}
-							gap={"5"}
-							pr={"4"}
-						>
-							<DarkModeToggle />
-							<AuthButtons />
-							<Logo />
-						</Flex>
-					</Box>
-				</Theme>
+						<DarkModeToggle />
+						<AuthButtons />
+						<Logo />
+					</Flex>
+				</Box>
 			)}
-		</>
+		</Box>
 	);
 }

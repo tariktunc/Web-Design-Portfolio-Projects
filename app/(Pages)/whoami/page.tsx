@@ -11,9 +11,10 @@ export default function Home() {
 			<Flex align={"center"} gap={"5"} justify={"center"}>
 				<Image
 					src="/whoami.webp"
-					width={1200}
+					width={1000}
 					height={1000}
 					alt="blakfy.com"
+					className="rounded-lg w-full h-full"
 				/>
 			</Flex>
 			{/* WHO AM I ?  */}

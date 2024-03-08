@@ -17,11 +17,11 @@ const config: Config = {
 	theme: {
 		screens: {
 			initial: "0px",
-			xs: "520px", // "640px
-			sm: "768px", // "768px
-			md: "1024px", // "1024px
-			lg: "1280px", // "1280px
-			xl: "1640px", // "1280px
+			xs: "520px",
+			sm: "768px",
+			md: "1024px",
+			lg: "1280px",
+			xl: "1640px",
 		},
 
 		extend: {

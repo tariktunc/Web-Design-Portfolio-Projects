@@ -17,7 +17,6 @@ export default function DynamicNavButtons() {
 				const data = await res.json();
 				setNavbarData(data);
 				setLoading(true);
-				console.log("data => ", data);
 			} catch (error) {
 				console.log("error => ", error);
 				setLoading(false);
@@ -30,7 +29,7 @@ export default function DynamicNavButtons() {
 		<>
 			{loading &&
 				navbarData.map((item) => (
-					<Button asChild variant="ghost" key={item.label}>
+					<Button asChild variant="ghost" size={"4"} key={item.label}>
 						<Link href={item.href}>{item.label}</Link>
 					</Button>
 				))}
