@@ -6,21 +6,24 @@ import WhoAmI from "@/app/Components/WhoAmI/WhoAmI";
 
 export default function Home() {
 	return (
-		<Container size={"1"}>
+		<Box>
 			{/* HEADER WHO AM I IMAGE  */}
-			<Flex align={"center"} gap={"5"} justify={"center"}>
-				<Image
-					src="/whoami.webp"
-					width={800}
-					height={800}
-					alt="blakfy.com"
-					className="rounded-lg"
-				/>
-			</Flex>
+			<Section size={"1"}>
+				<Flex align={"center"} justify={"center"}>
+					<Image
+						src="/whoami.webp"
+						width={800}
+						height={800}
+						alt="blakfy.com"
+						className="rounded-lg"
+					/>
+				</Flex>
+			</Section>
+
 			{/* WHO AM I ?  */}
 			<WhoAmI />
 			{/* Technologies */}
-			<Section size={"2"} className="light:bg-gray-100">
+			<Section size={"1"}>
 				<Heading as="h5" mt={"5"}>
 					Programming languages I speak
 				</Heading>
@@ -124,7 +127,7 @@ export default function Home() {
 			</Section>
 
 			{/* Lest Connect */}
-			<Box>
+			<Section size={"1"}>
 				<Heading as="h6">Let&apos;s Connect!</Heading>
 				<Text as="p" weight={"light"}>
 					You can also email me at{" "}
@@ -137,7 +140,7 @@ export default function Home() {
 				<Text as="p" weight={"light"}>
 					Thanks for stopping by. May the source be with you 🦄, Tarik.
 				</Text>
-			</Box>
-		</Container>
+			</Section>
+		</Box>
 	);
 }
