@@ -7,6 +7,12 @@
 	transition: all;
 	transition-duration: 500ms;
 }
+.loading {
+	width: 100vw;
+	height: 100vh;
+	background: black;
+	color: white;
+}
 .loader {
 	width: 300px;
 	height: 400px;

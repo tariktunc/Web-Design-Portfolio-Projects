@@ -10,6 +10,7 @@ import { Provider } from "react-redux";
 import store from "@/app/store";
 // Clerk
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark, shadesOfPurple, neobrutalism } from "@clerk/themes";
 import { enUS, trTR } from "@clerk/localizations"; // clerk dil seçeneği
 // Radix UI
 import "@radix-ui/themes/styles.css"; // Radix UI theme
@@ -26,17 +27,17 @@ export default function RootLayout({
 }>) {
 	return (
 		<Provider store={store}>
-			<ThemeProvider>
-				<html lang="en" suppressHydrationWarning>
-					<body className={"light"}>
-						<ClerkProvider
-							appearance={{
-								variables: {
-									colorPrimary: "#FC6A03",
-								},
-							}}
-							localization={enUS}
-						>
+			<html lang="en" suppressHydrationWarning>
+				<body className={"light"}>
+					<ClerkProvider
+						appearance={{
+							variables: {
+								colorPrimary: "#FC6A03",
+							},
+						}}
+						localization={enUS}
+					>
+						<ThemeProvider>
 							<Theme
 								appearance="light"
 								accentColor="orange"
@@ -46,10 +47,10 @@ export default function RootLayout({
 							>
 								{children}
 							</Theme>
-						</ClerkProvider>
-					</body>
-				</html>
-			</ThemeProvider>
+						</ThemeProvider>
+					</ClerkProvider>
+				</body>
+			</html>
 		</Provider>
 	);
 }

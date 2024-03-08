@@ -2,7 +2,7 @@ import * as React from "react";
 import { Button, Text, Flex } from "@radix-ui/themes";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { Suspense } from "react";
-import DarkModeBtn from "../../DarkModeBtn/DarkModeBtn";
+import DarkModeBtn from "./DarkModeBtn";
 import Link from "next/link";
 
 export interface IAppProps {}

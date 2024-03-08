@@ -1,19 +1,18 @@
-import * as React from "react";
+"use client";
+import React from "react";
 import { ThemeContext } from "@/utils/context";
 import Link from "next/link";
 import Image from "next/image";
 import { Text, Flex } from "@radix-ui/themes";
 
-export interface IAppProps {}
-
-export default function App(props: IAppProps) {
-	const { themes } = React.useContext(ThemeContext);
+export default function App() {
+	const { theme } = React.useContext(ThemeContext) as { theme: string };
 
 	return (
 		<Flex justify={"center"} align={"center"} gap={"2"}>
 			<Image
 				src={
-					themes === "dark"
+					theme === "light"
 						? "/Logo/Monochrome.webp"
 						: "/Logo/Grayscale.webp"
 				}

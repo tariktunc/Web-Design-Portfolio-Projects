@@ -3,35 +3,35 @@
 import React from "react";
 import { Flex, Container, Box } from "@radix-ui/themes";
 // Components
-import DynamicNavButtons from "./Components/DynamicNavButtons";
+import DynamicNavBtn from "./Components/DynamicNavBtn";
 import Logo from "./Components/Logo";
-import SearchButtons from "./Components/SearchButtons";
-import AuthButtons from "./Components/AuthButtons";
-import DarkModeToggle from "../DarkModeBtn/DarkModeBtn";
+import SearchBtn from "./Components/SearchBtn";
+import AuthBtn from "./Components/AuthBtn";
+import DarkModeBtn from "./Components/DarkModeBtn";
 //----------------------------------------------------------------
 
 export default function Navbar() {
 	return (
 		<Box shrink={"1"} mb={"5"} className="initial:hidden xs:flex xs:flex-col">
 			{/* Header */}
-			<Container size={"3"} p={"3"} className="border-b-2">
+			<Container size={"3"} py={"5"} className="border-b">
 				<Flex wrap={"wrap"} justify={"between"}>
 					{/* Search */}
-					<SearchButtons />
+					<SearchBtn />
 					{/* LOGO */}
 
 					<Logo />
 					{/* USER */}
 					<Flex align={"center"} gap={"5"}>
-						<AuthButtons />
-						<DarkModeToggle />
+						<AuthBtn />
+						<DarkModeBtn />
 					</Flex>
 				</Flex>
 			</Container>
 			{/* NAVIGATION */}
-			<Container size={"3"} p={"3"} className="border-b-2">
+			<Container size={"3"} py={"5"} className="border-b">
 				<Flex wrap={"wrap"} justify={"center"} gap={"5"} height={"100%"}>
-					<DynamicNavButtons />
+					<DynamicNavBtn />
 				</Flex>
 			</Container>
 		</Box>

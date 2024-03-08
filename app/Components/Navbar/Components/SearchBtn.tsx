@@ -1,14 +1,11 @@
-import * as React from "react";
 import { Button, Flex } from "@radix-ui/themes";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 
-export interface IAppProps {}
-
-export default function App(props: IAppProps) {
+export default function App() {
 	return (
 		<Flex justify={"start"} align={"center"}>
 			<Button asChild variant="ghost">
-				<MagnifyingGlassIcon />
+				<MagnifyingGlassIcon width={"25"} height={"25"} />
 			</Button>
 		</Flex>
 	);

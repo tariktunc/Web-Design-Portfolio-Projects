@@ -2,10 +2,10 @@
 import React from "react";
 import { Theme, Flex, Box, Button, VisuallyHidden } from "@radix-ui/themes";
 import { HamburgerMenuIcon, Cross1Icon } from "@radix-ui/react-icons";
-import DynamicNavButtons from "./Components/DynamicNavButtons";
+import DynamicNavButtons from "./Components/DynamicNavBtn";
 import Logo from "./Components/Logo";
-import DarkModeToggle from "../DarkModeBtn/DarkModeBtn";
-import AuthButtons from "./Components/AuthButtons";
+import DarkModeToggle from "./Components/DarkModeBtn";
+import AuthButtons from "./Components/AuthBtn";
 
 export default function Home() {
 	const [openMenu, setOpenMenu] = React.useState(false);
