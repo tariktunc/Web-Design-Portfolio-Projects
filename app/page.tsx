@@ -11,10 +11,9 @@ export default function Home() {
 		<>
 			<Navbar />
 			<Container
-				size={"4"}
+				size={"3"}
 				style={{ paddingLeft: "5%", paddingRight: "5%" }}
 			>
-				<WhoAmI />
 			</Container>
 		</>
 	);
