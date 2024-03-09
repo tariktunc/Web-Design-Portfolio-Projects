@@ -1,22 +1,22 @@
 {
 	"weBlog": [
-    {
-      "title": "React’te useEffect Hook’unun Etkin Kullanımı",
-      "alt": "React’te useEffect Hook’unun Etkin Kullanımı",
-      "src": "/weblog/image/reactjs.webp",
-      "categories": "React",
-      "date": "2021-03-12",
-      "summary": "React Hooks, fonksiyonel bileşenlerde durum ve yaşam döngüsü yönetimini kolaylaştırır. useEffect, yan etkileri yönetmek için kullanılan temel bir hook'tur.",
-      "link": "https://medium.com/@tariktunc/reactte-useeffect-hook-unun-etkin-kullan%C4%B1m%C4%B1-2de2572516e5"
-    },
-    {
-      "title": "ReactJS’te useState Kullanırken Dikkat Edilmesi Gerekenler",
-      "alt": "ReactJS’te useState Kullanırken Dikkat Edilmesi Gerekenler",
-      "src": "/weblog/image/reactjs.webp",
-      "categories": "React",
-      "date": "2021-03-12",
-      "summary": "Bugün, React dünyasının büyüleyici bir köşesine adım atıyoruz ve “useState Hook” ile eğlenceli bir yolculuğa çıkıyoruz. Şimdi, React’taki state yönetiminin temelini oluşturan bu önemli konuyu daha yakından inceleyerek başlayalım.",
-      "link": "https://medium.com/@tariktunc/reactjste-usestate-kullan%C4%B1rken-dikkat-edilmesi-gerekenler-c440809ce868"
-    }
-  ]
+		{
+			"title": "React’te useEffect Hook’unun Etkin Kullanımı",
+			"alt": "React’te useEffect Hook’unun Etkin Kullanımı",
+			"imageSrc": "/weblog/image/reactjs.webp",
+			"categories": "React",
+			"date": "2021-03-12",
+			"summary": "React Hooks, fonksiyonel bileşenlerde durum ve yaşam döngüsü yönetimini kolaylaştırır. useEffect, yan etkileri yönetmek için kullanılan temel bir hook'tur.",
+			"link": "https://medium.com/@tariktunc/reactte-useeffect-hook-unun-etkin-kullan%C4%B1m%C4%B1-2de2572516e5"
+		},
+		{
+			"title": "ReactJS’te useState Kullanırken Dikkat Edilmesi Gerekenler",
+			"alt": "ReactJS’te useState Kullanırken Dikkat Edilmesi Gerekenler",
+			"imageSrc": "/weblog/image/reactjs.webp",
+			"categories": "React",
+			"date": "2021-03-12",
+			"summary": "Bugün, React dünyasının büyüleyici bir köşesine adım atıyoruz ve “useState Hook” ile eğlenceli bir yolculuğa çıkıyoruz. Şimdi, React’taki state yönetiminin temelini oluşturan bu önemli konuyu daha yakından inceleyerek başlayalım.",
+			"link": "https://medium.com/@tariktunc/reactjste-usestate-kullan%C4%B1rken-dikkat-edilmesi-gerekenler-c440809ce868"
+		}
+	]
 }

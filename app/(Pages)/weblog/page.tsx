@@ -7,12 +7,13 @@ import LoadingCard from "./Components/LoadingCard";
 
 export default function Home() {
 	type WeBlogDatas = {
-		src?: string;
+		imageSrc?: string;
 		alt?: string;
 		date?: string;
 		categories?: string;
 		title?: string;
 		summary?: string;
+		link?: string;
 	};
 
 	const [weBlogData, setWeBlogData] = React.useState<WeBlogDatas[]>([]);
@@ -40,12 +41,13 @@ export default function Home() {
 				weBlogData.map((data) => (
 					<ArticleCard
 						key={data.title}
-						src={data.src}
+						imageSrc={data.imageSrc}
 						alt={data.alt}
 						categories={data.categories}
 						date={data.date}
 						title={data.title}
 						summary={data.summary}
+						link={data.link}
 					/>
 				))
 			) : (
