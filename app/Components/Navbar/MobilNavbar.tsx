@@ -8,7 +8,7 @@ import DarkModeToggle from "./Components/DarkModeBtn";
 import AuthButtons from "./Components/AuthBtn";
 
 export default function Home() {
-	const [openMenu, setOpenMenu] = React.useState(false);
+	const [openMenu, setOpenMenu] = React.useState(true);
 	return (
 		<Box height={"100%"} width={"100%"} className="shadow-md xs:hidden">
 			{openMenu && (
