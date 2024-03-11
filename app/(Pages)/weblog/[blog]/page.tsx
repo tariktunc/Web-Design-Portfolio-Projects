@@ -1,3 +1,4 @@
+"use client"
 import {
 	Container,
 	Box,
@@ -7,9 +8,17 @@ import {
 	Flex,
 	Section,
 } from "@radix-ui/themes";
+import React from "react";
+import { useRouter } from 'next/navigation'
 
 export default function Page({ params }: { params: { blog: string } }) {
 	// Fetch the blog post data from an API or database
+	const router = useRouter();
+	React.useEffect(() => {
+		window.onload = () => {	
+			router.push("/weblog");
+		}
+	}, []);
 
 	return (
 		<Box>
@@ -17,7 +26,7 @@ export default function Page({ params }: { params: { blog: string } }) {
 				{/* HEADER KISMI BURADA OLACAK. */}
 				<Section size={"1"}>
 					<Heading as={"h1"} size={"8"} mb={"7"}>
-						React’te useEffect Hook’unun Etkin Kullanımı
+						{params.blog} page not found.
 					</Heading>
 					<Flex justify={"start"} align={"center"} gap={"2"}>
 						<Avatar
@@ -28,7 +37,6 @@ export default function Page({ params }: { params: { blog: string } }) {
 						/>
 						<Flex direction={"column"}>
 							<Text as={"p"}>Tarik Tunç</Text>
-							<Text as={"p"}>10.03.2024</Text>
 						</Flex>
 					</Flex>
 				</Section>
