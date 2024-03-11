@@ -1,0 +1,53 @@
+{
+  "laboratory": [
+    {
+      "title": "Birincioğlu Ticaret",
+      "description": "E-ticaret sitesi",
+      "link": "https://www.birinciogluticaret.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc"
+    },
+    {
+      "title": "vinart desing",
+      "description": "İç mimar sitesi",
+      "link": "https://www.vinartdesign.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc"
+    },
+    {
+      "title": "saracyol asfalt",
+      "description": "Asfalt ve yol bakım şirketi",
+      "link": "https://www.saracyol.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc"
+    },
+    {
+      "title": "öz harbiye döner",
+      "description": "Restoran Menu sitesi",
+      "link": "https://ozharbiyedoner.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc"
+    },
+    {
+      "title": "tripslab",
+      "description": "Turizm Acentesi",
+      "link": "https://www.trips-lab.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc"
+    },
+    {
+      "title": "Tab Yapı",
+      "description": "Tab Yapı inşaat şirketi",
+      "link": "https://www.tabyapi.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc"
+    },
+    {
+      "title": "Galata Hukuk",
+      "description": "Galata Hukuk Bürosu",
+      "link": "https://galatahukuk.com.tr/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc"
+    }
+  ]
+}
