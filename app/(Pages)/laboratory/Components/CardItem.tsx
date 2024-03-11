@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Card, Flex, Text, Inset, Strong } from "@radix-ui/themes";
+import { Card, Flex, Text, Inset, Strong, Heading } from "@radix-ui/themes";
 import Image from "next/image";
 import Link from "next/link";
 import { GitHubLogoIcon, Link2Icon } from "@radix-ui/react-icons";
@@ -14,7 +14,7 @@ export interface IAppProps {
 }
 export default function App(props: IAppProps) {
   return (
-    <Card size={"2"} className="grid grid-colums-1 ">
+    <Card size={"2"} className="grid grid-colums-1 initial:mx-2 xs:mx-0">
       {/* Image */}
       <Inset clip="padding-box" side="top" pb="current">
         <Link href={props.link ? props.link : "/"}>
@@ -29,26 +29,33 @@ export default function App(props: IAppProps) {
       </Inset>
 
       {/* Title */}
-      <Text
-        as="p"
-        size="3"
-        className=" sm:min-h-40 sm:h-48 md:h-40 lg:h-40 xl:h-44"
-      >
+
+      <Heading as="h4" size={{ initial: "3", xs: "4" }} my={"3"}>
         <Strong>
           {props.title && props.title.length < 20
             ? props.title
             : (props.title || "Untitled").substring(0, 30).concat("...")}
-        </Strong>
+        </Strong>{" "}
+      </Heading>
 
-        <br />
-        {props.description && props.description.length < 141
-          ? props.description.substring(0, 140)
+      <Text
+        as="p"
+        size="3"
+        className=" sm:min-h-36 sm:h-44 md:h-36 lg:h-36 xl:h-40"
+      >
+        {props.description && props.description.length < 120
+          ? props.description.substring(0, 120)
           : (props.description || "No description")
-              .substring(0, 140)
+              .substring(0, 120)
               .concat("...")}
       </Text>
       {/* Stream Link */}
-      <Flex gap={"5"} justify={"end"} align={"center"} className=" h-8">
+      <Flex
+        gap={"5"}
+        justify={"end"}
+        align={"center"}
+        className="initial:h-20 xs:h-6"
+      >
         <Link href={props.github ? props.github : "/"}>
           <GitHubLogoIcon className="w-auto h-6" />
         </Link>
