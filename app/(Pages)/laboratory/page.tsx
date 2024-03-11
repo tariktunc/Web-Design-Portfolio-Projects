@@ -110,6 +110,7 @@ export default function Home() {
 
 		fetchProjects();
 	}, []);
+	
 	return (
 		<Container size={"2"}>
 			<Section size={"1"}>
@@ -134,7 +135,7 @@ export default function Home() {
 					towards the future with hope.
 				</Text>
 			</Section>
-			<Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-6">
+			<Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 lg:gap-6">
 				{loading ? (
 					projects.map((project) => (
 						<CardItem
