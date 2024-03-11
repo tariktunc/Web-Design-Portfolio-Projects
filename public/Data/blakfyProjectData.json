@@ -1,0 +1,53 @@
+{
+  "laboratory": [
+    {
+      "title": "Birincioğlu Ticaret",
+      "description": "E-ticaret sitesi",
+      "link": "https://www.birinciogluticaret.com/",
+      "imageAdress": "/LabImage/wheretowatch.png",
+      "github": ""
+    },
+    {
+      "title": "vinart desing",
+      "description": "İç mimar sitesi",
+      "link": "https://www.vinartdesign.com/",
+      "imageAdress": "/LabImage/multichannels.png",
+      "github": ""
+    },
+    {
+      "title": "saracyol asfalt",
+      "description": "Asfalt ve yol bakım şirketi",
+      "link": "https://www.saracyol.com/",
+      "imageAdress": "/LabImage/studytimerr.png",
+      "github": ""
+    },
+    {
+      "title": "öz harbiye döner",
+      "description": "42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir.",
+      "link": "https://ozharbiyedoner.com/",
+      "imageAdress": "/LabImage/42Logo.png",
+      "github": "https://github.com/tariktunc/42-piscine"
+    },
+    {
+      "title": "tripslab",
+      "description": "Turizm Acentesi",
+      "link": "https://www.trips-lab.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc/FreeCodeCamp-Projects"
+    },
+    {
+      "title": "Tab Yapı",
+      "description": "Tab Yapı inşaat şirketi",
+      "link": "https://www.tabyapi.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc/FreeCodeCamp-Projects"
+    },
+    {
+      "title": "Galata Hukuk",
+      "description": "Galata Hukuk Bürosu",
+      "link": "https://galatahukuk.com.tr/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc/FreeCodeCamp-Projects"
+    }
+  ]
+}
