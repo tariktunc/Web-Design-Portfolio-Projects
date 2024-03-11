@@ -29,7 +29,7 @@ export default function App(props: IAppProps) {
 		<Flex gap={"4"}>
 			{/* Avatar */}
 			<AvatarImage
-				src={"/blakfy-orginal-icon.jpg"}
+				imageSrc={"/blakfy-orginal-icon.jpg"}
 				alt={"blakfy"}
 				fallback="IMG"
 			/>

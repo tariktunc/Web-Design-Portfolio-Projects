@@ -1,23 +1,48 @@
+"use client"
+import {
+	Container,
+	Box,
+	Text,
+	Heading,
+	Avatar,
+	Flex,
+	Section,
+} from "@radix-ui/themes";
+import React from "react";
+import { useRouter } from 'next/navigation'
+
 export default function Page({ params }: { params: { blog: string } }) {
-  // Fetch the blog post data from an API or database
-  const blogPost = fetchBlogPost(params.blog);
+	// Fetch the blog post data from an API or database
+	const router = useRouter();
+	React.useEffect(() => {
+		window.onload = () => {	
+			router.push("/weblog");
+		}
+	}, []);
 
-  return (
-    <div>
-      <h1>{blogPost.title}</h1>
-      <p>{blogPost.author}</p>
-      <div dangerouslySetInnerHTML={{ __html: blogPost.content }}></div>
-    </div>
-  );
-}
-
-function fetchBlogPost(blogSlug: string) {
-  // Implement your logic to fetch the blog post data based on the blog slug
-  // This can be done using an API call or querying a database
-  // Return the blog post data as an object with properties like title, author, and content
-  return {
-    title: "Sample Blog Post",
-    author: "John Doe",
-    content: "<p>This is the content of the blog post.</p>",
-  };
+	return (
+		<Box>
+			<Box>
+				{/* HEADER KISMI BURADA OLACAK. */}
+				<Section size={"1"}>
+					<Heading as={"h1"} size={"8"} mb={"7"}>
+						{params.blog} page not found.
+					</Heading>
+					<Flex justify={"start"} align={"center"} gap={"2"}>
+						<Avatar
+							size="5"
+							src="/profilePhoto.jpg"
+							radius="full"
+							fallback="T"
+						/>
+						<Flex direction={"column"}>
+							<Text as={"p"}>Tarik Tunç</Text>
+						</Flex>
+					</Flex>
+				</Section>
+				{/* İÇERİK KISMI BURADA OLACAK. */}
+				<Section></Section>
+			</Box>
+		</Box>
+	);
 }
