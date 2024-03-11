@@ -16,15 +16,14 @@ export default function Home() {
         </Heading>
         <Text as="p" size={"3"} m={"5"}>
           Kişisel olarak geliştirdiğim ve/veya geliştirmekte olduğum projelerim.
-          ettiğim projeler{" "}
         </Text>
         <ProjectsContainer />
         <Heading as="h1" size={"9"} m={"5"}>
           Blakfy.com Projects
         </Heading>
         <Text as="p" size={"3"} m={"5"}>
-          Blakfy.com üzerin de geliştirdiğimiz, kobi'lerin dijitale dönüşümünü
-          sağladığımız projeler.
+          Blakfy.com üzerin de geliştirdiğimiz, kobi&apos;lerin dijitale
+          dönüşümünü sağladığımız projeler.
         </Text>
         <BlakfyProject />
       </Container>
