@@ -10,7 +10,7 @@ export default function App(props: IAppProps) {
     {
       name: "LinkedIn",
       ImageUrl: "https://skillicons.dev/icons?i=linkedin",
-      link: "https://www.linkedin.com/in/blakfy/",
+      link: "https://www.linkedin.com/in/tarktunc/",
     },
     {
       name: "Github",
@@ -20,12 +20,12 @@ export default function App(props: IAppProps) {
     {
       name: "Discord",
       ImageUrl: "https://skillicons.dev/icons?i=discord",
-      link: "https://discord.com/dfasweq",
+      link: "https://discord.com/kZWEEvmQAK",
     },
     {
       name: "Twitter",
       ImageUrl: "https://skillicons.dev/icons?i=twitter",
-      link: "https://twitter.com",
+      link: "https://twitter.com/tarkktunc",
     },
     {
       name: "Blakfy.com",
@@ -35,22 +35,22 @@ export default function App(props: IAppProps) {
     {
       name: "Spotify",
       ImageUrl: "/spotify.png",
-      link: "https://spotify.com",
+      link: "https://open.spotify.com/user/11177763987?si=8cccd8e276de4963",
     },
     {
       name: "Medium",
       ImageUrl: "/medium.png",
-      link: "https://https://medium.com",
+      link: "https://medium.com/@tariktunc",
     },
     {
       name: "Instagram",
       ImageUrl: "https://skillicons.dev/icons?i=instagram",
-      link: "https://instagram.com",
+      link: "https://www.instagram.com/tarkktunc/",
     },
     {
       name: "Stackoverflow",
       ImageUrl: "https://skillicons.dev/icons?i=stackoverflow",
-      link: "https://stackoverflow.com",
+      link: "https://stackoverflow.com/users/21361438/tar%c4%b1k-tunc",
     },
   ];
   return (
