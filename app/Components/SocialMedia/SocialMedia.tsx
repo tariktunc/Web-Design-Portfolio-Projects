@@ -71,7 +71,7 @@ export default function App(props: IAppProps) {
               alt={social.name}
               width={100}
               height={100}
-              className="initial:w-5 initial:h-5 xs:w-20 xs:w-20"
+              className="initial:w-5 initial:h-5 xs:w-20 xs:h-20"
             />
             <Link
               href={social.link ? social.link : "https://www.google.com"}
