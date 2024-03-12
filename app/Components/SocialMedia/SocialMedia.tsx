@@ -29,17 +29,17 @@ export default function App(props: IAppProps) {
     },
     {
       name: "Blakfy.com",
-      ImageUrl: "https://skillicons.dev/icons?i=edge",
+      ImageUrl: "/blakfy-orginal-icon.jpg",
       link: "https://blakfy.com",
     },
     {
       name: "Spotify",
-      ImageUrl: "https://skillicons.dev/icons?i=spotify",
+      ImageUrl: "/spotify.png",
       link: "https://spotify.com",
     },
     {
       name: "Medium",
-      ImageUrl: "https://skillicons.dev/icons?i=medium",
+      ImageUrl: "/medium.png",
       link: "https://https://medium.com",
     },
     {
@@ -71,7 +71,7 @@ export default function App(props: IAppProps) {
               alt={social.name}
               width={100}
               height={100}
-              className="initial:w-5 initial:h-5 xs:w-20 xs:h-20"
+              className="initial:w-5 initial:h-5 xs:w-10 xs:h-10"
             />
             <Link
               href={social.link ? social.link : "https://www.google.com"}
