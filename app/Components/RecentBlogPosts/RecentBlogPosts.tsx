@@ -14,7 +14,6 @@ export default function App(props: IAppProps) {
     summary?: string;
     link?: string;
   };
-
   const [weBlogData, setWeBlogData] = React.useState<WeBlogDatas[]>([]);
   const [loading, setLoading] = React.useState(false);
 
@@ -39,20 +38,18 @@ export default function App(props: IAppProps) {
       <Table.Body>
         {loading &&
           weBlogData.map((weBlogData) => (
-            <>
-              <Table.Row>
-                <Table.RowHeaderCell>
-                  <Link target="_blank" href={weBlogData.link}>
-                    {weBlogData.date}
-                  </Link>
-                </Table.RowHeaderCell>
-                <Table.Cell>
-                  <Link target="_blank" href={weBlogData.link}>
-                    {weBlogData.title}
-                  </Link>
-                </Table.Cell>
-              </Table.Row>
-            </>
+            <Table.Row key={weBlogData.title}>
+              <Table.RowHeaderCell>
+                <Link target="_blank" href={weBlogData.link}>
+                  {weBlogData.date}
+                </Link>
+              </Table.RowHeaderCell>
+              <Table.Cell>
+                <Link target="_blank" href={weBlogData.link}>
+                  {weBlogData.title}
+                </Link>
+              </Table.Cell>
+            </Table.Row>
           ))}
       </Table.Body>
     </Table.Root>

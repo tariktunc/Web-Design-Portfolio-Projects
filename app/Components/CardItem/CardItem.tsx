@@ -20,6 +20,7 @@ export interface IAppProps {
   github?: string;
   imageAdress?: string;
   size?: string;
+  status: string;
 }
 export default function App(props: IAppProps) {
   return (
@@ -59,6 +60,13 @@ export default function App(props: IAppProps) {
 
         {/* Stream Link */}
         <Flex justify={"end"} align={"end"} gap={"5"} my={"3"}>
+          <Text
+            as="p"
+            size={"2"}
+            color={props.status === "active" ? "yellow" : "red"}
+          >
+            {props.status}
+          </Text>
           <Link href={props.github ? props.github : "/"}>
             <GitHubLogoIcon className="w-auto h-6" />
           </Link>

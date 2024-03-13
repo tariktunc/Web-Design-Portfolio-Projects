@@ -11,10 +11,10 @@ interface Project {
   link?: string; // Assuming Url is a type you have defined elsewhere
   github?: string;
   imageAdress?: string;
+  status: string;
 }
 
-export interface IAppProps {}
-export default function App(props: IAppProps) {
+export default function Home() {
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [loading, setLoading] = React.useState(false);
 
@@ -45,6 +45,7 @@ export default function App(props: IAppProps) {
             link={project.link}
             imageAdress={project.imageAdress}
             github={project.github}
+            status={project.status}
             size="initial:h-16 xs:h-20"
           />
         ))

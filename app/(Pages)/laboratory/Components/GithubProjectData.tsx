@@ -11,6 +11,7 @@ interface Project {
   link?: string; // Assuming Url is a type you have defined elsewhere
   github?: string;
   imageAdress?: string;
+  status: string;
 }
 
 export interface IAppProps {}
@@ -46,6 +47,7 @@ export default function App(props: IAppProps) {
             imageAdress={project.imageAdress}
             github={project.github}
             size="initial:h-32 xs:h-40"
+            status={project.status}
           />
         ))
       ) : (
