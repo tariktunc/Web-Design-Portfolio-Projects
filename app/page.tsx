@@ -15,6 +15,7 @@ import Navbar from "@/app/Components/Navbar/Navbar";
 import BlakfyProject from "@/app/(Pages)/laboratory/Components/BlakfyProject";
 import ProjectsContainer from "@/app/(Pages)/laboratory/Components/GithubProjectData";
 import SocialMedia from "@/app/Components/SocialMedia/SocialMedia";
+import RecentBlogPosts from "@/app/Components/RecentBlogPosts/RecentBlogPosts";
 // ------------------------------
 export default function Home() {
   return (
@@ -41,6 +42,9 @@ export default function Home() {
               I still fix myself every day 🥷🏽
             </Text>
           </Flex>
+        </Section>
+        <Section size={"1"}>
+          <RecentBlogPosts />
         </Section>
         <Section size={"1"}>
           <Heading as="h1" size={{ initial: "5", xs: "8" }} m={"5"}>
