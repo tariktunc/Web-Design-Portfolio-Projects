@@ -1,13 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Text, Heading, Flex, Box } from "@radix-ui/themes";
+import { Text, Heading, Flex, Box, Container } from "@radix-ui/themes";
 import Avatar from "@/app/Components/WhoAmI/Avatar";
 import SocialMedia from "@/app/Components/SocialMedia/SocialMedia";
 
 import WhoAmI from "@/app/Components/WhoAmI/WhoAmI";
 export default function Home() {
   return (
-    <>
+    <Container size={"3"}>
       {/* WHO AM I ?  */}
       <Avatar />
       <WhoAmI />
@@ -131,6 +131,6 @@ export default function Home() {
         </Text>
       </Box>
       <SocialMedia />
-    </>
+    </Container>
   );
 }

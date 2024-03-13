@@ -1,19 +1,27 @@
 // Radix
-import { Container, Heading, Flex, Text, Section } from "@radix-ui/themes";
+import {
+  Container,
+  Heading,
+  Flex,
+  Grid,
+  Text,
+  Section,
+  Box,
+} from "@radix-ui/themes";
 import Avatar from "@/app/Components/WhoAmI/Avatar";
 // next
 // Components
 import Navbar from "@/app/Components/Navbar/Navbar";
 import BlakfyProject from "@/app/(Pages)/laboratory/Components/BlakfyProject";
-import ProjectsContainer from "@/app/(Pages)/laboratory/Components/ProjectsContainer";
+import ProjectsContainer from "@/app/(Pages)/laboratory/Components/GithubProjectData";
 import SocialMedia from "@/app/Components/SocialMedia/SocialMedia";
 // ------------------------------
 export default function Home() {
   return (
     <>
       <Navbar />
-      <Container size={"4"} style={{ paddingLeft: "5%", paddingRight: "5%" }}>
-        <Section size={"2"} p={"3"}>
+      <Container size={"3"} style={{ paddingLeft: "5%", paddingRight: "5%" }}>
+        <Section size={"1"}>
           <Avatar />
           <Flex
             direction={"column"}
@@ -34,7 +42,7 @@ export default function Home() {
             </Text>
           </Flex>
         </Section>
-        <Section size={"2"} p={"3"}>
+        <Section size={"1"}>
           <Heading as="h1" size={{ initial: "5", xs: "8" }} m={"5"}>
             Github Projects
           </Heading>
@@ -42,9 +50,11 @@ export default function Home() {
             Kişisel olarak geliştirdiğim ve/veya geliştirmekte olduğum
             projelerim.
           </Text>
-          <ProjectsContainer />
+          <Grid columns={{ initial: "1", sm: "3" }} gap={"5"}>
+            <ProjectsContainer />
+          </Grid>
         </Section>
-        <Section size={"2"} p={"3"}>
+        <Section size={"1"}>
           <Heading as="h1" size={{ initial: "5", xs: "8" }} m={"5"}>
             Blakfy.com Projects
           </Heading>
@@ -52,7 +62,9 @@ export default function Home() {
             Blakfy.com üzerin de geliştirdiğimiz, kobi&apos;lerin dijitale
             dönüşümünü sağladığımız projeler.
           </Text>
-          <BlakfyProject />
+          <Grid columns={{ initial: "1", sm: "4" }} gap={"5"}>
+            <BlakfyProject />
+          </Grid>
         </Section>
         <SocialMedia />
       </Container>

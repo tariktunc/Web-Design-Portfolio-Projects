@@ -2,7 +2,7 @@
 import React from "react";
 import { Box } from "@radix-ui/themes";
 import LoadingCardItem from "./LoadingCardItem";
-import CardItem from "./CardItem";
+import CardItem from "@/app/Components/CardItem/CardItem";
 
 // setProjects useState
 interface Project {
@@ -35,7 +35,7 @@ export default function App(props: IAppProps) {
   }, []);
 
   return (
-    <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 lg:gap-6">
+    <>
       {loading ? (
         projects.map((project) => (
           <CardItem
@@ -45,11 +45,12 @@ export default function App(props: IAppProps) {
             link={project.link}
             imageAdress={project.imageAdress}
             github={project.github}
+            size="initial:h-16 xs:h-20"
           />
         ))
       ) : (
         <LoadingCardItem />
       )}
-    </Box>
+    </>
   );
 }
