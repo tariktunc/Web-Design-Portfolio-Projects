@@ -29,13 +29,21 @@
       "description": "Restaurant",
       "link": "https://ozharbiyedoner.com/",
       "imageAdress": "/laboratorywallpaper2.webp",
-      "github": "https://github.com/tariktunc",
+      "github": "https://blakfy.editorx.io/ozharbiyedoner",
       "status": "active"
     },
     {
       "title": "Tripslab",
       "description": "Tourism",
       "link": "https://www.trips-lab.com/",
+      "imageAdress": "/laboratorywallpaper2.webp",
+      "github": "https://github.com/tariktunc",
+      "status": "active"
+    },
+    {
+      "title": "Vinart desing",
+      "description": "Interior architect",
+      "link": "https://blakfy.wixsite.com/vinartdesign/en",
       "imageAdress": "/laboratorywallpaper2.webp",
       "github": "https://github.com/tariktunc",
       "status": "active"
@@ -60,14 +68,6 @@
       "title": "Tab Yapi",
       "description": "Saracyol Building Company",
       "link": "https://www.tabyapi.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
-      "github": "https://github.com/tariktunc",
-      "status": "passive"
-    },
-    {
-      "title": "vinart desing",
-      "description": "Interior architect",
-      "link": "https://www.vinartdesign.com/",
       "imageAdress": "/laboratorywallpaper2.webp",
       "github": "https://github.com/tariktunc",
       "status": "passive"
