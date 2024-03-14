@@ -28,15 +28,17 @@ export default function App(props: IAppProps) {
       <Card size={"2"} variant="surface">
         {/* Image */}
         <Inset clip="padding-box" side="top" pb="current">
-          <Link href={props.link ? props.link : "/"}>
-            <Image
-              width={500}
-              height={100}
-              src={props.imageAdress || "/blakfy-orginal-icon.jpg"}
-              alt={props.title}
-              className="aspect-video block object-cover bg-gray-200"
-            />
-          </Link>
+          <Flex justify={"center"} align={"center"} className="aspect-video">
+            <Link href={props.link ? props.link : "/"}>
+              <Image
+                width={1000}
+                height={1000}
+                src={props.imageAdress || "/blakfy-orginal-icon.jpg"}
+                alt={props.title}
+                className="aspect-video block object-cover bg-gray-50 w-full h-full"
+              />
+            </Link>
+          </Flex>
         </Inset>
 
         {/* Title */}

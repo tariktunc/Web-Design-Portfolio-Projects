@@ -4,7 +4,7 @@
       "title": "Birincioğlu Trade",
       "description": "E-commerce",
       "link": "https://www.birinciogluticaret.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/birinciogluticaret.png",
       "github": "https://github.com/tariktunc",
       "status": "active"
     },
@@ -12,7 +12,7 @@
       "title": "Kubra Yilmaz Beauty",
       "description": "Beauty centre",
       "link": "https://kubrayilmazbeauty.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/kubrayilmazbeauty.png",
       "github": "https://github.com/tariktunc",
       "status": "active"
     },
@@ -20,7 +20,7 @@
       "title": "Blakfy",
       "description": "Web Design & Development",
       "link": "https://blakfy.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/blakfy.png",
       "github": "https://github.com/tariktunc",
       "status": "active"
     },
@@ -28,7 +28,7 @@
       "title": "Ozharbiye Doner",
       "description": "Restaurant",
       "link": "https://ozharbiyedoner.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/Harbiyedoner.png",
       "github": "https://blakfy.editorx.io/ozharbiyedoner",
       "status": "active"
     },
@@ -36,7 +36,7 @@
       "title": "Tripslab",
       "description": "Tourism",
       "link": "https://www.trips-lab.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/tripslab.webp",
       "github": "https://github.com/tariktunc",
       "status": "active"
     },
@@ -44,7 +44,7 @@
       "title": "Vinart desing",
       "description": "Interior architect",
       "link": "https://blakfy.wixsite.com/vinartdesign/en",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/vinartDesign.jpg",
       "github": "https://github.com/tariktunc",
       "status": "active"
     },
@@ -52,7 +52,7 @@
       "title": "Galata Law",
       "description": "Law office",
       "link": "https://galatahukuk.com.tr/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/galatahukuk.jpg",
       "github": "https://github.com/tariktunc",
       "status": "passive"
     },
@@ -60,7 +60,7 @@
       "title": "Saracyol Building Company",
       "description": "Building Company",
       "link": "https://www.saracyol.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/saracyol.png",
       "github": "https://github.com/tariktunc",
       "status": "passive"
     },
@@ -68,7 +68,7 @@
       "title": "Tab Yapi",
       "description": "Saracyol Building Company",
       "link": "https://www.tabyapi.com/",
-      "imageAdress": "/laboratorywallpaper2.webp",
+      "imageAdress": "/blakfyImageProject/tabyapi.png",
       "github": "https://github.com/tariktunc",
       "status": "passive"
     }
