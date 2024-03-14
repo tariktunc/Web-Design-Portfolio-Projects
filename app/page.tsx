@@ -12,6 +12,7 @@ import Avatar from "@/app/Components/WhoAmI/Avatar";
 // next
 // Components
 import Navbar from "@/app/Components/Navbar/Navbar";
+import Footer from "@/app/Components/Footer/Footer";
 import BlakfyProject from "@/app/(Pages)/laboratory/Components/BlakfyProject";
 import ProjectsContainer from "@/app/(Pages)/laboratory/Components/GithubProjectData";
 import SocialMedia from "@/app/Components/SocialMedia/SocialMedia";
@@ -72,6 +73,7 @@ export default function Home() {
         </Section>
         <SocialMedia />
       </Container>
+      <Footer />
     </>
   );
 }
