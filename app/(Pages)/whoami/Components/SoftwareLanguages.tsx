@@ -38,6 +38,7 @@ export default function App(props: IAppProps) {
               alt={skill}
               width={30}
               height={30}
+              className="initial:w-7 xs:w-10 h-full"
             />
           );
         })}
