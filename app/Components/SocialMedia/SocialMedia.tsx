@@ -54,7 +54,7 @@ export default function App(props: IAppProps) {
     },
   ];
   return (
-    <Flex wrap={"wrap"} justify={"center"}>
+    <Flex wrap={"wrap"} justify={"center"} my={"5"}>
       {socialMedia &&
         socialMedia.map((social, index) => (
           <Flex

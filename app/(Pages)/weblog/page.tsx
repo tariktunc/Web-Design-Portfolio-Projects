@@ -3,6 +3,7 @@ import { Flex, Container } from "@radix-ui/themes";
 import React from "react";
 import ArticleCard from "./Components/ArticleCard";
 import LoadingCard from "./Components/LoadingCard";
+import Image from "next/image";
 // ----------------------------------------------
 
 export default function Home() {
@@ -38,6 +39,12 @@ export default function Home() {
   return (
     <Container size={"3"}>
       <Flex direction={"column"} gap={"9"}>
+        <Image
+          src="/weblog/weblogbanner.webp"
+          alt="Weblog"
+          width={"1000"}
+          height={"1000"}
+        />
         {loading ? (
           weBlogData.map((data) => (
             <ArticleCard
@@ -52,14 +59,7 @@ export default function Home() {
             />
           ))
         ) : (
-          <>
-            <LoadingCard />
-            <LoadingCard />
-            <LoadingCard />
-            <LoadingCard />
-            <LoadingCard />
-            <LoadingCard />
-          </>
+          <LoadingCard />
         )}
       </Flex>
     </Container>
