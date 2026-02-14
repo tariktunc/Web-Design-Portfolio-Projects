@@ -22,7 +22,7 @@ export interface IAppProps {
   size?: string;
   status: string;
 }
-export default function App(props: IAppProps) {
+export default function CardItem(props: IAppProps) {
   return (
     <Box className="card-hover">
       <Card size={"2"} variant="surface">
@@ -65,10 +65,10 @@ export default function App(props: IAppProps) {
           >
             {props.status}
           </Text>
-          <Link href={props.github ? props.github : "/"}>
+          <Link href={props.github || "/"} target="_blank" rel="noopener noreferrer" aria-label={`${props.title} GitHub repository`}>
             <GitHubLogoIcon className="w-5 h-5 icon-hover" />
           </Link>
-          <Link href={props.link ? props.link : "/"}>
+          <Link href={props.link || "/"} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${props.title}`}>
             <Link2Icon className="w-5 h-5 icon-hover" />
           </Link>
         </Flex>

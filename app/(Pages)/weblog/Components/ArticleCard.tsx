@@ -15,7 +15,7 @@ export interface IAppProps {
   summary?: string;
   link?: string | undefined;
 }
-export default function App(props: IAppProps) {
+export default function ArticleCard(props: IAppProps) {
   return (
     <Suspense fallback={<p>Loading...</p>}>
       <Flex gap={"4"}>

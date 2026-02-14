@@ -1,42 +1,34 @@
 "use client";
 import React from "react";
-import { Box } from "@radix-ui/themes";
 import LoadingCardItem from "./LoadingCardItem";
 import CardItem from "@/app/Components/CardItem/CardItem";
 
-// setProjects useState
 interface Project {
   title: string;
   description: string;
-  link?: string; // Assuming Url is a type you have defined elsewhere
+  link?: string;
   github?: string;
   imageAdress?: string;
   status: string;
 }
 
-export default function Home() {
+export default function BlakfyProject() {
   const [projects, setProjects] = React.useState<Project[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const [loaded, setLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch("/Data/blakfyProjectData.json");
-        const data = await response.json();
+    fetch("/Data/blakfyProjectData.json")
+      .then((res) => res.json())
+      .then((data) => {
         setProjects(data.laboratory);
-        setLoading(true);
-      } catch (error) {
-        console.error("Fetching projects failed:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchProjects();
+        setLoaded(true);
+      })
+      .catch((error) => console.error("Fetching projects failed:", error));
   }, []);
 
   return (
     <>
-      {loading ? (
+      {loaded ? (
         projects.map((project) => (
           <CardItem
             key={project.title}

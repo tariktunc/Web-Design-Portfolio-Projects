@@ -1,13 +1,12 @@
-// Radix
 import { Section, Text, Heading, Flex } from "@radix-ui/themes";
 
-export default function Home() {
+export default function WhoAmI() {
   return (
     <Section size={"1"}>
       <Flex direction={"column"} justify={"end"} gap="5">
-        <Heading as="h1">Who Am I?</Heading>
-        <Text as="p" size={"4"} weight={"light"}>
-          Hello there! I am <i>Tarik Tunc</i>, a passionate junior software
+        <Heading as="h1" size={{ initial: "6", xs: "8" }}>Who Am I?</Heading>
+        <Text as="p" size={{ initial: "3", xs: "4" }} weight={"light"}>
+          Hello there! I am <em>Tarik Tunc</em>, a passionate junior software
           developer based in Turkey. With a zeal for solving product-related
           problems, I am deeply committed to continuous learning and sharing
           knowledge with peers. Being a collaborative team player, I thrive in

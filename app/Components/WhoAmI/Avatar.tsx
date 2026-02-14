@@ -8,26 +8,26 @@ export default function Avatars() {
 		<Flex mr={"5"} direction={"column"} justify={"center"} align={"center"}>
 			<Avatar size="9" src="/profilePhoto.jpg" radius="full" fallback="T" />
 			<Flex align={"center"} justify={"center"} gap={"2"} height={"6"}>
-				<Link href="https://linkedin.com/in/tarktunc">
+				<Link href="https://linkedin.com/in/tarktunc" aria-label="LinkedIn profile">
 					<Image
 						src="https://skillicons.dev/icons?i=linkedin"
-						alt="HTML"
+						alt="LinkedIn"
 						width={20}
 						height={20}
 					/>
 				</Link>
-				<Link href="https://twitter.com/tarkktunc">
+				<Link href="https://twitter.com/tarkktunc" aria-label="Twitter profile">
 					<Image
 						src="https://skillicons.dev/icons?i=twitter"
-						alt="HTML"
+						alt="Twitter"
 						width={20}
 						height={20}
 					/>
 				</Link>
-				<Link href="https://github.com/tariktunc">
+				<Link href="https://github.com/tariktunc" aria-label="GitHub profile">
 					<Image
 						src="https://skillicons.dev/icons?i=github"
-						alt="HTML"
+						alt="GitHub"
 						width={20}
 						height={20}
 					/>

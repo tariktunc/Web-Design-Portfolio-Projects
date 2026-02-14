@@ -3,14 +3,19 @@ import SocialMedia from "@/app/Components/SocialMedia/SocialMedia";
 import Footer from "@/app/Components/Footer/Footer";
 import { Container } from "@radix-ui/themes";
 
-export default function Home({ children }: { children: React.ReactNode }) {
+export default function PagesLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
-      {/* Tüm sayfa yapılarının eşit olunması için container kullanıldı. */}
-      <Container size="3" className="initial:p-3 xs:px-3 md:px-5">
-        {children}
-      </Container>
+      <main id="main-content">
+        <Container
+          size="4"
+          px={{ initial: "4", xs: "5", sm: "6" }}
+          style={{ maxWidth: 1600 }}
+        >
+          {children}
+        </Container>
+      </main>
       <SocialMedia />
       <Footer />
     </>

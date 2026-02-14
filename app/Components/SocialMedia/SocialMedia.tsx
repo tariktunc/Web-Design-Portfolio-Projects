@@ -1,11 +1,10 @@
 "use client";
 import * as React from "react";
-import { Flex, Text } from "@radix-ui/themes";
+import { Flex, Text, Heading } from "@radix-ui/themes";
 import Image from "next/image";
 import Link from "next/link";
 
-export interface IAppProps {}
-export default function App(props: IAppProps) {
+export default function SocialMedia() {
   const socialMedia = [
     {
       name: "LinkedIn",
@@ -53,35 +52,39 @@ export default function App(props: IAppProps) {
       link: "https://stackoverflow.com/users/21361438/tar%c4%b1k-tunc",
     },
   ];
+
   return (
-    <Flex wrap={"wrap"} justify={"center"} gap={"4"} my={"6"}>
-      {socialMedia.map((social, index) => (
-        <Link
-          href={social.link}
-          target="_blank"
-          key={index}
-          className="social-hover"
-        >
-          <Flex
-            align={"center"}
-            gap={"2"}
-            px={"3"}
-            py={"2"}
-            className="rounded-md"
+    <Flex direction="column" gap="3" my="6">
+      <Heading
+        as="h2"
+        size={{ initial: "4", xs: "5" }}
+        className="section-header"
+      >
+        Connect
+      </Heading>
+      <Flex wrap="wrap" gap="3" mt="2">
+        {socialMedia.map((social, index) => (
+          <Link
+            href={social.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            key={index}
+            className="social-card"
+            aria-label={`Visit ${social.name}`}
           >
             <Image
               src={social.ImageUrl}
               alt={social.name}
               width={100}
               height={100}
-              className="initial:w-6 initial:h-6 xs:w-8 xs:h-8 rounded-sm"
+              className="w-6 h-6 rounded-sm"
             />
-            <Text as="p" size={"2"}>
+            <Text as="p" size="2" weight="medium">
               {social.name}
             </Text>
-          </Flex>
-        </Link>
-      ))}
+          </Link>
+        ))}
+      </Flex>
     </Flex>
   );
 }

@@ -1,33 +1,50 @@
-"use client";
-// React
-import React from "react";
+import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeProvider, useTheme } from "@/utils/context";
-// Redux
-import { Provider } from "react-redux";
-import store from "@/app/store";
-// Clerk
-import { ClerkProvider } from "@clerk/nextjs";
-import { enUS } from "@clerk/localizations";
-// Radix UI
 import "@radix-ui/themes/styles.css";
 import "./theme-config.css";
-import { Theme } from "@radix-ui/themes";
+import Providers from "./Providers";
+import CursorFollower from "./Components/CursorFollower";
 
-function RadixThemeWrapper({ children }: { children: React.ReactNode }) {
-  const { theme } = useTheme();
-  return (
-    <Theme
-      appearance={theme === "dark" ? "dark" : "light"}
-      accentColor="orange"
-      grayColor="slate"
-      panelBackground="solid"
-      radius="medium"
-    >
-      {children}
-    </Theme>
-  );
-}
+export const metadata: Metadata = {
+  metadataBase: new URL("https://tariktunc.vercel.app"),
+  title: {
+    default: "Tarik Tunç — Full Stack Developer",
+    template: "%s | Tarik Tunç",
+  },
+  description:
+    "Full Stack Developer portfolio showcasing web development projects, blog posts, and technical skills. Built with Next.js, React, and TypeScript.",
+  keywords: [
+    "Full Stack Developer",
+    "Web Developer",
+    "React",
+    "Next.js",
+    "TypeScript",
+    "Tarik Tunç",
+    "Portfolio",
+  ],
+  authors: [{ name: "Tarik Tunç", url: "https://tariktunc.vercel.app" }],
+  creator: "Tarik Tunç",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://tariktunc.vercel.app",
+    siteName: "Tarik Tunç",
+    title: "Tarik Tunç — Full Stack Developer",
+    description:
+      "Full Stack Developer portfolio showcasing web development projects, blog posts, and technical skills.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tarik Tunç — Full Stack Developer",
+    description:
+      "Full Stack Developer portfolio showcasing web development projects, blog posts, and technical skills.",
+    creator: "@tarkktunc",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function RootLayout({
   children,
@@ -35,23 +52,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <Provider store={store}>
-      <html lang="en" suppressHydrationWarning>
-        <body>
-          <ClerkProvider
-            appearance={{
-              variables: {
-                colorPrimary: "#FC6A03",
-              },
-            }}
-            localization={enUS}
-          >
-            <ThemeProvider>
-              <RadixThemeWrapper>{children}</RadixThemeWrapper>
-            </ThemeProvider>
-          </ClerkProvider>
-        </body>
-      </html>
-    </Provider>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        <Providers>
+          <a href="#main-content" className="skip-to-content">
+            Skip to content
+          </a>
+          <CursorFollower />
+          {children}
+        </Providers>
+      </body>
+    </html>
   );
 }

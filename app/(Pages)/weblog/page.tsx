@@ -1,67 +1,36 @@
-"use client";
-import { Flex, Container } from "@radix-ui/themes";
-import React from "react";
-import ArticleCard from "./Components/ArticleCard";
-import LoadingCard from "./Components/LoadingCard";
+import type { Metadata } from "next";
+import { Heading } from "@radix-ui/themes";
 import Image from "next/image";
-// ----------------------------------------------
+import WeblogContent from "./Components/WeblogContent";
+import FadeInSection from "@/app/Components/FadeInSection";
 
-export default function Home() {
-  type WeBlogDatas = {
-    imageSrc?: string;
-    alt?: string;
-    date?: string;
-    categories?: string;
-    title?: string;
-    summary?: string;
-    link?: string;
-  };
+export const metadata: Metadata = {
+  title: "Blog",
+  description:
+    "Technical blog posts about React, Next.js, TypeScript, and modern web development by Tarik Tunç.",
+};
 
-  const [weBlogData, setWeBlogData] = React.useState<WeBlogDatas[]>([]);
-  const [loading, setLoading] = React.useState(false);
-
-  React.useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch("/weblog/data/blog.json");
-        const data = await response.json();
-        setWeBlogData(data.weBlog);
-        setLoading(true);
-      } catch (error) {
-        console.error("Fetching projects failed:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
-
+export default function WeblogPage() {
   return (
-    <Container size={"3"}>
-      <Flex direction={"column"} gap={"9"}>
+    <>
+      <FadeInSection>
         <Image
           src="/weblog/weblogbanner.webp"
-          alt="Weblog"
-          width={"1000"}
-          height={"1000"}
+          alt="Weblog - Technical articles by Tarik Tunç"
+          width={1600}
+          height={600}
+          className="mb-8 w-full rounded"
+          priority
         />
-        {loading ? (
-          weBlogData.map((data) => (
-            <ArticleCard
-              key={data.title}
-              imageSrc={data.imageSrc}
-              alt={data.alt}
-              categories={data.categories}
-              date={data.date}
-              title={data.title}
-              summary={data.summary}
-              link={data.link}
-            />
-          ))
-        ) : (
-          <LoadingCard />
-        )}
-      </Flex>
-    </Container>
+      </FadeInSection>
+      <FadeInSection>
+        <Heading as="h1" size={{ initial: "6", xs: "8" }} mb={"6"}>
+          Blog
+        </Heading>
+      </FadeInSection>
+      <FadeInSection>
+        <WeblogContent />
+      </FadeInSection>
+    </>
   );
 }

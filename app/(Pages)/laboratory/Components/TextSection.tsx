@@ -1,15 +1,12 @@
-import * as React from "react";
-import { Section, Text } from "@radix-ui/themes";
-export interface IAppProps {}
+import { Section, Text, Heading } from "@radix-ui/themes";
 
-export default function App(props: IAppProps) {
+export default function TextSection() {
   return (
     <Section size={"3"}>
-      <Text as="p" size={"8"}>
+      <Heading as="h1" size={{ initial: "7", xs: "8" }} mb="4">
         Our Laboratory
-      </Text>
-      <br />
-      <Text as="p" size={"5"}>
+      </Heading>
+      <Text as="p" size={{ initial: "3", xs: "5" }} color="gray">
         When creativity and technology come together, we have the power to
         transform our dreams into reality. Explore our projects and see how we
         can push the boundaries of creativity in the digital world together.
