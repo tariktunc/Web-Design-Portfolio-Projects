@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { UserProfile } from "@clerk/nextjs";
-import { dark, neobrutalism, shadesOfPurple } from "@clerk/themes"; // clerk dark light mode, default light olarak geliyor.
+import { dark } from "@clerk/themes";
 import { ThemeContext } from "@/utils/context";
 
 export default function Home() {
@@ -10,8 +10,6 @@ export default function Home() {
 	return (
 		<UserProfile
 			appearance={{ baseTheme: theme === "dark" ? dark : undefined }}
-			path="/user-profile"
-			routing="path"
 		/>
 	);
 }

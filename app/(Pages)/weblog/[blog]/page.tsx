@@ -8,14 +8,14 @@ import {
 	Flex,
 	Section,
 } from "@radix-ui/themes";
-import React from "react";
+import React, { use } from "react";
 import { useRouter } from 'next/navigation'
 
-export default function Page({ params }: { params: { blog: string } }) {
-	// Fetch the blog post data from an API or database
+export default function Page({ params }: { params: Promise<{ blog: string }> }) {
+	const { blog } = use(params);
 	const router = useRouter();
 	React.useEffect(() => {
-		window.onload = () => {	
+		window.onload = () => {
 			router.push("/weblog");
 		}
 	}, []);
@@ -26,7 +26,7 @@ export default function Page({ params }: { params: { blog: string } }) {
 				{/* HEADER KISMI BURADA OLACAK. */}
 				<Section size={"1"}>
 					<Heading as={"h1"} size={"8"} mb={"7"}>
-						{params.blog} page not found.
+						{blog} page not found.
 					</Heading>
 					<Flex justify={"start"} align={"center"} gap={"2"}>
 						<Avatar

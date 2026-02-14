@@ -12,7 +12,7 @@ import DarkModeBtn from "./Components/DarkModeBtn";
 
 export default function Navbar() {
 	return (
-		<Box shrink={"1"} mb={"5"} className="initial:hidden xs:flex xs:flex-col">
+		<Box mb={"5"} className="initial:hidden xs:flex xs:flex-col shrink">
 			{/* Header */}
 			<Container size={"3"} py={"5"} className="border-b">
 				<Flex wrap={"wrap"} justify={"between"}>
