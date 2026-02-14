@@ -16,7 +16,7 @@ import { GitHubLogoIcon, Link2Icon } from "@radix-ui/react-icons";
 export interface IAppProps {
   title: string;
   description: string;
-  link?: string; // Assuming Url is a type you have defined elsewhere
+  link?: string;
   github?: string;
   imageAdress?: string;
   size?: string;
@@ -24,25 +24,25 @@ export interface IAppProps {
 }
 export default function App(props: IAppProps) {
   return (
-    <Box>
+    <Box className="card-hover">
       <Card size={"2"} variant="surface">
         {/* Image */}
         <Inset clip="padding-box" side="top" pb="current">
-          <Flex justify={"center"} align={"center"} className="aspect-video">
+          <Flex justify={"center"} align={"center"} className="aspect-video overflow-hidden">
             <Link href={props.link ? props.link : "/"}>
               <Image
                 width={1000}
                 height={1000}
                 src={props.imageAdress || "/blakfy-orginal-icon.jpg"}
                 alt={props.title}
-                className="aspect-video block object-cover bg-gray-50 w-full h-full"
+                className="aspect-video block object-cover w-full h-full transition-transform duration-300 hover:scale-105"
               />
             </Link>
           </Flex>
         </Inset>
 
         {/* Title */}
-        <Flex direction={"column"} gap={"2"} my={"1"} className={props.size}>
+        <Flex direction={"column"} gap={"2"} my={"2"} className={props.size}>
           <Heading as="h4" size={{ initial: "3", xs: "4" }}>
             <Strong>
               {props.title && props.title.length < 20
@@ -51,29 +51,25 @@ export default function App(props: IAppProps) {
             </Strong>
           </Heading>
 
-          <Text as="p" size="3">
-            {props.description && props.description.length < 120
-              ? props.description.substring(0, 120)
-              : (props.description || "No description")
-                  .substring(0, 120)
-                  .concat("...")}
+          <Text as="p" size="2" color="gray" className="line-clamp-3">
+            {props.description || "No description"}
           </Text>
         </Flex>
 
         {/* Stream Link */}
-        <Flex justify={"end"} align={"end"} gap={"5"} my={"3"}>
+        <Flex justify={"end"} align={"center"} gap={"4"} mt={"3"}>
           <Text
             as="p"
             size={"2"}
-            color={props.status === "active" ? "yellow" : "red"}
+            color={props.status === "active" ? "green" : "red"}
           >
             {props.status}
           </Text>
           <Link href={props.github ? props.github : "/"}>
-            <GitHubLogoIcon className="w-auto h-6" />
+            <GitHubLogoIcon className="w-5 h-5 icon-hover" />
           </Link>
           <Link href={props.link ? props.link : "/"}>
-            <Link2Icon className="w-auto h-6" />
+            <Link2Icon className="w-5 h-5 icon-hover" />
           </Link>
         </Flex>
       </Card>

@@ -9,23 +9,23 @@ export default function App() {
 	const { theme } = React.useContext(ThemeContext) as { theme: string };
 
 	return (
-		<Flex justify={"center"} align={"center"} gap={"2"}>
-			<Image
-				src={
-					theme === "light"
-						? "/Logo/Monochrome.webp"
-						: "/Logo/Grayscale.webp"
-				}
-				alt="blakfy"
-				width={40}
-				height={100}
-			/>
-			<Link href="/">
+		<Link href="/" className="link-hover">
+			<Flex justify={"center"} align={"center"} gap={"2"}>
+				<Image
+					src={
+						theme === "light"
+							? "/Logo/Monochrome.webp"
+							: "/Logo/Grayscale.webp"
+					}
+					alt="blakfy"
+					width={40}
+					height={100}
+				/>
 				<Flex direction={"column"}>
-					<Text size={"6"}>tariktunc</Text>
-					<Text size={"1"}>operated by blakfy</Text>
+					<Text size={"6"} weight={"bold"}>tariktunc</Text>
+					<Text size={"1"} color="gray">operated by blakfy</Text>
 				</Flex>
-			</Link>
-		</Flex>
+			</Flex>
+		</Link>
 	);
 }

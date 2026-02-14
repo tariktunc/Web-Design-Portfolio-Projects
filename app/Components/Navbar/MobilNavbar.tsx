@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Theme, Flex, Box, Button, VisuallyHidden } from "@radix-ui/themes";
+import { Flex, Box, Button } from "@radix-ui/themes";
 import { HamburgerMenuIcon, Cross1Icon } from "@radix-ui/react-icons";
 import DynamicNavButtons from "./Components/DynamicNavBtn";
 import Logo from "./Components/Logo";
@@ -8,44 +8,37 @@ import DarkModeToggle from "./Components/DarkModeBtn";
 import AuthButtons from "./Components/AuthBtn";
 
 export default function Home() {
-	const [openMenu, setOpenMenu] = React.useState(true);
+	const [openMenu, setOpenMenu] = React.useState(false);
 	return (
-		<Box height={"100%"} width={"100%"} className="shadow-md xs:hidden">
-			{openMenu && (
-				<Flex justify={"end"} align={"center"} gap={"5"} px={"2"} py={"3"}>
-					<Button onClick={() => setOpenMenu(false)} variant="surface">
-						<HamburgerMenuIcon width={"25"} height={"25"} /> Menu
-					</Button>
-				</Flex>
-			)}
-			{!openMenu && (
-				<Box
-					px={"2"}
-					py={"3"}
-					width={"100%"}
-					className=" bg-white dark:bg-slate-950"
+		<Box height={"100%"} width={"100%"} className="shadow-sm xs:hidden">
+			<Flex justify={"between"} align={"center"} px={"3"} py={"3"}>
+				<Logo />
+				<Button
+					onClick={() => setOpenMenu(!openMenu)}
+					variant="surface"
 				>
-					<Flex justify={"end"} align={"center"} gap={"5"}>
-						<Button onClick={() => setOpenMenu(true)} variant="surface">
-							<Cross1Icon width={"25"} height={"25"} /> Menu
-						</Button>
-					</Flex>
-
-					<Flex direction={"column"} align={"center"} gap={"5"} pr={"4"}>
+					{openMenu ? (
+						<Cross1Icon width={"20"} height={"20"} />
+					) : (
+						<HamburgerMenuIcon width={"20"} height={"20"} />
+					)}
+					Menu
+				</Button>
+			</Flex>
+			{openMenu && (
+				<Box px={"3"} pb={"4"} className="mobile-menu-enter">
+					<Flex direction={"column"} align={"center"} gap={"4"}>
 						<DynamicNavButtons />
 					</Flex>
 
 					<Flex
-						direction={"column"}
 						justify={"center"}
-						py={"5"}
+						py={"4"}
 						align={"center"}
-						gap={"5"}
-						pr={"4"}
+						gap={"4"}
 					>
 						<DarkModeToggle />
 						<AuthButtons />
-						<Logo />
 					</Flex>
 				</Box>
 			)}

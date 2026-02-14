@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
-import { Table, Link } from "@radix-ui/themes";
+import { Table, Link, Heading, Box } from "@radix-ui/themes";
+import { ExternalLinkIcon } from "@radix-ui/react-icons";
 
 export interface IAppProps {}
 
@@ -34,24 +35,29 @@ export default function App(props: IAppProps) {
   }, []);
 
   return (
-    <Table.Root>
-      <Table.Body>
-        {loading &&
-          weBlogData.map((weBlogData) => (
-            <Table.Row key={weBlogData.title}>
-              <Table.RowHeaderCell>
-                <Link target="_blank" href={weBlogData.link}>
-                  {weBlogData.date}
-                </Link>
-              </Table.RowHeaderCell>
-              <Table.Cell>
-                <Link target="_blank" href={weBlogData.link}>
-                  {weBlogData.title}
-                </Link>
-              </Table.Cell>
-            </Table.Row>
-          ))}
-      </Table.Body>
-    </Table.Root>
+    <Box>
+      <Heading as="h2" size={{ initial: "4", xs: "5" }} mb={"4"}>
+        Recent Blog Posts
+      </Heading>
+      <Table.Root variant="surface">
+        <Table.Body>
+          {loading &&
+            weBlogData.map((item) => (
+              <Table.Row key={item.title} className="row-hover">
+                <Table.RowHeaderCell width={"120px"}>
+                  <Link target="_blank" href={item.link} color="gray">
+                    {item.date}
+                  </Link>
+                </Table.RowHeaderCell>
+                <Table.Cell>
+                  <Link target="_blank" href={item.link}>
+                    {item.title} <ExternalLinkIcon className="inline-block ml-1" />
+                  </Link>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+        </Table.Body>
+      </Table.Root>
+    </Box>
   );
 }

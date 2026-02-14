@@ -2,17 +2,32 @@
 // React
 import React from "react";
 import "./globals.css";
-import { ThemeProvider } from "@/utils/context";
+import { ThemeProvider, useTheme } from "@/utils/context";
 // Redux
 import { Provider } from "react-redux";
 import store from "@/app/store";
 // Clerk
 import { ClerkProvider } from "@clerk/nextjs";
-import { enUS, trTR } from "@clerk/localizations"; // clerk dil seçeneği
+import { enUS } from "@clerk/localizations";
 // Radix UI
-import "@radix-ui/themes/styles.css"; // Radix UI theme
+import "@radix-ui/themes/styles.css";
 import "./theme-config.css";
-import { Theme } from "@radix-ui/themes"; // Radix UI theme
+import { Theme } from "@radix-ui/themes";
+
+function RadixThemeWrapper({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+  return (
+    <Theme
+      appearance={theme === "dark" ? "dark" : "light"}
+      accentColor="orange"
+      grayColor="slate"
+      panelBackground="solid"
+      radius="medium"
+    >
+      {children}
+    </Theme>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -22,7 +37,7 @@ export default function RootLayout({
   return (
     <Provider store={store}>
       <html lang="en" suppressHydrationWarning>
-        <body className={"light "}>
+        <body>
           <ClerkProvider
             appearance={{
               variables: {
@@ -32,15 +47,7 @@ export default function RootLayout({
             localization={enUS}
           >
             <ThemeProvider>
-              <Theme
-                appearance="light"
-                accentColor="orange"
-                grayColor="slate"
-                panelBackground="solid"
-                radius="small"
-              >
-                {children}
-              </Theme>
+              <RadixThemeWrapper>{children}</RadixThemeWrapper>
             </ThemeProvider>
           </ClerkProvider>
         </body>

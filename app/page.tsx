@@ -6,10 +6,8 @@ import {
   Grid,
   Text,
   Section,
-  Box,
 } from "@radix-ui/themes";
 import Avatar from "@/app/Components/WhoAmI/Avatar";
-// next
 // Components
 import Navbar from "@/app/Components/Navbar/Navbar";
 import Footer from "@/app/Components/Footer/Footer";
@@ -17,12 +15,12 @@ import BlakfyProject from "@/app/(Pages)/laboratory/Components/BlakfyProject";
 import ProjectsContainer from "@/app/(Pages)/laboratory/Components/GithubProjectData";
 import SocialMedia from "@/app/Components/SocialMedia/SocialMedia";
 import RecentBlogPosts from "@/app/Components/RecentBlogPosts/RecentBlogPosts";
-// ------------------------------
+
 export default function Home() {
   return (
     <>
       <Navbar />
-      <Container size={"3"} style={{ paddingLeft: "5%", paddingRight: "5%" }}>
+      <Container size={"3"} px={{ initial: "4", xs: "5" }}>
         <Section size={"1"}>
           <Avatar />
           <Flex
@@ -31,16 +29,17 @@ export default function Home() {
             justify={"center"}
             gap={"1"}
             mt={"3"}
-            className="border-b-2 border-gray-300 pb-5 w-full"
+            pb={"5"}
+            className="border-b w-full"
           >
-            <Text as="p" size={"8"}>
+            <Text as="p" size={{ initial: "6", xs: "8" }} weight={"bold"}>
               Tarık Tunç
             </Text>
-            <Text as="p" size={"5"}>
+            <Text as="p" size={{ initial: "3", xs: "5" }} color="gray">
               Full Stack Developer
             </Text>
-            <Text as="p" size={"1"}>
-              I still fix myself every day 🥷🏽
+            <Text as="p" size={"2"} color="gray">
+              I still fix myself every day
             </Text>
           </Flex>
         </Section>
@@ -48,10 +47,10 @@ export default function Home() {
           <RecentBlogPosts />
         </Section>
         <Section size={"1"}>
-          <Heading as="h1" size={{ initial: "5", xs: "8" }} m={"5"}>
+          <Heading as="h2" size={{ initial: "5", xs: "7" }} mb={"3"}>
             Github Projects
           </Heading>
-          <Text as="p" size={{ initial: "2", xs: "4" }} m={"5"}>
+          <Text as="p" size={{ initial: "2", xs: "3" }} color="gray" mb={"5"}>
             Kişisel olarak geliştirdiğim ve/veya geliştirmekte olduğum
             projelerim.
           </Text>
@@ -60,14 +59,14 @@ export default function Home() {
           </Grid>
         </Section>
         <Section size={"1"}>
-          <Heading as="h1" size={{ initial: "5", xs: "8" }} m={"5"}>
+          <Heading as="h2" size={{ initial: "5", xs: "7" }} mb={"3"}>
             Blakfy.com Projects
           </Heading>
-          <Text as="p" size={{ initial: "2", xs: "4" }} m={"5"}>
-            Blakfy.com üzerin de geliştirdiğimiz, kobi&apos;lerin dijitale
+          <Text as="p" size={{ initial: "2", xs: "3" }} color="gray" mb={"5"}>
+            Blakfy.com üzerinde geliştirdiğimiz, kobi&apos;lerin dijitale
             dönüşümünü sağladığımız projeler.
           </Text>
-          <Grid columns={{ initial: "1", sm: "4" }} gap={"5"}>
+          <Grid columns={{ initial: "1", sm: "3" }} gap={"5"}>
             <BlakfyProject />
           </Grid>
         </Section>

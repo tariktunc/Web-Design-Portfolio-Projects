@@ -1,7 +1,15 @@
+import { Container, Flex, Text } from "@radix-ui/themes";
+
 export default function Home() {
   return (
-    <footer className="dark:bg-orange-900 dark:text-white bg-orange-100 text-center py-1">
-      Copyright © Tarik Tunç
+    <footer className="border-t mt-8">
+      <Container size={"3"}>
+        <Flex justify={"center"} align={"center"} py={"5"}>
+          <Text as="p" size={"2"} color="gray">
+            &copy; {new Date().getFullYear()} Tarik Tun&ccedil;. All rights reserved.
+          </Text>
+        </Flex>
+      </Container>
     </footer>
   );
 }

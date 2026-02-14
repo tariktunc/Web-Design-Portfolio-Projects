@@ -12,24 +12,23 @@ import DarkModeBtn from "./Components/DarkModeBtn";
 
 export default function Navbar() {
 	return (
-		<Box mb={"5"} className="initial:hidden xs:flex xs:flex-col shrink">
+		<Box mb={"5"} className="initial:hidden xs:flex xs:flex-col shrink shadow-sm">
 			{/* Header */}
-			<Container size={"3"} py={"5"} className="border-b">
-				<Flex wrap={"wrap"} justify={"between"}>
+			<Container size={"3"} py={"4"} px={"4"}>
+				<Flex wrap={"wrap"} justify={"between"} align={"center"}>
 					{/* Search */}
 					<SearchBtn />
 					{/* LOGO */}
-
 					<Logo />
 					{/* USER */}
-					<Flex align={"center"} gap={"5"}>
+					<Flex align={"center"} gap={"4"}>
 						<AuthBtn />
 						<DarkModeBtn />
 					</Flex>
 				</Flex>
 			</Container>
 			{/* NAVIGATION */}
-			<Container size={"3"} py={"5"} className="border-b">
+			<Container size={"3"} py={"3"} className="border-t border-b">
 				<Flex wrap={"wrap"} justify={"center"} gap={"5"} height={"100%"}>
 					<DynamicNavBtn />
 				</Flex>

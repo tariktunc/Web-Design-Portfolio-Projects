@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { Flex, Box, Container, Text, Heading } from "@radix-ui/themes";
+import { Flex, Text } from "@radix-ui/themes";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -54,35 +54,34 @@ export default function App(props: IAppProps) {
     },
   ];
   return (
-    <Flex wrap={"wrap"} justify={"center"} my={"5"}>
-      {socialMedia &&
-        socialMedia.map((social, index) => (
+    <Flex wrap={"wrap"} justify={"center"} gap={"4"} my={"6"}>
+      {socialMedia.map((social, index) => (
+        <Link
+          href={social.link}
+          target="_blank"
+          key={index}
+          className="social-hover"
+        >
           <Flex
-            m={{ initial: "2", xs: "3" }}
             align={"center"}
-            key={index}
-            width={"max-content"}
-            height={"max-content"}
             gap={"2"}
-            className="cursor-pointer"
+            px={"3"}
+            py={"2"}
+            className="rounded-md"
           >
             <Image
               src={social.ImageUrl}
               alt={social.name}
               width={100}
               height={100}
-              className="initial:w-5 initial:h-5 xs:w-10 xs:h-10"
+              className="initial:w-6 initial:h-6 xs:w-8 xs:h-8 rounded-sm"
             />
-            <Link
-              href={social.link ? social.link : "https://www.google.com"}
-              target="_blank"
-            >
-              <Text as="p" size={"2"}>
-                {social.name}
-              </Text>
-            </Link>
+            <Text as="p" size={"2"}>
+              {social.name}
+            </Text>
           </Flex>
-        ))}
+        </Link>
+      ))}
     </Flex>
   );
 }

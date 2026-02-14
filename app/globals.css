@@ -2,11 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+	scroll-behavior: smooth;
+}
+
 .dark,
 .light {
-	transition: all;
-	transition-duration: 500ms;
+	transition: background-color 400ms ease, color 400ms ease,
+		border-color 400ms ease;
 }
+
+/* Card hover utility */
+.card-hover {
+	transition: transform 250ms ease, box-shadow 250ms ease;
+}
+.card-hover:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Link hover utility */
+.link-hover {
+	transition: opacity 200ms ease;
+}
+.link-hover:hover {
+	opacity: 0.7;
+}
+
+/* Icon hover utility */
+.icon-hover {
+	transition: transform 200ms ease, color 200ms ease;
+}
+.icon-hover:hover {
+	transform: scale(1.15);
+}
+
+/* Social item hover */
+.social-hover {
+	transition: transform 200ms ease, opacity 200ms ease;
+}
+.social-hover:hover {
+	transform: translateY(-2px);
+	opacity: 0.8;
+}
+
+/* Nav link active indicator */
+.nav-active {
+	position: relative;
+}
+.nav-active::after {
+	content: "";
+	position: absolute;
+	bottom: -2px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 60%;
+	height: 2px;
+	background-color: var(--accent-9);
+	border-radius: 1px;
+}
+
+/* Mobile menu animation */
+.mobile-menu-enter {
+	animation: slideDown 250ms ease forwards;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Table row hover */
+.row-hover {
+	transition: background-color 150ms ease;
+}
+.row-hover:hover {
+	background-color: var(--gray-a3);
+}
+
+/* Loading spinner */
 .loading {
 	width: 100vw;
 	height: 100vh;
@@ -14,7 +94,7 @@
 	color: white;
 }
 .loader {
-	width: 300px;
+	width: min(300px, 80vw);
 	height: 400px;
 	display: block;
 	margin: auto;
