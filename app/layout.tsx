@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import "@radix-ui/themes/styles.css";
 import "./theme-config.css";
 import Providers from "./Providers";
-import CursorFollower from "./Components/CursorFollower";
+import MouseGradient from "./Components/MouseGradient/MouseGradient";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tariktunc.vercel.app"),
@@ -52,13 +58,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans`} suppressHydrationWarning>
         <Providers>
           <a href="#main-content" className="skip-to-content">
             Skip to content
           </a>
-          <CursorFollower />
+          <MouseGradient />
           {children}
         </Providers>
       </body>

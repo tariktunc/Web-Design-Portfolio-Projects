@@ -26,7 +26,8 @@
       "WebFetch(domain:sive.rs)",
       "WebFetch(domain:worrydream.com)",
       "WebFetch(domain:gatesnotes.com)",
-      "Bash(node --version)"
+      "Bash(node --version)",
+      "Bash(gh api repos/tariktunc/Web-Design-Portfolio-Projects/deployments --jq '.[0] | {sha: .sha, environment: .environment, created_at: .created_at, description: .description}')"
     ]
   }
 }

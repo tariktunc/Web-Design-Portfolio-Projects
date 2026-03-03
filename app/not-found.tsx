@@ -24,7 +24,7 @@ export default function NotFound() {
                 We could not find the page you were looking for.
               </Text>
               <Link href="/">
-                <Text size="3" color="orange">
+                <Text size="3" color="teal">
                   Go back to the home page
                 </Text>
               </Link>
