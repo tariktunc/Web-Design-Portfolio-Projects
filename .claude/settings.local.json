@@ -8,7 +8,25 @@
       "WebFetch(domain:www.npmjs.com)",
       "Bash(npm view:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "WebFetch(domain:www.searchbloom.com)",
+      "WebFetch(domain:www.reidhoffman.org)",
+      "WebFetch(domain:nav.al)",
+      "WebFetch(domain:www.gatesnotes.com)",
+      "WebFetch(domain:www.bezosexpeditions.com)",
+      "WebFetch(domain:awesometechstack.com)",
+      "WebFetch(domain:brittanychiang.com)",
+      "WebFetch(domain:theinklusive.com)",
+      "WebFetch(domain:sahillavingia.com)",
+      "WebFetch(domain:wpminds.com)",
+      "WebFetch(domain:rauchg.com)",
+      "WebFetch(domain:garyvaynerchuk.com)",
+      "WebFetch(domain:vanschneider.com)",
+      "WebFetch(domain:jessicahische.is)",
+      "WebFetch(domain:sive.rs)",
+      "WebFetch(domain:worrydream.com)",
+      "WebFetch(domain:gatesnotes.com)",
+      "Bash(node --version)"
     ]
   }
 }
