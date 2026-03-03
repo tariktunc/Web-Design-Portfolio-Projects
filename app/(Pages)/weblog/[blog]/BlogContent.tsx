@@ -13,9 +13,7 @@ import { useRouter } from "next/navigation";
 export default function BlogContent({ blog }: { blog: string }) {
   const router = useRouter();
   React.useEffect(() => {
-    window.onload = () => {
-      router.push("/weblog");
-    };
+    router.push("/weblog");
   }, [router]);
 
   return (
