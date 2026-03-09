@@ -18,39 +18,40 @@ export default function AboutSection() {
       <div className="space-y-5 text-slate-custom leading-relaxed text-base sm:text-lg">
         <div className="about-reveal">
           <p>
-            Merhaba! Ben{" "}
+            Kariyerine{" "}
+            <span className="font-medium text-lightest-slate">siber güvenlik</span>{" "}
+            alanında başlayan{" "}
             <span className="font-medium text-lightest-slate">Tarık Tunç</span>,
-            Türkiye merkezli tutkulu bir yazılım geliştiricisiyim. Ürün odaklı
-            problemleri çözme konusundaki heyecanımla, sürekli öğrenmeye ve
-            bilgimi meslektaşlarımla paylaşmaya derinden bağlıyım.
+            aktif ve pasif saldırı vektörlerinin analizi, savunma sistemleri
+            geliştirme ve penetrasyon testi süreçlerinde deneyim kazanmıştır.
+            Kali Linux, Metasploit, Burp Suite ve Wireshark gibi araçlarla
+            güvenlik altyapıları üzerinde çalışmalar yürütmüştür.
           </p>
         </div>
 
         <div className="about-reveal">
           <p>
-            Şu anda{" "}
-            <a
-              href="https://blakfy.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-lightest-slate hover:text-green transition-colors inline-block border-b border-green/0 hover:border-green/50"
-              aria-label="Blakfy (yeni sekmede açılır)"
-            >
-              Blakfy
-            </a>
-            &apos;de dijital ürünler geliştiriyorum. Next.js, React ve
-            TypeScript ile modern web deneyimleri oluşturuyorum. E-ticaret,
-            turizm, güzellik ve profesyonel hizmetler alanlarında 9&apos;dan
-            fazla müşteri projesi teslim ettim.
+            Full Stack Developer olarak{" "}
+            <span className="font-medium text-lightest-slate">
+              Next.js, React, TypeScript ve Node.js
+            </span>{" "}
+            teknolojileriyle e-ticaret altyapıları, SaaS platformları ve kurumsal
+            web uygulamaları geliştirmektedir. E-ticaret, turizm, güzellik ve
+            profesyonel hizmetler sektörlerinde 9&apos;dan fazla müşteri projesi
+            teslim etmiş; satış oranlarında{" "}
+            <span className="font-medium text-lightest-slate">%200–%300</span>{" "}
+            seviyelerinde artış sağlanmıştır.
           </p>
         </div>
 
         <div className="about-reveal">
           <p>
-            Bu günlerde asıl odak noktam erişilebilir, insan odaklı web
-            uygulamaları geliştirmek. Tasarım ve mühendisliğin kesiştiği noktada
-            çalışmaktan en çok keyif alıyorum — düşünceli etkileşimlerle
-            piksel-mükemmel arayüzler yaratmak.
+            Yapay zekâ destekli otonom reklamcılık sistemleri, SEO mühendisliği
+            araçları ve Google Ads veri madenciliği platformları geliştiren Tunç,
+            kendi AI altyapısını kurarak reklam stratejisi optimizasyonu, bütçe
+            yönetimi ve dönüşüm oranı analizi süreçlerini otomatize etmektedir.
+            Sosyal medya mühendisliği ve içerik stratejisi alanlarında da aktif
+            çalışmalar sürdürmektedir.
           </p>
         </div>
       </div>
