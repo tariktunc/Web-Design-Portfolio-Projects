@@ -211,9 +211,9 @@ export default function Hero() {
         />
       </div>
 
-      {/* Center grid lines — Apple style subtle grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]" aria-hidden="true">
-        <div className="h-full w-full" style={{
+      {/* Center grid lines — animated diagonal drift */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04] overflow-hidden" aria-hidden="true">
+        <div className="absolute -inset-20 animate-grid-drift" style={{
           backgroundImage: `
             linear-gradient(rgba(100, 255, 218, 0.3) 1px, transparent 1px),
             linear-gradient(90deg, rgba(100, 255, 218, 0.3) 1px, transparent 1px)

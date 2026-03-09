@@ -368,6 +368,35 @@ body {
 	animation: lineExpand 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* ===== Grid Drift Animation (Hero background) ===== */
+@keyframes gridDrift {
+	0% { transform: translate(0, 0); }
+	100% { transform: translate(80px, 80px); }
+}
+.animate-grid-drift {
+	animation: gridDrift 20s linear infinite;
+}
+
+/* ===== Animated Background Keyframes ===== */
+@keyframes bgFloat {
+	0%, 100% { transform: translateY(0) translateX(0); }
+	25% { transform: translateY(-20px) translateX(10px); }
+	50% { transform: translateY(-8px) translateX(-15px); }
+	75% { transform: translateY(-25px) translateX(5px); }
+}
+@keyframes bgDrift {
+	0% { transform: translateX(-80px); }
+	100% { transform: translateX(80px); }
+}
+@keyframes bgRotate {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+@keyframes bgPulse {
+	0%, 100% { transform: scale(1); opacity: 0.04; }
+	50% { transform: scale(1.3); opacity: 0.08; }
+}
+
 /* ===== Floating Animation ===== */
 .animate-float {
 	animation: float 3s ease-in-out infinite;
@@ -704,5 +733,13 @@ body {
 	.skill-label {
 		opacity: 1 !important;
 		transform: none !important;
+	}
+
+	.bg-anim {
+		animation: none !important;
+	}
+
+	.animate-grid-drift {
+		animation: none !important;
 	}
 }

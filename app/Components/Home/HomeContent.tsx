@@ -6,7 +6,6 @@ import AboutSection from "@/app/Components/Sections/AboutSection";
 import ExperienceSection from "@/app/Components/Sections/ExperienceSection";
 import ProjectsSection from "@/app/Components/Sections/ProjectsSection";
 import WritingSection from "@/app/Components/Sections/WritingSection";
-import ScrollNav from "@/app/Components/Navigation/ScrollNav";
 
 /* ─────────────────────────────────────────────
    HomeContent — animejs.com tarzı scroll-driven anasayfa
@@ -17,11 +16,6 @@ import ScrollNav from "@/app/Components/Navigation/ScrollNav";
 export default function HomeContent() {
   return (
     <>
-      {/* Floating nav — sticky left side on desktop, inside container */}
-      <div className="hidden md:block fixed top-1/2 -translate-y-1/2 z-50 left-[max(2rem,calc((100vw-1600px)/2+2rem))]">
-        <ScrollNav className="" />
-      </div>
-
       {/* ── Section 1: Hero Intro (pinned) ── */}
       <ScrollSection id="hero" chapter="intro" label="HERO" spacers={1}>
         <Hero />

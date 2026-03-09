@@ -1,196 +1,252 @@
 "use client";
-import { useRef, useEffect, useCallback } from "react";
-import { waapi } from "animejs";
+import { useRef, useEffect } from "react";
 
 /* ─────────────────────────────────────────────
-   SkillRings — animejs.com toolbox section karşılığı.
-   progress prop'u ScrollSection'dan gelir (0-1).
+   SkillRings — Gezegen Sistemi (Solar System)
 
-   Özellikler:
-   - Scroll ile dönen 3D halkalar (daha büyük, daha parlak)
-   - Etiketler scroll ile büyüyüp küçülür (scale + opacity + slide)
-   - Hareketli arka plan çizgileri
-   - Başlık ortada üstte, scroll ile fade in/out
+   - Eliptik yörüngeler (SVG ellipse)
+   - Gezegen noktaları + ok (arrow) + etiketler
+   - Scroll ile dönüş (720° = 2 tam tur)
+   - Sürekli otonom dönüş (10°/s)
+   - Derinlik simülasyonu (arkadaki gezegenler soluk)
    ───────────────────────────────────────────── */
 
-const skillsLeft = [
-  { name: "TypeScript", color: "var(--green)" },
-  { name: "React", color: "#61dafb" },
-  { name: "Next.js", color: "var(--lightest-slate)" },
-  { name: "Node.js", color: "#68a063" },
-  { name: "MongoDB", color: "#4db33d" },
+const D2R = Math.PI / 180;
+
+interface Skill {
+  readonly name: string;
+  readonly color: string;
+  readonly angle: number;
+}
+
+interface Orbit {
+  readonly a: number;
+  readonly b: number;
+  readonly stroke: string;
+  readonly width: number;
+  readonly speed: number;
+  readonly dir: 1 | -1;
+  readonly skills: readonly Skill[];
+}
+
+const ORBITS: readonly Orbit[] = [
+  {
+    a: 120, b: 48,
+    stroke: "rgba(100,255,218,0.4)", width: 1.8,
+    speed: 1, dir: 1,
+    skills: [
+      { name: "TypeScript", color: "#3178c6", angle: 0 },
+      { name: "React", color: "#61dafb", angle: 120 },
+      { name: "Next.js", color: "#ccd6f6", angle: 240 },
+    ],
+  },
+  {
+    a: 215, b: 86,
+    stroke: "rgba(97,218,251,0.28)", width: 1.3,
+    speed: 0.7, dir: -1,
+    skills: [
+      { name: "Node.js", color: "#68a063", angle: 20 },
+      { name: "Express", color: "#a8b2d1", angle: 110 },
+      { name: "MongoDB", color: "#4db33d", angle: 200 },
+      { name: "Redux", color: "#764abc", angle: 290 },
+    ],
+  },
+  {
+    a: 330, b: 132,
+    stroke: "rgba(100,255,218,0.18)", width: 1,
+    speed: 0.45, dir: 1,
+    skills: [
+      { name: "Tailwind", color: "#38bdf8", angle: 10 },
+      { name: "Git", color: "#f05032", angle: 82 },
+      { name: "REST API", color: "#64ffda", angle: 154 },
+      { name: "Python", color: "#3776ab", angle: 226 },
+      { name: "CSS", color: "#264de4", angle: 298 },
+    ],
+  },
 ];
 
-const skillsRight = [
-  { name: "Tailwind", color: "#38bdf8" },
-  { name: "Redux", color: "#764abc" },
-  { name: "Express", color: "var(--slate)" },
-  { name: "Git", color: "#f05032" },
-  { name: "REST API", color: "var(--green)" },
-  { name: "CSS", color: "#264de4" },
-];
+const ALL_SKILLS = ORBITS.flatMap((o) => o.skills);
 
-interface SkillRingsProps {
+interface Props {
   progress: number;
 }
 
-export default function SkillRings({ progress }: SkillRingsProps) {
-  const ringsRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const labelsLeftRef = useRef<HTMLDivElement>(null);
-  const labelsRightRef = useRef<HTMLDivElement>(null);
-  const bgLinesRef = useRef<SVGSVGElement>(null);
+export default function SkillRings({ progress }: Props) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const bgRef = useRef<SVGSVGElement>(null);
+  const autoRef = useRef(0);
+  const pRef = useRef(0);
+  const frameRef = useRef(0);
 
-  // Continuous background line animation (WAAPI 60fps)
+  pRef.current = progress;
+
   useEffect(() => {
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) return;
+    const svg = svgRef.current;
+    if (!svg) return;
 
-    const anims: ReturnType<typeof waapi.animate>[] = [];
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-    // Animate background SVG lines
-    if (bgLinesRef.current) {
-      const lines = bgLinesRef.current.querySelectorAll(".bg-line") as NodeListOf<SVGElement>;
-      lines.forEach((line, i) => {
-        anims.push(
-          waapi.animate(line, {
-            opacity: [0.03 + i * 0.01, 0.08 + i * 0.02, 0.03 + i * 0.01],
-            duration: 3000 + i * 1000,
-            iterations: Infinity,
-            easing: "ease-in-out",
-          })
-        );
+    let prev = performance.now();
+
+    const frame = (now: number) => {
+      const dt = Math.min((now - prev) / 1000, 0.1);
+      prev = now;
+
+      if (!reduced) autoRef.current += dt * 10;
+
+      const p = pRef.current;
+      const scrollDeg = p * 720;
+      const vis = Math.min(1, p * 3.5);
+
+      /* ── Orbit paths ── */
+      ORBITS.forEach((orbit, oi) => {
+        const oEl = svg.querySelector(`[data-o="${oi}"]`) as SVGElement | null;
+        if (oEl) oEl.style.opacity = String((vis * 0.7).toFixed(2));
       });
-    }
 
-    // Animate ring glow pulse
-    if (ringsRef.current) {
-      const rings = ringsRef.current.querySelectorAll(".ring") as NodeListOf<HTMLElement>;
-      rings.forEach((ring, i) => {
-        anims.push(
-          waapi.animate(ring, {
-            opacity: [0.15 + i * 0.05, 0.35 + i * 0.08, 0.15 + i * 0.05],
-            duration: 3500 + i * 1200,
-            iterations: Infinity,
-            easing: "ease-in-out",
-          })
-        );
+      /* ── Planets ── */
+      ORBITS.forEach((orbit, oi) => {
+        orbit.skills.forEach((skill, si) => {
+          const g = svg.querySelector(
+            `[data-s="${oi}-${si}"]`
+          ) as SVGGElement | null;
+          if (!g) return;
+
+          const deg =
+            skill.angle +
+            (autoRef.current + scrollDeg) * orbit.speed * orbit.dir;
+          const rad = deg * D2R;
+          const x = orbit.a * Math.cos(rad);
+          const y = orbit.b * Math.sin(rad);
+
+          // Depth: sin → 0 = front (bright), 1 = back (dim)
+          const depth = (Math.sin(rad) + 1) / 2;
+          const dOp = 0.25 + 0.75 * (1 - depth);
+          const op = dOp * vis;
+          const sc = 0.6 + 0.4 * (1 - depth);
+
+          g.setAttribute(
+            "transform",
+            `translate(${x.toFixed(1)},${y.toFixed(1)})`
+          );
+          g.style.opacity = op.toFixed(2);
+
+          // Planet dot + glow scale
+          const dot = g.querySelector(".dot") as SVGCircleElement | null;
+          const glow = g.querySelector(".glow") as SVGCircleElement | null;
+          if (dot) dot.setAttribute("r", (5.5 * sc).toFixed(1));
+          if (glow) glow.setAttribute("r", (14 * sc).toFixed(1));
+
+          // Arrow direction
+          const right = x >= 0;
+          const d = right ? 1 : -1;
+          const aStart = 9 * d;
+          const aEnd = 50 * d;
+          const tip = (50 + 7) * d;
+
+          const line = g.querySelector(".aline") as SVGLineElement | null;
+          const head = g.querySelector(".ahead") as SVGPolygonElement | null;
+          const txt = g.querySelector(".stxt") as SVGTextElement | null;
+
+          if (line) {
+            line.setAttribute("x1", String(aStart));
+            line.setAttribute("x2", String(aEnd));
+          }
+          if (head) {
+            if (right) {
+              head.setAttribute(
+                "points",
+                `${aEnd},-3.5 ${aEnd},3.5 ${tip},0`
+              );
+            } else {
+              head.setAttribute(
+                "points",
+                `${aEnd},-3.5 ${aEnd},3.5 ${tip},0`
+              );
+            }
+          }
+          if (txt) {
+            txt.setAttribute("x", String((50 + 13) * d));
+            txt.setAttribute("text-anchor", right ? "start" : "end");
+          }
+        });
       });
-    }
 
-    return () => {
-      anims.forEach((a) => a?.pause());
+      /* ── Center glow ── */
+      svg.querySelectorAll(".cglow").forEach((el) => {
+        (el as SVGElement).style.opacity = vis.toFixed(2);
+      });
+
+      /* ── Heading ── */
+      if (headRef.current) {
+        const fi = Math.min(1, p / 0.08);
+        const fo = Math.max(0, 1 - (p - 0.85) * 6);
+        headRef.current.style.opacity = String(Math.min(fi, fo).toFixed(2));
+        const ty = (1 - Math.min(1, p / 0.15)) * 30;
+        headRef.current.style.transform = `translate(-50%, ${ty}px)`;
+      }
+
+      /* ── Background lines scroll parallax ── */
+      if (bgRef.current) {
+        const lines = bgRef.current.querySelectorAll(
+          ".bgl"
+        ) as NodeListOf<SVGElement>;
+        lines.forEach((l, i) => {
+          const offset = p * (80 + i * 40) * (i % 2 === 0 ? 1 : -1);
+          l.style.transform = `translateY(${offset}px)`;
+        });
+      }
+
+      frameRef.current = requestAnimationFrame(frame);
     };
+
+    frameRef.current = requestAnimationFrame(frame);
+
+    return () => cancelAnimationFrame(frameRef.current);
   }, []);
-
-  // Update labels: opacity + scale + slide based on progress
-  const updateLabels = useCallback((container: HTMLDivElement | null, p: number, side: "left" | "right") => {
-    if (!container) return;
-    const labels = container.querySelectorAll(".skill-label") as NodeListOf<HTMLElement>;
-    const count = labels.length;
-    if (!count) return;
-
-    labels.forEach((label, i) => {
-      // Each label has its own activation window
-      const start = (i / count) * 0.45 + 0.08;
-      const end = start + 0.15;
-      const labelProgress = Math.min(1, Math.max(0, (p - start) / (end - start)));
-
-      // Scale: 0.5 → 1.0
-      const scale = 0.5 + labelProgress * 0.5;
-      // Slide: ±60px → 0
-      const slideX = (1 - labelProgress) * 60 * (side === "left" ? -1 : 1);
-      // Opacity: 0 → 1
-      label.style.opacity = String(labelProgress);
-      label.style.transform = `translateX(${slideX}px) scale(${scale})`;
-    });
-  }, []);
-
-  // Scroll-driven: rotate rings + show labels + fade text + move bg lines
-  useEffect(() => {
-    if (!ringsRef.current) return;
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) {
-      if (textRef.current) textRef.current.style.opacity = "1";
-      return;
-    }
-
-    // Rotate rings based on scroll
-    const rings = ringsRef.current.querySelectorAll(".ring") as NodeListOf<HTMLElement>;
-    rings.forEach((ring, i) => {
-      const speed = 360 + i * 220;
-      const xTilt = 60 - i * 8;
-      const zRotation = progress * speed * (i % 2 === 0 ? 1 : -1);
-      const ringScale = 0.8 + progress * 0.4; // Rings grow as you scroll
-      ring.style.transform = `rotateX(${xTilt}deg) rotateZ(${zRotation}deg) scale(${ringScale})`;
-    });
-
-    // Update labels
-    updateLabels(labelsLeftRef.current, progress, "left");
-    updateLabels(labelsRightRef.current, progress, "right");
-
-    // Heading fade
-    if (textRef.current) {
-      const fadeIn = Math.min(1, progress / 0.08);
-      const fadeOut = Math.max(0, 1 - (progress - 0.85) * 6);
-      textRef.current.style.opacity = String(Math.min(fadeIn, fadeOut));
-      // Slight upward movement
-      const translateY = (1 - Math.min(1, progress / 0.15)) * 30;
-      textRef.current.style.transform = `translate(-50%, ${translateY}px)`;
-    }
-
-    // Move background lines based on scroll
-    if (bgLinesRef.current) {
-      const lines = bgLinesRef.current.querySelectorAll(".bg-line") as NodeListOf<SVGElement>;
-      lines.forEach((line, i) => {
-        const offset = progress * (80 + i * 40) * (i % 2 === 0 ? 1 : -1);
-        line.style.transform = `translateY(${offset}px)`;
-      });
-    }
-  }, [progress, updateLabels]);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-      {/* Animated background grid lines */}
+      {/* ── Background flowing lines ── */}
       <svg
-        ref={bgLinesRef}
+        ref={bgRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
         viewBox="0 0 1400 900"
         fill="none"
-        aria-hidden="true"
         preserveAspectRatio="none"
+        aria-hidden="true"
       >
-        {/* Horizontal flowing lines */}
-        <path className="bg-line" d="M0 200 Q350 150 700 200 T1400 180" stroke="var(--green)" strokeWidth="0.8" opacity="0.04" />
-        <path className="bg-line" d="M0 400 Q400 350 800 420 T1400 380" stroke="var(--green)" strokeWidth="0.6" opacity="0.03" />
-        <path className="bg-line" d="M0 600 Q300 650 600 580 T1400 620" stroke="var(--green)" strokeWidth="0.8" opacity="0.04" />
-        <path className="bg-line" d="M0 750 Q500 700 900 770 T1400 730" stroke="#61dafb" strokeWidth="0.5" opacity="0.03" />
-        {/* Vertical flowing lines */}
-        <path className="bg-line" d="M300 0 Q280 450 320 900" stroke="var(--green)" strokeWidth="0.5" opacity="0.03" />
-        <path className="bg-line" d="M700 0 Q720 400 680 900" stroke="var(--green)" strokeWidth="0.6" opacity="0.04" />
-        <path className="bg-line" d="M1100 0 Q1080 500 1120 900" stroke="#61dafb" strokeWidth="0.5" opacity="0.03" />
-        {/* Diagonal accents */}
-        <path className="bg-line" d="M0 0 Q700 450 1400 900" stroke="var(--green)" strokeWidth="0.4" opacity="0.02" />
-        <path className="bg-line" d="M1400 0 Q700 450 0 900" stroke="var(--green)" strokeWidth="0.4" opacity="0.02" />
+        <path className="bgl" d="M0 200 Q350 150 700 200 T1400 180" stroke="var(--green)" strokeWidth="0.8" opacity="0.04" />
+        <path className="bgl" d="M0 400 Q400 350 800 420 T1400 380" stroke="var(--green)" strokeWidth="0.6" opacity="0.03" />
+        <path className="bgl" d="M0 600 Q300 650 600 580 T1400 620" stroke="var(--green)" strokeWidth="0.8" opacity="0.04" />
+        <path className="bgl" d="M0 750 Q500 700 900 770 T1400 730" stroke="#61dafb" strokeWidth="0.5" opacity="0.03" />
+        <path className="bgl" d="M300 0 Q280 450 320 900" stroke="var(--green)" strokeWidth="0.5" opacity="0.03" />
+        <path className="bgl" d="M700 0 Q720 400 680 900" stroke="var(--green)" strokeWidth="0.6" opacity="0.04" />
+        <path className="bgl" d="M1100 0 Q1080 500 1120 900" stroke="#61dafb" strokeWidth="0.5" opacity="0.03" />
+        <path className="bgl" d="M0 0 Q700 450 1400 900" stroke="var(--green)" strokeWidth="0.4" opacity="0.02" />
+        <path className="bgl" d="M1400 0 Q700 450 0 900" stroke="var(--green)" strokeWidth="0.4" opacity="0.02" />
       </svg>
 
-      {/* Radial glow behind rings */}
+      {/* ── Radial glow behind orbits ── */}
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
-          width: "500px",
-          height: "500px",
-          background: "radial-gradient(circle, rgba(100,255,218,0.06) 0%, transparent 70%)",
+          width: 500,
+          height: 500,
+          background:
+            "radial-gradient(circle, rgba(100,255,218,0.07) 0%, transparent 70%)",
           filter: "blur(40px)",
           opacity: Math.min(1, progress * 3),
         }}
         aria-hidden="true"
       />
 
-      {/* Heading — centered above rings */}
+      {/* ── Heading ── */}
       <div
-        ref={textRef}
+        ref={headRef}
         className="absolute z-20 text-center w-full max-w-2xl px-6 top-[8%] left-1/2"
         style={{ opacity: 0, transform: "translate(-50%, 30px)" }}
       >
@@ -198,122 +254,136 @@ export default function SkillRings({ progress }: SkillRingsProps) {
           Teknoloji Araç Kutum
         </h2>
         <p className="text-base sm:text-lg text-slate-custom max-w-lg mx-auto">
-          Modern web teknolojileriyle performanslı ve erişilebilir uygulamalar geliştiriyorum.
+          Modern web teknolojileriyle performanslı ve erişilebilir uygulamalar
+          geliştiriyorum.
         </p>
       </div>
 
-      {/* 3D Rings — larger and more visible */}
-      <div ref={ringsRef} className="rings-container" style={{ minHeight: "450px" }}>
-        <div
-          className="ring ring-glow"
-          style={{
-            width: "min(440px, 75vw)",
-            height: "min(440px, 75vw)",
-            borderColor: "var(--green)",
-            borderWidth: "2px",
-            opacity: 0.2,
-            transform: "rotateX(60deg) rotateZ(0deg)",
-          }}
-        />
-        <div
-          className="ring ring-glow"
-          style={{
-            width: "min(340px, 60vw)",
-            height: "min(340px, 60vw)",
-            borderColor: "#61dafb",
-            borderWidth: "1.5px",
-            opacity: 0.25,
-            transform: "rotateX(52deg) rotateZ(0deg)",
-          }}
-        />
-        <div
-          className="ring ring-glow"
-          style={{
-            width: "min(240px, 45vw)",
-            height: "min(240px, 45vw)",
-            borderColor: "var(--green)",
-            borderWidth: "2.5px",
-            opacity: 0.3,
-            transform: "rotateX(44deg) rotateZ(0deg)",
-          }}
-        />
-        <div
-          className="ring ring-glow"
-          style={{
-            width: "min(150px, 28vw)",
-            height: "min(150px, 28vw)",
-            borderColor: "var(--green)",
-            borderWidth: "3px",
-            opacity: 0.4,
-            transform: "rotateX(36deg) rotateZ(0deg)",
-          }}
-        />
-        {/* Center glow dot */}
-        <div
-          className="absolute w-4 h-4 rounded-full"
-          style={{
-            background: "var(--green)",
-            boxShadow: "0 0 30px var(--green), 0 0 80px rgba(100,255,218,0.4)",
-            opacity: Math.min(1, progress * 4),
-          }}
-        />
-      </div>
-
-      {/* Labels Left — large, animated */}
-      <div
-        ref={labelsLeftRef}
-        className="absolute hidden md:flex flex-col justify-center gap-5 pointer-events-none"
-        style={{ left: "12%", top: "50%", transform: "translateY(-50%)" }}
+      {/* ── Solar System SVG ── */}
+      <svg
+        ref={svgRef}
+        className="w-full h-full"
+        viewBox="-480 -220 960 440"
+        preserveAspectRatio="xMidYMid meet"
+        style={{ maxWidth: 960 }}
+        role="img"
+        aria-label="Teknoloji yörünge haritası"
       >
-        {skillsLeft.map((skill) => (
-          <div
-            key={skill.name}
-            className="skill-label flex items-center gap-3"
-            style={{ opacity: 0, transform: "translateX(-60px) scale(0.5)" }}
-          >
-            <span
-              className="block w-10 h-[2px] rounded-full"
-              style={{ background: skill.color, opacity: 0.6 }}
-            />
-            <span
-              className="text-lg md:text-xl lg:text-2xl font-bold tracking-wide whitespace-nowrap"
-              style={{ color: skill.color }}
-            >
-              {skill.name}
-            </span>
-          </div>
-        ))}
-      </div>
+        <defs>
+          <radialGradient id="centerGradient">
+            <stop offset="0%" stopColor="var(--green)" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="var(--green)" stopOpacity="0" />
+          </radialGradient>
+        </defs>
 
-      {/* Labels Right — large, animated */}
-      <div
-        ref={labelsRightRef}
-        className="absolute hidden md:flex flex-col justify-center items-end gap-5 pointer-events-none"
-        style={{ right: "12%", top: "50%", transform: "translateY(-50%)" }}
-      >
-        {skillsRight.map((skill) => (
-          <div
-            key={skill.name}
-            className="skill-label flex items-center gap-3"
-            style={{ opacity: 0, transform: "translateX(60px) scale(0.5)" }}
-          >
-            <span
-              className="text-lg md:text-xl lg:text-2xl font-bold tracking-wide whitespace-nowrap"
-              style={{ color: skill.color }}
-            >
-              {skill.name}
-            </span>
-            <span
-              className="block w-10 h-[2px] rounded-full"
-              style={{ background: skill.color, opacity: 0.6 }}
-            />
-          </div>
-        ))}
-      </div>
+        {/* Center glow gradient */}
+        <circle
+          className="cglow"
+          cx={0}
+          cy={0}
+          r={80}
+          fill="url(#centerGradient)"
+          style={{ opacity: 0 }}
+        />
 
-      {/* Mobile: skill labels below rings */}
+        {/* Orbit ellipses */}
+        {ORBITS.map((o, i) => (
+          <ellipse
+            key={i}
+            data-o={i}
+            cx={0}
+            cy={0}
+            rx={o.a}
+            ry={o.b}
+            fill="none"
+            stroke={o.stroke}
+            strokeWidth={o.width}
+            style={{ opacity: 0 }}
+          />
+        ))}
+
+        {/* Center "star" */}
+        <circle
+          className="cglow"
+          cx={0}
+          cy={0}
+          r={7}
+          fill="var(--green)"
+          style={{ opacity: 0 }}
+        />
+        <circle
+          className="cglow"
+          cx={0}
+          cy={0}
+          r={3}
+          fill="#fff"
+          style={{ opacity: 0 }}
+        />
+
+        {/* Planets + Arrows + Labels */}
+        {ORBITS.map((orbit, oi) =>
+          orbit.skills.map((skill, si) => (
+            <g
+              key={`${oi}-${si}`}
+              data-s={`${oi}-${si}`}
+              style={{ opacity: 0 }}
+            >
+              {/* Planet glow */}
+              <circle
+                className="glow"
+                cx={0}
+                cy={0}
+                r={14}
+                fill={skill.color}
+                opacity={0.12}
+              />
+              {/* Planet dot */}
+              <circle
+                className="dot"
+                cx={0}
+                cy={0}
+                r={5.5}
+                fill={skill.color}
+              />
+              {/* Arrow line */}
+              <line
+                className="aline"
+                x1={9}
+                y1={0}
+                x2={50}
+                y2={0}
+                stroke={skill.color}
+                strokeWidth={1.5}
+                opacity={0.55}
+              />
+              {/* Arrow head */}
+              <polygon
+                className="ahead"
+                points="50,-4 50,4 57,0"
+                fill={skill.color}
+                opacity={0.55}
+              />
+              {/* Skill label */}
+              <text
+                className="stxt"
+                x={63}
+                y={6}
+                fill={skill.color}
+                fontSize={20}
+                fontWeight="700"
+                fontFamily="Inter, system-ui, sans-serif"
+                letterSpacing="0.01em"
+              >
+                {skill.name}
+              </text>
+            </g>
+          ))
+        )}
+      </svg>
+
+      {/* ── Mobile: skill badges ── */}
       <div className="absolute bottom-[8%] left-0 right-0 flex md:hidden flex-wrap justify-center gap-3 px-6">
-        {[...skillsLeft, ...skillsRight].map((skill) => (
+        {ALL_SKILLS.map((skill) => (
           <span
             key={skill.name}
             className="text-xs font-semibold px-3 py-1.5 rounded-full border"

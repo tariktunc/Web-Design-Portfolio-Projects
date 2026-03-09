@@ -5,6 +5,7 @@ import "@radix-ui/themes/styles.css";
 import "./theme-config.css";
 import Providers from "./Providers";
 import MouseGradient from "./Components/MouseGradient/MouseGradient";
+import AnimatedBackground from "./Components/Background/AnimatedBackground";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -73,6 +74,7 @@ export default function RootLayout({
             İçeriğe geç
           </a>
           <MouseGradient />
+          <AnimatedBackground />
           <div className="site-container">
             {children}
           </div>

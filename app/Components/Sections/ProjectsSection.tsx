@@ -69,7 +69,7 @@ export default function ProjectsSection() {
   }, []);
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-6 sm:px-12">
+    <div className="w-full max-w-5xl mx-auto px-6 sm:px-12">
       <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-lightest-slate mb-8 tracking-tight">
         Projeler
       </h2>
