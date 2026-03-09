@@ -14,6 +14,7 @@ export interface IAppProps {
   title?: string;
   summary?: string;
   link?: string | undefined;
+  slug?: string;
 }
 export default function ArticleCard(props: IAppProps) {
   return (
@@ -24,7 +25,8 @@ export default function ArticleCard(props: IAppProps) {
           imageSrc={props.imageSrc || "/blakfy-orginal-icon.jpg"}
           alt={props.alt || "blakfy"}
           fallback="IMG"
-          link={props.link || "/"}
+          link={props.slug ? `/weblog/${props.slug}` : (props.link || "/")}
+          internal={!!props.slug}
         />
         <Flex direction={"column"} wrap={"wrap"}>
           <Flex gap={"2"} wrap={"wrap"}>

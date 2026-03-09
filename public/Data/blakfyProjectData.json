@@ -2,75 +2,174 @@
   "laboratory": [
     {
       "title": "Birincioğlu Trade",
+      "slug": "birincioglu-trade",
+      "category": "client",
       "description": "E-commerce",
+      "longDescription": "Birincioğlu Ticaret için geliştirilen profesyonel e-ticaret web sitesi. Toptan ve perakende ticaret ürünlerinin sergilendiği kapsamlı bir ürün kataloğu, kategori bazlı filtreleme sistemi ve mobil öncelikli responsive tasarım içerir. SEO optimizasyonlu ürün sayfaları ile organik trafik artışı hedeflenmiştir. İletişim ve sipariş talep formları ile müşteri etkileşimi sağlanmaktadır. Blakfy bünyesinde tasarlanmış ve geliştirilmiştir.",
       "link": "https://www.birinciogluticaret.com/",
       "imageAdress": "/blakfyImageProject/birinciogluticaret.png",
       "github": "https://github.com/tariktunc",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Next.js", "React", "Tailwind CSS", "Vercel"],
+      "features": [
+        "Kapsamlı ürün kataloğu",
+        "Kategori bazlı filtreleme",
+        "Mobil öncelikli responsive tasarım",
+        "SEO optimizasyonlu sayfalar",
+        "İletişim ve sipariş talep formları"
+      ]
     },
     {
       "title": "Kubra Yilmaz Beauty",
+      "slug": "kubra-yilmaz-beauty",
+      "category": "client",
       "description": "Beauty centre",
+      "longDescription": "Kübra Yılmaz Güzellik Merkezi için tasarlanan modern ve şık web sitesi. Sunulan güzellik hizmetlerinin detaylı tanıtımı, galeri bölümü, fiyat listesi ve online randevu talep sistemi içerir. Estetik ve zarif tasarımı ile markanın premium imajını dijital ortamda yansıtır. Responsive yapısı sayesinde tüm cihazlarda mükemmel görünüm sağlar.",
       "link": "https://kubrayilmazbeauty.com/",
       "imageAdress": "/blakfyImageProject/kubrayilmazbeauty.png",
       "github": "https://github.com/tariktunc",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Next.js", "React", "Tailwind CSS", "Vercel"],
+      "features": [
+        "Hizmet tanıtım sayfaları",
+        "Görsel galeri bölümü",
+        "Online randevu talep sistemi",
+        "Fiyat listesi sayfası",
+        "Premium marka imajına uygun tasarım"
+      ]
     },
     {
       "title": "Blakfy",
+      "slug": "blakfy",
+      "category": "client",
       "description": "Web Design & Development",
+      "longDescription": "Blakfy, web tasarım ve geliştirme hizmetleri sunan dijital ajansın kurumsal web sitesidir. Ajansın sunduğu hizmetlerin detaylı açıklamaları, tamamlanan proje portföyü, müşteri referansları ve iletişim bilgileri yer almaktadır. Modern ve profesyonel tasarımı ile potansiyel müşterilere ajansın yetkinliklerini etkili bir şekilde sunar. SEO uyumlu yapısı ile arama motorlarında üst sıralarda yer almayı hedefler.",
       "link": "https://blakfy.com/",
       "imageAdress": "/blakfyImageProject/blakfy.png",
       "github": "https://github.com/tariktunc",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Next.js", "React", "Tailwind CSS", "Vercel"],
+      "features": [
+        "Hizmet detay sayfaları",
+        "Proje portföy vitrini",
+        "Müşteri referans bölümü",
+        "SEO optimizasyonu",
+        "Modern ve profesyonel tasarım"
+      ]
     },
     {
       "title": "Ozharbiye Doner",
+      "slug": "ozharbiye-doner",
+      "category": "client",
       "description": "Restaurant",
+      "longDescription": "Özharbiye Döner restoran zinciri için geliştirilen web sitesi. Restoranın zengin menüsü, şube konumları, çalışma saatleri ve iletişim bilgileri yer almaktadır. Yemek görselleri ile zenginleştirilmiş menü sayfası, müşterilerin lezzetleri keşfetmesini kolaylaştırır. Sıcak ve davetkar tasarımı ile restoranın atmosferini dijital ortamda yansıtır.",
       "link": "https://ozharbiyedoner.com/",
       "imageAdress": "/blakfyImageProject/Harbiyedoner.png",
       "github": "https://blakfy.editorx.io/ozharbiyedoner",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Wix", "EditorX", "JavaScript", "CSS"],
+      "features": [
+        "Görsellerle zenginleştirilmiş menü sayfası",
+        "Şube konum bilgileri ve harita",
+        "Çalışma saatleri bilgisi",
+        "Galeri bölümü",
+        "Mobil uyumlu tasarım"
+      ]
     },
     {
       "title": "Tripslab",
+      "slug": "tripslab",
+      "category": "client",
       "description": "Tourism",
+      "longDescription": "Tripslab, turizm sektörüne yönelik geliştirilen kapsamlı bir web platformudur. Destinasyon tanıtım sayfaları, tur paketleri, seyahat rotaları ve rezervasyon talep sistemi içerir. Kullanıcılar popüler destinasyonları keşfedebilir, tur detaylarını inceleyebilir ve kolayca iletişime geçebilir. Görsel açıdan zengin tasarımı ile seyahat ilhamı vermek üzere optimize edilmiştir.",
       "link": "https://www.trips-lab.com/",
       "imageAdress": "/blakfyImageProject/tripslab.png",
       "github": "https://github.com/tariktunc",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Next.js", "React", "Tailwind CSS", "Vercel"],
+      "features": [
+        "Destinasyon tanıtım sayfaları",
+        "Tur paketi detayları",
+        "Seyahat rotası planlama",
+        "Rezervasyon talep sistemi",
+        "Görsel zengin tasarım"
+      ]
     },
     {
-      "title": "Vinart desing",
+      "title": "Vinart Design",
+      "slug": "vinart-design",
+      "category": "client",
       "description": "Interior architect",
+      "longDescription": "Vinart Design, iç mimarlık ve tasarım firması için geliştirilen portföy web sitesidir. Tamamlanan projelerin detaylı görselleri, tasarım felsefesi, sunulan hizmetler ve iletişim bilgileri yer almaktadır. Minimalist ve şık tasarımı ile firmanın estetik anlayışını dijital ortamda yansıtır. Proje galerisi, yüksek çözünürlüklü görsellerle zenginleştirilmiştir.",
       "link": "https://blakfy.wixsite.com/vinartdesign/en",
       "imageAdress": "/blakfyImageProject/vinartDesign.png",
       "github": "https://github.com/tariktunc",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Wix", "JavaScript", "CSS"],
+      "features": [
+        "Proje portföy galerisi",
+        "Yüksek çözünürlüklü görsel vitrin",
+        "Hizmet detay sayfaları",
+        "Tasarım felsefesi bölümü",
+        "Çok dilli destek (TR/EN)"
+      ]
     },
     {
       "title": "Galata Law",
+      "slug": "galata-law",
+      "category": "client",
       "description": "Law office",
+      "longDescription": "Galata Hukuk Bürosu için geliştirilen kurumsal web sitesi. Hukuk bürosunun uzmanlık alanları, avukat kadrosu tanıtımları, başarı hikayeleri ve iletişim bilgileri yer almaktadır. Güvenilir ve profesyonel tasarımı ile hukuk bürosunun kurumsal imajını güçlendirir. Detaylı hizmet sayfaları ile potansiyel müvekkillere kapsamlı bilgi sunar.",
       "link": "https://galatahukuk.com.tr/",
       "imageAdress": "/blakfyImageProject/galatahukuk.jpg",
       "github": "https://github.com/tariktunc",
-      "status": "passive"
+      "status": "passive",
+      "techStack": ["WordPress", "PHP", "CSS", "JavaScript"],
+      "features": [
+        "Uzmanlık alanı detay sayfaları",
+        "Avukat kadrosu tanıtımları",
+        "İletişim ve danışma talep formu",
+        "Kurumsal güvenilir tasarım",
+        "Blog ve hukuki bilgilendirme"
+      ]
     },
     {
       "title": "Saracyol Building Company",
+      "slug": "saracyol-building",
+      "category": "client",
       "description": "Building Company",
+      "longDescription": "Saracyol İnşaat firması için geliştirilen kurumsal web sitesi. Tamamlanan ve devam eden inşaat projelerinin detaylı tanıtımları, firma profili, referanslar ve iletişim bilgileri yer almaktadır. Proje galerisi yüksek kaliteli görsellerle desteklenmiştir. Güçlü ve güvenilir tasarımı ile inşaat sektöründeki kurumsal kimliği dijital ortamda yansıtır.",
       "link": "https://www.saracyol.com/",
       "imageAdress": "/blakfyImageProject/saracyol.png",
       "github": "https://github.com/tariktunc",
-      "status": "passive"
+      "status": "passive",
+      "techStack": ["WordPress", "PHP", "CSS", "JavaScript"],
+      "features": [
+        "Proje portföy vitrini",
+        "Tamamlanan ve devam eden projeler",
+        "Firma profili ve referanslar",
+        "Yüksek kaliteli proje görselleri",
+        "İletişim formu"
+      ]
     },
     {
       "title": "Tab Yapi",
-      "description": "Saracyol Building Company",
+      "slug": "tab-yapi",
+      "category": "client",
+      "description": "Building Company",
+      "longDescription": "Tab Yapı inşaat firması için geliştirilen kurumsal web sitesi. Firmanın inşaat projeleri, sunduğu hizmetler, kurumsal profil ve iletişim bilgileri yer almaktadır. Tamamlanan projelerin detaylı tanıtımları ve görselleri ile firmanın portföyü etkili bir şekilde sunulur. Profesyonel ve modern tasarımı ile inşaat sektörünün beklentilerine uygun bir dijital vitrin sağlar.",
       "link": "https://www.tabyapi.com/",
       "imageAdress": "/blakfyImageProject/tabyapi.png",
       "github": "https://github.com/tariktunc",
-      "status": "passive"
+      "status": "passive",
+      "techStack": ["WordPress", "PHP", "CSS", "JavaScript"],
+      "features": [
+        "İnşaat proje portföyü",
+        "Hizmet detay sayfaları",
+        "Kurumsal profil bölümü",
+        "Proje görselleri galerisi",
+        "İletişim ve teklif talep formu"
+      ]
     }
   ]
 }

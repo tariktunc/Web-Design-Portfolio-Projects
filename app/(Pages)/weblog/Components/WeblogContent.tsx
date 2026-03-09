@@ -3,6 +3,10 @@ import { Flex } from "@radix-ui/themes";
 import React from "react";
 import ArticleCard from "./ArticleCard";
 import LoadingCard from "./LoadingCard";
+import {
+  StaggerContainer,
+  StaggerItem,
+} from "@/app/Components/Motion/MotionWrappers";
 
 type WeBlogDatas = {
   imageSrc?: string;
@@ -12,6 +16,7 @@ type WeBlogDatas = {
   title?: string;
   summary?: string;
   link?: string;
+  slug?: string;
 };
 
 export default function WeblogContent() {
@@ -31,19 +36,24 @@ export default function WeblogContent() {
   return (
     <Flex direction={"column"} gap={"9"}>
       {loaded ? (
-        weBlogData.map((data) => (
-          <article key={data.title}>
-            <ArticleCard
-              imageSrc={data.imageSrc}
-              alt={data.alt}
-              categories={data.categories}
-              date={data.date}
-              title={data.title}
-              summary={data.summary}
-              link={data.link}
-            />
-          </article>
-        ))
+        <StaggerContainer>
+          {weBlogData.map((data) => (
+            <StaggerItem key={data.title}>
+              <article>
+                <ArticleCard
+                  imageSrc={data.imageSrc}
+                  alt={data.alt}
+                  categories={data.categories}
+                  date={data.date}
+                  title={data.title}
+                  summary={data.summary}
+                  link={data.link}
+                  slug={data.slug}
+                />
+              </article>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
       ) : (
         <LoadingCard />
       )}

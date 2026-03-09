@@ -3,10 +3,10 @@ import React from "react";
 import { useScrollSpy } from "@/app/hooks/useScrollSpy";
 
 const NAV_ITEMS = [
-  { id: "about", label: "About" },
-  { id: "experience", label: "Experience" },
-  { id: "projects", label: "Projects" },
-  { id: "writing", label: "Writing" },
+  { id: "about", label: "Hakkımda" },
+  { id: "experience", label: "Deneyim" },
+  { id: "projects", label: "Projeler" },
+  { id: "blog", label: "Blog" },
 ];
 
 export default function ScrollNav({ className = "" }: { className?: string }) {
@@ -24,6 +24,7 @@ export default function ScrollNav({ className = "" }: { className?: string }) {
             <li key={item.id}>
               <a
                 href={`#${item.id}`}
+                aria-current={isActive ? "true" : undefined}
                 className={`group flex items-center py-3 transition-all duration-300 ${
                   isActive
                     ? "text-green"

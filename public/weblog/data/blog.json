@@ -1,21 +1,25 @@
 {
   "weBlog": [
     {
-      "title": "React’te useEffect Hook’unun Etkin Kullanımı",
-      "alt": "React’te useEffect Hook’unun Etkin Kullanımı",
+      "title": "React'te useEffect Hook'unun Etkin Kullanımı",
+      "slug": "useeffect-hook-etkin-kullanim",
+      "alt": "React'te useEffect Hook'unun Etkin Kullanımı",
       "imageSrc": "/weblog/image/useEffect.webp",
       "categories": "React",
       "date": "Jan 11, 2024",
       "summary": "React Hooks, fonksiyonel bileşenlerde durum ve yaşam döngüsü yönetimini kolaylaştırır. useEffect, yan etkileri yönetmek için kullanılan temel bir hook'tur.",
+      "fullSummary": "React'in fonksiyonel bileşen ekosisteminde useEffect hook'u, side effect yönetiminin temel taşıdır. API çağrıları, event listener'lar, DOM manipülasyonu ve zamanlayıcılar gibi işlemler için kullanılan bu hook'un yanlış kullanımı sonsuz döngülere ve memory leak'lere neden olabilir. Bu makalede dependency array'in doğru kullanımı, cleanup fonksiyonlarının önemi, async/await ile useEffect'in birlikte kullanımı ve custom hook'larla useEffect'i nasıl kapsülleyeceğinizi detaylı örneklerle ele alıyorum. Ayrıca useEffect'in yaşam döngüsü metotlarıyla (componentDidMount, componentDidUpdate, componentWillUnmount) olan ilişkisini ve hangi senaryolarda useEffect yerine useMemo veya useCallback tercih edilmesi gerektiğini inceliyorum.",
       "link": "https://medium.com/@tariktunc/reactte-useeffect-hook-unun-etkin-kullan%C4%B1m%C4%B1-2de2572516e5"
     },
     {
-      "title": "ReactJS’te useState Kullanırken Dikkat Edilmesi Gerekenler",
-      "alt": "ReactJS’te useState Kullanırken Dikkat Edilmesi Gerekenler",
+      "title": "ReactJS'te useState Kullanırken Dikkat Edilmesi Gerekenler",
+      "slug": "usestate-dikkat-edilmesi-gerekenler",
+      "alt": "ReactJS'te useState Kullanırken Dikkat Edilmesi Gerekenler",
       "imageSrc": "/weblog/image/reactjs.webp",
       "categories": "React",
       "date": "Dec 16, 2023",
-      "summary": "Bugün, React dünyasının büyüleyici bir köşesine adım atıyoruz ve “useState Hook” ile eğlenceli bir yolculuğa çıkıyoruz. Şimdi, React’taki state yönetiminin temelini oluşturan bu önemli konuyu daha yakından inceleyerek başlayalım.",
+      "summary": "Bugün, React dünyasının büyüleyici bir köşesine adım atıyoruz ve useState Hook ile eğlenceli bir yolculuğa çıkıyoruz. Şimdi, React'taki state yönetiminin temelini oluşturan bu önemli konuyu daha yakından inceleyerek başlayalım.",
+      "fullSummary": "React'in state yönetiminin temel taşı olan useState hook'u, görünüşte basit olmasına rağmen dikkat edilmesi gereken birçok önemli nokta barındırır. Bu makalede useState'in asenkron doğasını, state güncellemelerinin batching mekanizmasını, referans tipli değerler (object, array) ile çalışırken yapılan yaygın hataları ve bunların çözümlerini inceliyorum. Fonksiyonel güncelleme pattern'ini (prev => ...) ne zaman kullanmanız gerektiğini, lazy initialization ile performans optimizasyonunu ve useState ile useReducer arasındaki seçim kriterlerini pratik örneklerle açıklıyorum. Ayrıca derived state kavramı ve gereksiz state tanımlamaktan kaçınma stratejilerini de ele alıyorum.",
       "link": "https://medium.com/@tariktunc/reactjste-usestate-kullan%C4%B1rken-dikkat-edilmesi-gerekenler-c440809ce868"
     }
   ]

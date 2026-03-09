@@ -1,23 +1,28 @@
 "use client";
 import React from "react";
-import LoadingCardItem from "./LoadingCardItem";
-import CardItem from "@/app/Components/CardItem/CardItem";
+import {
+  StaggerContainer,
+  StaggerItem,
+} from "@/app/Components/Motion/MotionWrappers";
+import LabProjectCard from "./LabProjectCard";
 
 interface Project {
   title: string;
+  slug: string;
   description: string;
   link?: string;
   github?: string;
   imageAdress?: string;
   status: string;
+  techStack?: string[];
 }
 
-export default function GithubProjectData() {
+export default function BlakfyProject() {
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [loaded, setLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    fetch("/Data/githubProjectData.json")
+    fetch("/Data/blakfyProjectData.json")
       .then((res) => res.json())
       .then((data) => {
         setProjects(data.laboratory);
@@ -26,24 +31,30 @@ export default function GithubProjectData() {
       .catch((error) => console.error("Fetching projects failed:", error));
   }, []);
 
+  if (!loaded) {
+    return (
+      <div className="py-8 text-center text-slate-custom text-sm">
+        Loading projects...
+      </div>
+    );
+  }
+
   return (
-    <>
-      {loaded ? (
-        projects.map((project) => (
-          <CardItem
-            key={project.title}
+    <StaggerContainer>
+      {projects.map((project) => (
+        <StaggerItem key={project.title}>
+          <LabProjectCard
             title={project.title}
+            slug={project.slug}
             description={project.description}
             link={project.link}
             imageAdress={project.imageAdress}
             github={project.github}
-            size="initial:h-32 xs:h-40"
             status={project.status}
+            techStack={project.techStack}
           />
-        ))
-      ) : (
-        <LoadingCardItem />
-      )}
-    </>
+        </StaggerItem>
+      ))}
+    </StaggerContainer>
   );
 }

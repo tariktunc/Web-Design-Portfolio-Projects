@@ -18,6 +18,20 @@ const config: Config = {
       xl: "1640px",
     },
 
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "1rem",
+        xs: "1.25rem",
+        sm: "1.5rem",
+        md: "2rem",
+        lg: "2.5rem",
+      },
+      screens: {
+        xl: "1600px",
+      },
+    },
+
     extend: {
       colors: {
         navy: {

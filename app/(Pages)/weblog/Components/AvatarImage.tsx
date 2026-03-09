@@ -6,12 +6,15 @@ export interface IAppProps {
   alt: string;
   fallback: string;
   link?: string | undefined;
+  internal?: boolean;
 }
 
 export default function App(props: IAppProps) {
   return (
-    // _blank new window or tab
-    <Link target="_blank" href={props.link || "/"}>
+    <Link
+      target={props.internal ? undefined : "_blank"}
+      href={props.link || "/"}
+    >
       <Avatar
         size={{
           initial: "6",

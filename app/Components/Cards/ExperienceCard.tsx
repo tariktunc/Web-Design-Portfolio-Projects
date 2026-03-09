@@ -1,3 +1,7 @@
+"use client";
+import { useRef, useEffect } from "react";
+import { animate, spring } from "animejs";
+
 interface ExperienceCardProps {
   period: string;
   title: string;
@@ -15,13 +19,50 @@ export default function ExperienceCard({
   description,
   technologies,
 }: ExperienceCardProps) {
+  const cardRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    // Respect prefers-reduced-motion
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const handleEnter = () => {
+      const badges = el.querySelectorAll(".tech-badge") as NodeListOf<HTMLElement>;
+      animate(badges, {
+        scale: [1, 1.08],
+        translateY: [0, -2],
+        duration: 400,
+        ease: spring({ stiffness: 400, damping: 20 }),
+      });
+    };
+
+    const handleLeave = () => {
+      const badges = el.querySelectorAll(".tech-badge") as NodeListOf<HTMLElement>;
+      animate(badges, {
+        scale: [1.08, 1],
+        translateY: [-2, 0],
+        duration: 300,
+        ease: "outExpo",
+      });
+    };
+
+    el.addEventListener("mouseenter", handleEnter);
+    el.addEventListener("mouseleave", handleLeave);
+    return () => {
+      el.removeEventListener("mouseenter", handleEnter);
+      el.removeEventListener("mouseleave", handleLeave);
+    };
+  }, []);
+
   return (
-    <li className="mb-12">
+    <li ref={cardRef} className="mb-12">
       <div className="group relative grid pb-1 transition-all duration-300 sm:grid-cols-8 sm:gap-8 md:gap-4 md:hover:!opacity-100 md:group-hover/list:opacity-50">
         {/* Glass hover background with glow */}
         <div className="absolute -inset-x-4 -inset-y-4 z-0 hidden rounded-md transition-all duration-500 motion-reduce:transition-none md:-inset-x-6 md:block md:group-hover:bg-navy-light/50 md:group-hover:shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1),0_0_30px_rgba(100,255,218,0.03)] md:group-hover:drop-shadow-lg md:group-hover:backdrop-blur-sm" />
 
-        <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-slate-custom/70 sm:col-span-2 transition-colors duration-300 group-hover:text-green/70">
+        <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-slate-custom sm:col-span-2 transition-colors duration-300 group-hover:text-green/70">
           {period}
         </header>
 
@@ -32,11 +73,12 @@ export default function ExperienceCard({
               target="_blank"
               rel="noopener noreferrer"
               className="group/link inline-flex items-baseline text-base font-medium leading-tight text-lightest-slate hover:text-green focus-visible:text-green transition-colors duration-300"
+              aria-label={`${title} at ${company} (opens in new tab)`}
             >
               {title} &middot;{" "}
               <span className="inline-block">
                 {company}
-                <span className="ml-1 inline-block transition-transform duration-300 group-hover/link:translate-x-2 group-hover/link:-translate-y-0.5">
+                <span className="ml-1 inline-block transition-transform duration-300 group-hover/link:translate-x-2 group-hover/link:-translate-y-0.5" aria-hidden="true">
                   &#8599;
                 </span>
               </span>
@@ -45,11 +87,11 @@ export default function ExperienceCard({
           <p className="mt-2 text-sm leading-normal text-slate-custom transition-colors duration-300 group-hover:text-slate-custom-light">
             {description}
           </p>
-          {/* Technology badges with shimmer */}
+          {/* Technology badges — anime.js hover */}
           <ul className="mt-2 flex flex-wrap gap-2" aria-label="Technologies used">
             {technologies.map((tech) => (
               <li key={tech}>
-                <span className="shimmer-badge inline-flex items-center rounded-full px-3 py-1 text-xs font-medium leading-5 text-green border border-green/20 transition-all duration-300 hover:border-green/50 hover:shadow-[0_0_8px_rgba(100,255,218,0.15)]">
+                <span className="tech-badge shimmer-badge inline-flex items-center rounded-full px-3 py-1 text-xs font-medium leading-5 text-green border border-green/20 transition-all duration-300 hover:border-green/50 hover:shadow-[0_0_8px_rgba(100,255,218,0.15)]">
                   {tech}
                 </span>
               </li>

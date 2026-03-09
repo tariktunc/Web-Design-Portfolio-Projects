@@ -1,68 +1,77 @@
+"use client";
 import Link from "next/link";
 import ExperienceCard from "../Cards/ExperienceCard";
-import FadeInSection from "@/app/Components/FadeInSection";
+import { useAnimeStagger, useAnimeScrollReveal } from "@/app/hooks/useAnime";
 
 const experiences = [
   {
-    period: "2023 — Present",
-    title: "Full Stack Developer",
+    period: "2023 — Günümüz",
+    title: "Full Stack Geliştirici",
     company: "Blakfy",
     companyUrl: "https://blakfy.com",
     description:
-      "Build and maintain web applications for diverse clients. Lead development of 9+ client projects spanning e-commerce, restaurant, tourism, and professional services industries using modern web technologies.",
+      "Farklı müşteriler için web uygulamaları geliştirip sürdürüyorum. E-ticaret, restoran, turizm ve profesyonel hizmetler sektörlerinde 9'dan fazla müşteri projesinin geliştirme sürecini modern web teknolojileriyle yönetiyorum.",
     technologies: ["Next.js", "React", "TypeScript", "Tailwind CSS", "MongoDB"],
   },
   {
     period: "2023",
-    title: "Piscine Participant",
+    title: "Piscine Katılımcısı",
     company: "42 Ecole",
     companyUrl: "https://42.fr",
     description:
-      "Completed intensive coding bootcamp focused on C programming, algorithms, and peer-to-peer learning methodology. Developed problem-solving skills through collaborative projects.",
-    technologies: ["C", "Shell", "Algorithms", "Git"],
+      "C programlama, algoritmalar ve akran öğrenme metodolojisine odaklanan yoğun kodlama kampını tamamladım. İşbirlikçi projeler aracılığıyla problem çözme becerilerimi geliştirdim.",
+    technologies: ["C", "Shell", "Algoritmalar", "Git"],
   },
   {
     period: "2022 — 2023",
-    title: "Self-Taught Developer",
+    title: "Otodikat Geliştirici",
     company: "FreeCodeCamp",
     companyUrl: "https://freecodecamp.org",
     description:
-      "Completed JavaScript Algorithms & Data Structures certification. Built multiple projects including responsive web designs and front-end libraries with React.",
+      "JavaScript Algoritmaları ve Veri Yapıları sertifikasını tamamladım. Responsive web tasarımları ve React ile front-end kütüphaneleri dahil birçok proje geliştirdim.",
     technologies: ["JavaScript", "React", "HTML", "CSS", "SASS"],
   },
 ];
 
 export default function ExperienceSection() {
+  const staggerRef = useAnimeStagger(".exp-item", { delay: 150, from: "first" });
+  const linkRef = useAnimeScrollReveal(".exp-link", {
+    translateY: [40, 0],
+    duration: 800,
+  });
+
   return (
-    <section
-      id="experience"
-      className="mb-16 scroll-mt-16 sm:mb-24 md:mb-36 md:scroll-mt-24"
-    >
-      <div className="sticky top-0 z-20 -mx-6 mb-4 w-screen bg-navy/75 px-6 py-5 backdrop-blur sm:-mx-12 sm:px-12 md:sr-only md:relative md:top-auto md:mx-auto md:w-full md:px-0 md:py-0 md:opacity-0">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-lightest-slate md:sr-only">
-          Experience
-        </h2>
+    <div className="w-full max-w-3xl mx-auto px-6 sm:px-12">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-lightest-slate mb-8 tracking-tight">
+        Deneyim
+      </h2>
+
+      <div ref={staggerRef}>
+        <ol className="group/list">
+          {experiences.map((exp, i) => (
+            <div className="exp-item" key={i}>
+              <ExperienceCard {...exp} />
+            </div>
+          ))}
+        </ol>
       </div>
 
-      <ol className="group/list">
-        {experiences.map((exp, i) => (
-          <FadeInSection key={i}>
-            <ExperienceCard {...exp} />
-          </FadeInSection>
-        ))}
-      </ol>
-
-      <div className="mt-12">
-        <Link
-          href="/whoami"
-          className="inline-flex items-center font-medium text-lightest-slate hover:text-green transition-colors group"
-        >
-          View Full Resume
-          <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">
-            &rarr;
-          </span>
-        </Link>
+      <div ref={linkRef}>
+        <div className="exp-link mt-8">
+          <Link
+            href="/ben-kimim"
+            className="inline-flex items-center font-medium text-lightest-slate hover:text-green transition-colors group"
+          >
+            Özgeçmişin Tamamını Gör
+            <span
+              className="ml-1 inline-block transition-transform group-hover:translate-x-1"
+              aria-hidden="true"
+            >
+              &rarr;
+            </span>
+          </Link>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

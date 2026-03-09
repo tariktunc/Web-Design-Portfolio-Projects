@@ -1,54 +1,59 @@
-export default function AboutSection() {
-  return (
-    <section
-      id="about"
-      className="mb-16 scroll-mt-16 sm:mb-24 md:mb-36 md:scroll-mt-24"
-    >
-      <div className="sticky top-0 z-20 -mx-6 mb-4 w-screen bg-navy/75 px-6 py-5 backdrop-blur sm:-mx-12 sm:px-12 md:sr-only md:relative md:top-auto md:mx-auto md:w-full md:px-0 md:py-0 md:opacity-0">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-lightest-slate md:sr-only">
-          About
-        </h2>
-      </div>
+"use client";
+import { useAnimeScrollReveal } from "@/app/hooks/useAnime";
 
-      <div className="space-y-4 text-slate-custom leading-relaxed">
-        <p>
-          Hello there! I am{" "}
-          <span className="font-medium text-lightest-slate">Tarik Tunc</span>, a
-          passionate software developer based in Turkey. With a zeal for solving
-          product-related problems, I am deeply committed to continuous learning
-          and sharing knowledge with peers.
-        </p>
-        <p>
-          Currently, I am crafting digital products at{" "}
-          <a
-            href="https://blakfy.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-lightest-slate hover:text-green transition-colors"
-          >
-            Blakfy
-          </a>
-          , building modern web experiences with Next.js, React, and TypeScript.
-          I have delivered 9+ client projects spanning e-commerce, tourism,
-          beauty, and professional services.
-        </p>
-        <p>
-          My main focus these days is building accessible, human-centered web
-          applications. I most enjoy working at the intersection of design and
-          engineering — creating pixel-perfect interfaces with thoughtful
-          interactions. When I am not coding, you can find me writing about React
-          on{" "}
-          <a
-            href="https://medium.com/@tariktunc"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-lightest-slate hover:text-green transition-colors"
-          >
-            Medium
-          </a>
-          .
-        </p>
+export default function AboutSection() {
+  const containerRef = useAnimeScrollReveal(".about-reveal", {
+    translateY: [60, 0],
+    filter: ["blur(8px)", "blur(0px)"],
+    duration: 1000,
+    ease: "outExpo",
+  });
+
+  return (
+    <div ref={containerRef} className="w-full max-w-3xl mx-auto px-6 sm:px-12">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-lightest-slate mb-8 tracking-tight">
+        Hakkımda
+      </h2>
+
+      <div className="space-y-5 text-slate-custom leading-relaxed text-base sm:text-lg">
+        <div className="about-reveal">
+          <p>
+            Merhaba! Ben{" "}
+            <span className="font-medium text-lightest-slate">Tarık Tunç</span>,
+            Türkiye merkezli tutkulu bir yazılım geliştiricisiyim. Ürün odaklı
+            problemleri çözme konusundaki heyecanımla, sürekli öğrenmeye ve
+            bilgimi meslektaşlarımla paylaşmaya derinden bağlıyım.
+          </p>
+        </div>
+
+        <div className="about-reveal">
+          <p>
+            Şu anda{" "}
+            <a
+              href="https://blakfy.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-lightest-slate hover:text-green transition-colors inline-block border-b border-green/0 hover:border-green/50"
+              aria-label="Blakfy (yeni sekmede açılır)"
+            >
+              Blakfy
+            </a>
+            &apos;de dijital ürünler geliştiriyorum. Next.js, React ve
+            TypeScript ile modern web deneyimleri oluşturuyorum. E-ticaret,
+            turizm, güzellik ve profesyonel hizmetler alanlarında 9&apos;dan
+            fazla müşteri projesi teslim ettim.
+          </p>
+        </div>
+
+        <div className="about-reveal">
+          <p>
+            Bu günlerde asıl odak noktam erişilebilir, insan odaklı web
+            uygulamaları geliştirmek. Tasarım ve mühendisliğin kesiştiği noktada
+            çalışmaktan en çok keyif alıyorum — düşünceli etkileşimlerle
+            piksel-mükemmel arayüzler yaratmak.
+          </p>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

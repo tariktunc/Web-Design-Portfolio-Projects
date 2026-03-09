@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" fill="none">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1400" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a192f"/>
+      <stop offset="100%" stop-color="#0d2240"/>
+    </linearGradient>
+    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#64ffda"/>
+      <stop offset="100%" stop-color="#00e5a0"/>
+    </linearGradient>
+    <linearGradient id="chart" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#64ffda" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#64ffda" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="600" fill="url(#bg3)"/>
+  <!-- Grid -->
+  <g opacity="0.03" stroke="#64ffda" stroke-width="0.5">
+    <line x1="0" y1="150" x2="1400" y2="150"/><line x1="0" y1="250" x2="1400" y2="250"/>
+    <line x1="0" y1="350" x2="1400" y2="350"/><line x1="0" y1="450" x2="1400" y2="450"/>
+  </g>
+  <!-- Main dashboard card -->
+  <rect x="180" y="60" width="1040" height="460" rx="20" fill="#112240" stroke="#233554" stroke-width="1"/>
+  <!-- Header -->
+  <rect x="180" y="60" width="1040" height="50" rx="20" fill="#1a3050"/>
+  <rect x="180" y="90" width="1040" height="20" fill="#1a3050"/>
+  <circle cx="210" cy="85" r="6" fill="#ff5f57"/><circle cx="230" cy="85" r="6" fill="#febc2e"/>
+  <circle cx="250" cy="85" r="6" fill="#28c840"/>
+  <text x="700" y="90" fill="#8892b0" font-family="sans-serif" font-size="12" text-anchor="middle">FinTrack Dashboard — fintrack.app</text>
+  <!-- Balance card -->
+  <rect x="220" y="130" width="300" height="120" rx="12" fill="#0d2137" stroke="#233554" stroke-width="1"/>
+  <text x="245" y="158" fill="#8892b0" font-family="sans-serif" font-size="12">Toplam Bakiye</text>
+  <text x="245" y="195" fill="#ccd6f6" font-family="sans-serif" font-size="32" font-weight="bold">₺124.850</text>
+  <text x="245" y="225" fill="#28c840" font-family="sans-serif" font-size="13">↑ 12.4% bu ay</text>
+  <!-- Income card -->
+  <rect x="545" y="130" width="220" height="120" rx="12" fill="#0d2137" stroke="#233554" stroke-width="1"/>
+  <text x="570" y="158" fill="#8892b0" font-family="sans-serif" font-size="12">Gelir</text>
+  <text x="570" y="195" fill="#28c840" font-family="sans-serif" font-size="28" font-weight="bold">₺18.500</text>
+  <text x="570" y="220" fill="#8892b0" font-family="sans-serif" font-size="11">Aylık ortalama</text>
+  <!-- Expense card -->
+  <rect x="790" y="130" width="220" height="120" rx="12" fill="#0d2137" stroke="#233554" stroke-width="1"/>
+  <text x="815" y="158" fill="#8892b0" font-family="sans-serif" font-size="12">Gider</text>
+  <text x="815" y="195" fill="#ff6b6b" font-family="sans-serif" font-size="28" font-weight="bold">₺11.200</text>
+  <text x="815" y="220" fill="#8892b0" font-family="sans-serif" font-size="11">Aylık ortalama</text>
+  <!-- Chart area -->
+  <rect x="220" y="270" width="560" height="220" rx="12" fill="#0d2137" stroke="#233554" stroke-width="1"/>
+  <text x="245" y="298" fill="#ccd6f6" font-family="sans-serif" font-size="13" font-weight="bold">Gelir/Gider Grafiği</text>
+  <!-- Chart line -->
+  <polyline points="260,440 310,420 360,400 410,380 460,350 510,370 560,340 610,310 660,290 710,280 730,270"
+    stroke="url(#mint)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <polygon points="260,440 310,420 360,400 410,380 460,350 510,370 560,340 610,310 660,290 710,280 730,270 730,460 260,460"
+    fill="url(#chart)"/>
+  <!-- Expense line -->
+  <polyline points="260,410 310,400 360,420 410,410 460,400 510,415 560,410 610,395 660,400 710,390 730,380"
+    stroke="#ff6b6b" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" stroke-dasharray="6 3"/>
+  <!-- Chart dots -->
+  <circle cx="460" cy="350" r="4" fill="#64ffda"/><circle cx="660" cy="290" r="4" fill="#64ffda"/>
+  <circle cx="730" cy="270" r="4" fill="#64ffda"/>
+  <!-- Category breakdown -->
+  <rect x="800" y="270" width="210" height="220" rx="12" fill="#0d2137" stroke="#233554" stroke-width="1"/>
+  <text x="825" y="298" fill="#ccd6f6" font-family="sans-serif" font-size="13" font-weight="bold">Kategoriler</text>
+  <!-- Category bars -->
+  <rect x="825" y="315" width="160" height="8" rx="4" fill="#233554"/>
+  <rect x="825" y="315" width="120" height="8" rx="4" fill="#64ffda"/>
+  <text x="825" y="340" fill="#8892b0" font-family="sans-serif" font-size="10">Konut ₺4.200</text>
+  <rect x="825" y="355" width="160" height="8" rx="4" fill="#233554"/>
+  <rect x="825" y="355" width="85" height="8" rx="4" fill="#00b4d8"/>
+  <text x="825" y="380" fill="#8892b0" font-family="sans-serif" font-size="10">Market ₺2.800</text>
+  <rect x="825" y="395" width="160" height="8" rx="4" fill="#233554"/>
+  <rect x="825" y="395" width="65" height="8" rx="4" fill="#a855f7"/>
+  <text x="825" y="420" fill="#8892b0" font-family="sans-serif" font-size="10">Ulaşım ₺1.500</text>
+  <rect x="825" y="435" width="160" height="8" rx="4" fill="#233554"/>
+  <rect x="825" y="435" width="50" height="8" rx="4" fill="#f59e0b"/>
+  <text x="825" y="460" fill="#8892b0" font-family="sans-serif" font-size="10">Eğlence ₺1.200</text>
+  <!-- Brand -->
+  <text x="700" y="565" fill="#64ffda" font-family="sans-serif" font-size="20" font-weight="bold" text-anchor="middle" letter-spacing="4">FINTRACK</text>
+</svg>

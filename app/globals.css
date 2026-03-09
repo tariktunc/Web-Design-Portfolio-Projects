@@ -18,8 +18,8 @@
 
 /* ===== Base Styles ===== */
 html {
-	scroll-behavior: smooth;
 	scroll-padding-top: 5rem;
+	min-width: 280px;
 }
 
 body {
@@ -29,6 +29,17 @@ body {
 	line-height: 1.6;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	min-width: 280px;
+}
+
+/* ===== Site Container — global max/min width + centering ===== */
+.site-container {
+	width: 100%;
+	max-width: 1600px;
+	min-width: 280px;
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
 }
 
 /* ===== Selection ===== */
@@ -109,6 +120,7 @@ body {
 
 /* Desktop nav links */
 .nav-link {
+	position: relative;
 	display: inline-flex;
 	align-items: center;
 	padding: 8px 16px;
@@ -117,18 +129,10 @@ body {
 	font-weight: 500;
 	color: var(--slate);
 	text-decoration: none;
-	transition: background-color 200ms ease, color 200ms ease;
+	transition: color 200ms ease;
 }
 .nav-link:hover {
-	background-color: rgba(100, 255, 218, 0.1);
 	color: var(--lightest-slate);
-}
-.nav-link-active {
-	background-color: rgba(100, 255, 218, 0.1);
-	color: var(--green);
-}
-.nav-link-active:hover {
-	background-color: rgba(100, 255, 218, 0.15);
 }
 
 /* Theme toggle button */
@@ -148,41 +152,6 @@ body {
 .theme-toggle:hover {
 	background-color: rgba(100, 255, 218, 0.1);
 	transform: scale(1.08);
-}
-
-/* Mobile menu overlay */
-.mobile-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: 40;
-	background-color: rgba(0, 0, 0, 0.6);
-	opacity: 0;
-	transition: opacity 300ms ease;
-	pointer-events: none;
-}
-.mobile-overlay.open {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-/* Mobile slide-in panel */
-.mobile-panel {
-	position: fixed;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	z-index: 45;
-	width: min(320px, 85vw);
-	backdrop-filter: blur(20px) saturate(180%);
-	-webkit-backdrop-filter: blur(20px) saturate(180%);
-	background-color: rgba(10, 25, 47, 0.92);
-	border-left: 1px solid rgba(255, 255, 255, 0.06);
-	transform: translateX(100%);
-	transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
-	overflow-y: auto;
-}
-.mobile-panel.open {
-	transform: translateX(0);
 }
 
 /* Mobile nav item */
@@ -206,12 +175,6 @@ body {
 	color: var(--green);
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.mobile-panel,
-	.mobile-overlay {
-		transition: none;
-	}
-}
 
 /* ===== Entrance Animations (Keyframes) ===== */
 
@@ -541,18 +504,205 @@ body {
 	border-color: var(--green);
 }
 
+/* ===== Dramatic Continuous Animations ===== */
+
+/* Glow border cycling */
+@keyframes glowBorderCycle {
+	0%, 100% {
+		border-color: rgba(100, 255, 218, 0.1);
+		box-shadow: 0 0 5px rgba(100, 255, 218, 0);
+	}
+	50% {
+		border-color: rgba(100, 255, 218, 0.4);
+		box-shadow: 0 0 15px rgba(100, 255, 218, 0.15);
+	}
+}
+
+/* Text shimmer */
+@keyframes textShimmer {
+	0% { background-position: -200% center; }
+	100% { background-position: 200% center; }
+}
+
+/* Breathing scale */
+@keyframes breathe {
+	0%, 100% { transform: scale(1); }
+	50% { transform: scale(1.02); }
+}
+
+.glow-border-cycle {
+	animation: glowBorderCycle 3s ease-in-out infinite;
+}
+
+.text-shimmer-effect {
+	background: linear-gradient(
+		90deg,
+		var(--lightest-slate) 0%,
+		var(--green) 50%,
+		var(--lightest-slate) 100%
+	);
+	background-size: 200% auto;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: textShimmer 3s ease-in-out infinite;
+}
+
+.animate-breathe {
+	animation: breathe 4s ease-in-out infinite;
+}
+
+/* Card with continuous subtle glow sweep */
+.card-glow-pulse {
+	position: relative;
+}
+.card-glow-pulse::before {
+	content: "";
+	position: absolute;
+	inset: -1px;
+	border-radius: inherit;
+	background: linear-gradient(
+		135deg,
+		transparent 40%,
+		rgba(100, 255, 218, 0.15) 50%,
+		transparent 60%
+	);
+	background-size: 300% 300%;
+	animation: shimmer 4s ease-in-out infinite;
+	z-index: -1;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+.card-glow-pulse:hover::before {
+	opacity: 1;
+}
+
+/* ===== Scroll-Driven Sections (animejs.com style) ===== */
+
+/* Section container — holds fixed content + spacers */
+.scroll-section {
+	position: relative;
+	width: 100%;
+}
+
+/* Empty spacer — creates scroll height (each = 100vh) */
+.section-spacer {
+	height: 100vh;
+	height: 100lvh;
+	pointer-events: none;
+}
+
+/* Pinned content — sticks while spacers scroll past */
+.fixed-section {
+	position: sticky;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	height: 100lvh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	z-index: 1;
+}
+
+/* Light background variant (toolbox section transition) */
+.scroll-section-light .fixed-section {
+	background-color: var(--white);
+	color: var(--navy);
+}
+
+/* Feature section — text left, demo right layout */
+.feature-section-layout {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 2rem;
+	width: 100%;
+	max-width: 72rem;
+	padding: 0 1.5rem;
+	margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+	.feature-section-layout {
+		grid-template-columns: 1fr 1fr;
+		gap: 4rem;
+		padding: 0 3rem;
+	}
+}
+
+/* 3D Skill Rings container */
+.rings-container {
+	perspective: 1200px;
+	perspective-origin: 50% 50%;
+	width: 100%;
+	max-width: 500px;
+	height: 100%;
+	max-height: 500px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+}
+
+.ring {
+	position: absolute;
+	border-radius: 50%;
+	border: 1.5px solid var(--green);
+	transform-style: preserve-3d;
+	will-change: transform, opacity;
+	transition: opacity 0.3s ease;
+}
+
+.ring-glow {
+	box-shadow: 0 0 30px rgba(100, 255, 218, 0.12),
+		inset 0 0 30px rgba(100, 255, 218, 0.06);
+}
+
+/* Skill label transition */
+.skill-label {
+	will-change: transform, opacity;
+	transition: transform 0.1s linear, opacity 0.1s linear;
+}
+
+/* ===== Scrollbar Hide (inner scroll containers) ===== */
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
 /* ===== Global Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	*::after {
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
-		scroll-behavior: auto !important;
-	}
-	.fade-in-section {
+	.fade-in-section,
+	.fade-in-left,
+	.fade-in-scale {
 		opacity: 1;
 		transform: none;
+		filter: none;
+	}
+
+	/* Disable scroll pinning for reduced-motion */
+	.fixed-section {
+		position: relative;
+		height: auto;
+		min-height: auto;
+	}
+
+	.section-spacer {
+		height: 0;
+	}
+
+	.ring {
+		will-change: auto;
+		animation: none !important;
+	}
+
+	.skill-label {
+		opacity: 1 !important;
+		transform: none !important;
 	}
 }

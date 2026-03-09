@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tr '}' '\\\\n')",
+      "Bash(mv \"app/\\(Pages\\)/laboratory\" \"app/\\(Pages\\)/laboratuvar\")",
+      "Bash(mv \"app/\\(Pages\\)/whoami\" \"app/\\(Pages\\)/ben-kimim\")",
+      "Bash(cp -r \"app/\\(Pages\\)/laboratory\" \"app/\\(Pages\\)/laboratuvar\")",
+      "Bash(cp -r \"app/\\(Pages\\)/whoami\" \"app/\\(Pages\\)/ben-kimim\")",
+      "Bash(rm -rf \"app/\\(Pages\\)/laboratory\")",
+      "Bash(rm -rf \"app/\\(Pages\\)/whoami\")",
+      "Bash(cp -r \"app/\\(Pages\\)/laboratuvar\" \"app/\\(Pages\\)/projeler\")",
+      "Bash(rm -rf \"app/\\(Pages\\)/laboratuvar\")",
+      "Bash(projeler \")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\tarkt\\OneDrive\\Desktop\\Github\\tarktunc project\\Web-Design-Portfolio-Projects\\app\\(Pages)\\ben-kimim\\Components"
+    ]
+  }
+}

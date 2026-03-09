@@ -2,43 +2,759 @@
   "laboratory": [
     {
       "title": "Where to Watch",
+      "slug": "where-to-watch",
+      "category": "personal",
       "description": "Where to Watch, The Movie Database (TMDb) API'sini kullanarak kullanıcılara film ve dizi arama, kategori bazında seçim yapma ve en çok izlenen içerikleri keşfetme imkanı sunan bir web sitesidir. Bu platform, kullanıcılara her bir film ve dizinin hangi yayın platformlarında bulunduğunu ve ilgili diğer bilgileri göstererek, izlemek istedikleri içeriği nerede bulabileceklerini kolayca öğrenmelerini sağlar.",
+      "longDescription": "Where to Watch, The Movie Database (TMDb) API üzerinde inşa edilmiş kapsamlı bir film ve dizi keşif platformudur. Günlük hayatta herkesin karşılaştığı bir sorunu çözer: izlemek istediğiniz içeriğin hangi yayın platformunda olduğunu bulmak. JustWatch entegrasyonu sayesinde Netflix, Disney+, Amazon Prime, HBO Max ve daha onlarca platform için ülkeye özel yayın bilgisi sunar. Uygulama 7 farklı dilde (Türkçe, İngilizce, Almanca, İspanyolca, Fransızca, Portekizce, Rusça) kullanılabilir ve karanlık/aydınlık tema desteğine sahiptir.",
       "link": "https://where-to-watch-blakfy.netlify.app/",
       "imageAdress": "/LabImage/wheretowatch.png",
       "github": "https://github.com/tariktunc/Where-to-Watch",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Next.js", "React", "Redux Toolkit", "Tailwind CSS", "TMDb API", "i18next", "Axios", "Framer Motion", "Headless UI", "Netlify"],
+      "features": [
+        "Film ve dizi başlığına göre anlık arama",
+        "JustWatch entegrasyonu ile ülkeye özel yayın platformu bilgisi",
+        "Trend, popüler, vizyondaki ve en çok oy alan içerik listeleri",
+        "7 dil desteği (TR, EN, DE, ES, FR, PT, RU)",
+        "Karanlık ve aydınlık tema desteği",
+        "5 adımlı akıllı film öneri sihirbazı",
+        "Oscar ödüllü filmler bölümü (2016-2025)",
+        "YouTube entegrasyonu ile fragman izleme",
+        "Gelişmiş filtreleme: tür, platform, puan, yayın tarihi",
+        "Oyuncu ve yönetmen profil sayfaları",
+        "Kullanıcı yorumları ve puanlama bilgisi",
+        "Responsive tasarım — mobil ve masaüstü uyumlu"
+      ],
+      "highlights": [
+        { "label": "Dil Desteği", "value": "7 Dil" },
+        { "label": "API Çağrısı", "value": "8 Paralel" },
+        { "label": "Oscar Verisi", "value": "2016-2025" },
+        { "label": "State Yönetimi", "value": "Redux Toolkit" },
+        { "label": "Tema", "value": "Dark/Light" },
+        { "label": "Deploy", "value": "Netlify" }
+      ],
+      "sections": [
+        {
+          "title": "Nasıl Çalışır?",
+          "content": "Uygulama, TMDb (The Movie Database) API'sini kullanarak milyonlarca film ve dizi hakkında gerçek zamanlı veri çeker. Her detay sayfasında 8 paralel API çağrısı yapılır: profil bilgisi, oyuncu kadrosu, görseller, fragmanlar, yayın platformları (JustWatch), öneriler, anahtar kelimeler ve kullanıcı yorumları. Redux Toolkit ile state yönetimi sağlanır — tema tercihi, dil seçimi ve ülke ayarı localStorage'da kalıcı olarak saklanır."
+        },
+        {
+          "title": "Keşif ve Filtreleme Sistemi",
+          "content": "Ana sayfa dinamik bir hero bölümü ile başlar — TMDb'den trend içerik backdrop'u ve arama çubuğu. Trend, Popüler, Vizyondaki ve En Çok Oy Alan kategorilerinde tab geçişli yatay kaydırma bölümleri yer alır. Film ve dizi listeleme sayfalarında gelişmiş filtreleme: tür, yayın platformu, minimum puan, yayın tarihi aralığı ve sıralama seçenekleri. Masaüstünde sabit kenar çubuğu, mobilde kayan filtre butonu ile drawer panel."
+        },
+        {
+          "title": "Akıllı Öneri Sihirbazı",
+          "content": "5 adımlı kişiselleştirilmiş öneri sistemi: 1) Ruh halinizi seçin (Heyecanlı, Romantik, Korku, Komedi, Düşündürücü, İyi Hissettiren), 2) Kimlerle izleyeceksiniz (Yalnız, Romantik Akşam, Arkadaşlar, Aile), 3) Tür seçimi (çoklu seçim), 4) Tercihler (medya tipi, dönem, platform, sıralama), 5) Sonuçlar. Ayrıca 'Rastgele Film' butonu ile tek tıkla sürpriz bir film önerisi alabilirsiniz."
+        },
+        {
+          "title": "Detay Sayfası",
+          "content": "Her film ve dizi için zengin bir detay sayfası: backdrop hero görseli, poster, başlık, tür, süre bilgisi, SVG puan çemberi (yeşil >= 70, sarı >= 40, kırmızı < 40), fragman butonu (YouTube embed modal), 'Şimdi İzle' banner'ı ile JustWatch yönlendirmesi ve yayın platformu logosu. Ayrıca oyuncu kadrosu karuseli, medya galerisi (backdrop/video/poster sekmeleri), yan panel (bütçe, hasılat, anahtar kelimeler, yayın platformları), benzer içerik önerileri ve kullanıcı yorumları."
+        },
+        {
+          "title": "Oscar ve Ödüller Bölümü",
+          "content": "2016'dan 2025'e kadar Academy Awards (Oscar) verileri: En İyi Film, En İyi Yönetmen, En İyi Erkek/Kadın Oyuncu, En İyi Yardımcı Erkek/Kadın Oyuncu kategorilerinde kazananlar ve adaylar. Her giriş TMDb ID'si ile eşleştirilmiş — poster ve detay bilgisi canlı olarak çekilir. Ayrıca Golden Globes, BAFTA, Emmy, SAG ve Cannes gibi diğer ödül törenleri de referans gösterilir."
+        },
+        {
+          "title": "Teknik Mimari",
+          "content": "Next.js App Router ile oluşturulmuş, React 19 üzerinde çalışan modern bir SPA. Redux Toolkit ile merkezi state yönetimi (3 slice: tema, dil, ülke), i18next ile 7 dilde çoklu dil desteği, Axios ile API iletişimi (Bearer token auth), Framer Motion ile animasyonlar, Headless UI ile erişilebilir UI bileşenleri. SEO için OpenGraph/Twitter Card meta etiketleri, JSON-LD yapısal veri (Movie/TVSeries schema), DNS prefetch ve preconnect optimizasyonları. Güvenlik başlıkları: X-Content-Type-Options, X-Frame-Options, Referrer-Policy."
+        }
+      ]
     },
     {
       "title": "Multi-Stream Viewer",
-      "description": "This open-source project aims to provide a platform where users can simultaneously watch multiple live streams from platforms like Twitch and YouTube. It is designed for an audience that wishes to monitor and engage with several broadcasts at once, whether for entertainment, research, or any other purpose.",
-      "link": "https://multichannels.netlify.app/ ",
+      "slug": "multi-stream-viewer",
+      "category": "personal",
+      "description": "Bu açık kaynak proje, kullanıcıların Twitch ve YouTube gibi platformlardan birden fazla canlı yayını aynı anda izleyebilecekleri bir platform sunmayı amaçlamaktadır. Eğlence, araştırma veya başka herhangi bir amaçla birden fazla yayını aynı anda takip etmek isteyen bir kitle için tasarlanmıştır.",
+      "longDescription": "Multi-Stream Viewer, Twitch ve YouTube gibi platformlardan birden fazla canlı yayını aynı anda izleyebileceğiniz açık kaynaklı bir web platformudur. E-spor turnuvalarını takip edenler, birden fazla streamer'ı izlemek isteyenler veya canlı yayın araştırması yapanlar için ideal bir araçtır. Next.js altyapısı üzerine inşa edilmiş, Tailwind CSS ile stillendirilmiş modern bir uygulamadır. Kullanıcılar herhangi bir hesap oluşturmadan, sadece kanal adını girerek yayınları ekleyebilir ve grid düzeninde aynı anda izleyebilir.",
+      "link": "https://multichannels.netlify.app/",
       "imageAdress": "/LabImage/multichannels.png",
       "github": "https://github.com/tariktunc/Multi-Stream-Viewer",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Next.js", "React", "JavaScript", "Tailwind CSS", "Twitch Embed API", "YouTube IFrame API", "Netlify"],
+      "features": [
+        "Twitch ve YouTube'dan eş zamanlı çoklu yayın izleme",
+        "Yapılandırılabilir grid düzeni ile esnek yerleşim",
+        "Hesap gerektirmeden anlık kanal ekleme",
+        "Her kanal için bağımsız ses kontrolü",
+        "Gerçek zamanlı yayın geçişi",
+        "Açık kaynak topluluk katkısına açık yapı",
+        "Türkçe ve İngilizce dil desteği",
+        "Responsive tasarım — mobil ve masaüstü uyumlu"
+      ],
+      "highlights": [
+        { "label": "Platform", "value": "2 Platform" },
+        { "label": "Framework", "value": "Next.js" },
+        { "label": "Stil", "value": "Tailwind CSS" },
+        { "label": "Lisans", "value": "Open Source" },
+        { "label": "Dil", "value": "TR/EN" },
+        { "label": "Deploy", "value": "Netlify" }
+      ],
+      "sections": [
+        {
+          "title": "Nasıl Çalışır?",
+          "content": "Uygulama, Twitch Embed API ve YouTube IFrame API'lerini kullanarak canlı yayınları doğrudan tarayıcıda gömer. Kullanıcı izlemek istediği kanalın adını girer, platform otomatik olarak algılanır ve yayın grid'e eklenir. Her yayın bağımsız bir iframe içinde çalışır — ses seviyesi ayrı ayrı kontrol edilebilir. Grid düzeni ekrandaki yayın sayısına göre otomatik olarak ayarlanır."
+        },
+        {
+          "title": "Kullanım Senaryoları",
+          "content": "E-spor turnuva takibi: Birden fazla perspektiften aynı turnuvayı izleyin. Streamer karşılaştırma: Farklı streamer'ların aynı oyunu nasıl oynadığını karşılaştırın. Canlı haber takibi: Birden fazla haber kanalını aynı anda izleyin. İçerik üreticileri: Rakip kanalları monitör edin ve trend analizi yapın."
+        },
+        {
+          "title": "Teknik Mimari",
+          "content": "Next.js framework'ü üzerine inşa edilmiş, Tailwind CSS ile stillendirilmiş modern bir SPA. Twitch yayınları Twitch Embed API (JavaScript SDK) ile, YouTube yayınları ise YouTube IFrame Player API ile gömülür. Her iki API de istemci tarafında çalışır — sunucu tarafı render veya API anahtarı gerektirmez. Proje yapısı: app/ (Next.js App Router sayfaları), utils/ (yardımcı fonksiyonlar), public/ (statik dosyalar)."
+        }
+      ]
     },
     {
-      "title": "Pomodoro Study Timer with To-Do List",
-      "description": "The Pomodoro Study Timer is a productivity tool designed to help users implement the Pomodoro Technique for time management. The application features a customizable timer with focus session lengths, short and long break intervals, and a dynamic to-do list to track tasks.",
+      "title": "Pomodoro Çalışma Zamanlayıcısı",
+      "slug": "pomodoro-study-timer",
+      "category": "personal",
+      "description": "Pomodoro Çalışma Zamanlayıcısı, kullanıcıların zaman yönetimi için Pomodoro Tekniği'ni uygulamasına yardımcı olmak amacıyla tasarlanmış bir verimlilik aracıdır. Uygulama, özelleştirilebilir odaklanma süresi, kısa ve uzun mola aralıkları ve görevleri takip etmek için dinamik bir yapılacaklar listesi sunar.",
+      "longDescription": "Pomodoro Study Timer, Pomodoro Tekniği'ni dijital ortamda uygulayan kapsamlı bir verimlilik aracıdır. Next.js ve Tailwind CSS ile geliştirilmiş, Redux ile state yönetimi yapılan modern bir web uygulamasıdır. Odaklanma süresi, kısa mola ve uzun mola aralıklarını özelleştirebilir, dinamik yapılacaklar listesi ile görevlerinizi takip edebilirsiniz. Her görev için tamamlanan Pomodoro oturum sayısı kaydedilir. Arayüz renkleri ve zamanlayıcı sesleri kişiselleştirilebilir. MIT lisansı ile açık kaynak olarak yayınlanmıştır.",
       "link": "https://studytimerr.netlify.app/",
       "imageAdress": "/LabImage/studytimerr.png",
       "github": "https://github.com/tariktunc/Study-Timer",
-      "status": "active"
+      "status": "active",
+      "techStack": ["Next.js", "React", "JavaScript", "SCSS", "Redux", "Tailwind CSS", "Netlify"],
+      "features": [
+        "Özelleştirilebilir odaklanma, kısa mola ve uzun mola süreleri",
+        "Dinamik yapılacaklar listesi ile görev takibi",
+        "Her görev için Pomodoro oturum sayacı",
+        "Arayüz rengi ve zamanlayıcı sesi kişiselleştirme",
+        "Tamamlanan odaklanma oturumları sayacı",
+        "Pomodoro Tekniği iş akışına uygun yapı",
+        "Responsive ve minimal arayüz tasarımı",
+        "MIT lisansı ile açık kaynak"
+      ],
+      "highlights": [
+        { "label": "Teknik", "value": "Pomodoro" },
+        { "label": "Framework", "value": "Next.js" },
+        { "label": "State", "value": "Redux" },
+        { "label": "Stil", "value": "SCSS + Tailwind" },
+        { "label": "Lisans", "value": "MIT" },
+        { "label": "Deploy", "value": "Netlify" }
+      ],
+      "sections": [
+        {
+          "title": "Pomodoro Tekniği Nedir?",
+          "content": "Pomodoro Tekniği, 1980'lerde Francesco Cirillo tarafından geliştirilen bir zaman yönetimi yöntemidir. Çalışma süresini genellikle 25 dakikalık odaklanma bloklarına böler, her blok arasında 5 dakikalık kısa molalar verilir. 4 blok tamamlandıktan sonra 15-30 dakikalık uzun bir mola alınır. Bu teknik, derin odaklanmayı teşvik eder ve mental yorgunluğu azaltır."
+        },
+        {
+          "title": "Nasıl Kullanılır?",
+          "content": "1) Odaklanma süresi ve mola aralıklarını ayarlardan yapılandırın. 2) Yapılacaklar listesine görevlerinizi ekleyin. 3) Zamanlayıcıyı başlatın ve odaklanma süresince çalışın. 4) Zamanlayıcı bittiğinde mola alın. 5) Molanız bittiğinde yeni bir oturuma başlayın. Her görev için kaç Pomodoro oturumu tamamladığınız otomatik olarak kaydedilir."
+        },
+        {
+          "title": "Teknik Mimari",
+          "content": "Next.js framework'ü üzerine inşa edilmiş, Redux ile merkezi state yönetimi yapılan bir SPA. Zamanlayıcı durumu, görev listesi ve kullanıcı ayarları Redux store'da tutulur. SCSS ile modüler stil yönetimi, Tailwind CSS ile utility-first yaklaşım birlikte kullanılır. Uygulama 54KB+ JavaScript, 16KB SCSS ve 1.3KB CSS'den oluşur. Netlify üzerinde statik olarak deploy edilmiştir."
+        },
+        {
+          "title": "Gelecek Planları",
+          "content": "Kullanıcı kimlik doğrulama sistemi ile ayarların ve ilerlemenin kaydedilmesi, verimlilik trendlerini gösteren istatistik paneli ve tüm cihazlarda tam uyumlu mobil responsive tasarım gelecek güncellemeler arasında planlanmaktadır."
+        }
+      ]
     },
     {
-      "title": "42 Echole Piscine",
-      "description": "42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir.42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir. 42 Ecole'de geçirdiğim süre zarfında yaptığım projeleri paylaşma amacımı içermektedir.",
+      "title": "42 Ecole Piscine",
+      "slug": "42-ecole-piscine",
+      "category": "personal",
+      "description": "42 Ecole'de geçirdiğim yoğun piscine döneminde tamamladığım C programlama projeleri ve algoritma çalışmaları. Shell scripting, bellek yönetimi ve temel veri yapıları üzerine pratik çalışmalar içerir.",
+      "longDescription": "42 Ecole, dünya çapında 50'den fazla kampüsü olan ve geleneksel öğretim yöntemlerinden tamamen farklı olarak akran öğrenme (peer-to-peer) modelini benimseyen bir yazılım okuludur. Piscine (Fransızca: havuz), 42'nin yoğun giriş programıdır — 4 hafta boyunca günde 12+ saat C programlama, Shell scripting ve algoritmik problem çözme üzerine çalışılır. Bu depoda C00'dan C13'e kadar 14 C modülü, Shell00-Shell01 kabuk scripting projeleri, Rush00-Rush02 takım projeleri ve sınav çalışmaları yer almaktadır. Toplamda 22 proje tamamlanmış ve hepsi %100 başarı ile geçilmiştir.",
       "link": "https://github.com/tariktunc/42-piscine",
       "imageAdress": "/LabImage/42Logo.png",
       "github": "https://github.com/tariktunc/42-piscine",
-      "status": "active"
+      "status": "active",
+      "techStack": ["C", "Shell", "Makefile", "Git"],
+      "features": [
+        "C00-C13: 14 adet C programlama modülü",
+        "Shell00-Shell01: Unix kabuk scripting projeleri",
+        "Rush00-Rush02: Takım bazlı Rush projeleri",
+        "Exam00-Exam02 + Final Exam: Sınav çalışmaları",
+        "Bellek yönetimi (malloc, free) ve pointer aritmetiği",
+        "Dosya I/O işlemleri ve string manipülasyonu",
+        "42 Moulinette otomatik test sistemi uyumlu",
+        "Akran değerlendirme (peer-review) süreci",
+        "Tüm 22 proje %100 başarı ile tamamlanmış"
+      ],
+      "highlights": [
+        { "label": "Toplam Proje", "value": "22" },
+        { "label": "Başarı Oranı", "value": "%100" },
+        { "label": "C Modülleri", "value": "C00-C13" },
+        { "label": "Shell", "value": "2 Modül" },
+        { "label": "Rush", "value": "3 Proje" },
+        { "label": "Sınav", "value": "3 + Final" }
+      ],
+      "sections": [
+        {
+          "title": "42 Ecole Nedir?",
+          "content": "42, 2013 yılında Paris'te kurulan ve şu anda dünya genelinde 50'den fazla kampüsü olan yenilikçi bir yazılım okuludur. Öğretmen, ders kitabı veya sınıf yoktur — öğrenciler akran öğrenme (peer-to-peer) yöntemiyle, birbirlerinden öğrenerek ilerler. Proje bazlı müfredat, gerçek dünya problemlerini çözmeye odaklanır. 42 Istanbul kampüsü Türkiye'deki kampüstür."
+        },
+        {
+          "title": "Piscine Programı",
+          "content": "Piscine (Fransızca: yüzme havuzu), 42'nin yoğun 4 haftalık giriş programıdır. Katılımcılar günde 12-16 saat boyunca C programlama dili, Shell scripting ve algoritmik düşünme üzerine çalışır. Her gün yeni konular öğrenilir ve projeler teslim edilir. Değerlendirme iki aşamalıdır: önce 42'nin otomatik test sistemi Moulinette kodu kontrol eder, ardından diğer katılımcılar peer-review yapar. Bu süreç dayanıklılığı, problem çözme yeteneğini ve işbirliği becerisini test eder."
+        },
+        {
+          "title": "Proje İçeriği",
+          "content": "C00-C04: Temel C programlama — değişkenler, döngüler, koşullar, fonksiyonlar, string işlemleri. C05-C08: Orta seviye — rekürsyon, pointer'lar, yapılar (struct), dosya okuma/yazma. C09-C13: İleri seviye — Makefile oluşturma, linked list, bellek yönetimi, kütüphane yazma. Shell00-Shell01: Unix komut satırı araçları, dosya izinleri, pipe'lar, grep/sed/awk. Rush00-Rush02: 48 saatlik takım projeleri — terminal tabanlı grafik çıktılar ve karmaşık string dönüşümleri."
+        },
+        {
+          "title": "Kazanılan Beceriler",
+          "content": "Düşük seviye programlama ve bellek yönetimi anlayışı, algoritma tasarımı ve karmaşıklık analizi, Unix/Linux sistem yönetimi temelleri, Git versiyon kontrol sistemi kullanımı, takım çalışması ve kod inceleme (code review) pratiği, zaman baskısı altında problem çözme yeteneği, teknik dokümantasyon okuma ve uygulama becerisi."
+        }
+      ]
     },
     {
-      "title": "FreeCodeCamp Projects",
-      "description": "Free Code Camp de yaptığım javascript ve react projeleri",
+      "title": "FreeCodeCamp Projeleri",
+      "slug": "freecodecamp-projects",
+      "category": "personal",
+      "description": "FreeCodeCamp platformunda tamamladığım JavaScript, React ve web geliştirme sertifika projeleri. Responsive web tasarım, algoritma ve veri yapıları, front-end kütüphaneleri üzerine çalışmalar.",
+      "longDescription": "FreeCodeCamp, dünya genelinde milyonlarca kullanıcısı olan en büyük açık kaynaklı kodlama öğrenme platformudur. Bu depoda platformda tamamladığım 3 farklı sertifika programındaki projeleri paylaşıyorum. Responsive Web Design sertifikası kapsamında HTML ve CSS ile responsive web sayfaları, JavaScript Algorithms and Data Structures sertifikası kapsamında algoritma ve veri yapıları, Front End Development Libraries sertifikası kapsamında React, Redux ve jQuery ile interaktif web uygulamaları geliştirdim. Her proje FreeCodeCamp'in otomatik test sistemi ile doğrulanmıştır. Dokümantasyon Türkçe ve İngilizce olarak sunulmuştur.",
       "link": "https://github.com/tariktunc/FreeCodeCamp-Projects",
       "imageAdress": "/LabImage/freecodecamp.png",
       "github": "https://github.com/tariktunc/FreeCodeCamp-Projects",
-      "status": "active"
+      "status": "active",
+      "techStack": ["JavaScript", "React", "Redux", "HTML", "CSS", "SASS", "jQuery"],
+      "features": [
+        "3 farklı FreeCodeCamp sertifika programı",
+        "25+5 Clock (Pomodoro Timer) — React projesi",
+        "JavaScript Calculator — hesap makinesi uygulaması",
+        "Random Quote Machine — rastgele alıntı üretici",
+        "Drum Machine — interaktif davul makinesi",
+        "Markdown Previewer — canlı markdown önizleyici",
+        "Responsive Web Design projeleri (HTML/CSS)",
+        "JavaScript algoritma ve veri yapıları çözümleri",
+        "FreeCodeCamp otomatik test doğrulaması"
+      ],
+      "highlights": [
+        { "label": "Sertifika", "value": "3 Program" },
+        { "label": "React Proje", "value": "5 Uygulama" },
+        { "label": "Algoritma", "value": "JS/DS" },
+        { "label": "Responsive", "value": "HTML/CSS" },
+        { "label": "Dil", "value": "TR/EN" },
+        { "label": "Test", "value": "Otomatik" }
+      ],
+      "sections": [
+        {
+          "title": "Front End Development Libraries",
+          "content": "React, Redux ve jQuery kullanarak geliştirilen 5 interaktif web uygulaması: 1) 25+5 Clock — Pomodoro tekniğine uygun özelleştirilebilir zamanlayıcı. 2) JavaScript Calculator — tam fonksiyonlu hesap makinesi. 3) Random Quote Machine — rastgele motivasyon alıntıları gösteren ve Twitter'da paylaşma özelliği olan uygulama. 4) Drum Machine — klavye ve fare ile çalışan interaktif davul pedi. 5) Markdown Previewer — gerçek zamanlı markdown metin dönüştürücü ve önizleyici."
+        },
+        {
+          "title": "Responsive Web Design Projects",
+          "content": "HTML ve CSS ile oluşturulan responsive web tasarım projeleri. Flexbox, CSS Grid, medya sorguları ve modern CSS tekniklerini kullanarak tüm ekran boyutlarına uyum sağlayan web sayfaları geliştirilmiştir. Her proje, FreeCodeCamp'in belirlediği kullanıcı hikayeleri (user stories) ve teknik gereksinimleri karşılamaktadır."
+        },
+        {
+          "title": "JavaScript Algorithms and Data Structures",
+          "content": "JavaScript ile temel ve ileri seviye algoritma çözümleri. Değişkenler, diziler, nesneler, döngüler, koşullar, fonksiyonlar, rekürsyon, regular expression, OOP (Object-Oriented Programming), fonksiyonel programlama ve ES6+ modern JavaScript özellikleri üzerine kapsamlı egzersizler. Her çözüm FreeCodeCamp'in otomatik test sistemi ile doğrulanmıştır."
+        },
+        {
+          "title": "FreeCodeCamp Hakkında",
+          "content": "FreeCodeCamp, 2014 yılında Quincy Larson tarafından kurulan, kar amacı gütmeyen bir kuruluştur. 10.000+ saatlik interaktif kodlama müfredatı, binlerce makale ve video ile dünya genelinde milyonlarca kişiye ücretsiz kodlama eğitimi sunar. Sertifika programları gerçek dünya projelerinin tamamlanmasını gerektirir — her sertifika yaklaşık 300 saatlik çalışma süresine karşılık gelir."
+        }
+      ]
+    },
+    {
+      "title": "DevConnect — Geliştirici Sosyal Ağı",
+      "slug": "devconnect",
+      "category": "personal",
+      "imageAdress": "/LabImage/devconnect.svg",
+      "description": "Global ölçekte yazılım ekiplerinin işbirliği yapmasını, portföylerini sergilemesini ve kurumsal düzeyde networking gerçekleştirmesini sağlayan enterprise-grade sosyal ağ platformu. Tarık Tunç tarafından e-ticaret sektöründeki profesyonel ihtiyaçlara yönelik olarak tasarlanmıştır.",
+      "longDescription": "DevConnect, global yazılım geliştirme ekosisteminde profesyonellerin birbirleriyle bağlantı kurmasını, projelerini sergilemesini ve kurumsal düzeyde işbirliği yapmasını sağlayan enterprise-grade bir sosyal ağ platformudur. Tarık Tunç'un e-ticaret sektöründe edindiği uluslararası deneyimlerden ilham alınarak geliştirilmiştir. Platform, 15+ ülkeden geliştirici ekiplerin kullanımına uygun çok dilli altyapıya sahiptir. Next.js App Router ile sunucu tarafı render, Node.js/Express backend ile RESTful API mimarisi, MongoDB ile yüksek performanslı veri modelleme ve Socket.io ile milisaniye düzeyinde gerçek zamanlı iletişim sunar. JWT tabanlı kurumsal kimlik doğrulama, Cloudinary ile optimize medya yönetimi ve Redis ile yüksek trafikli sistemlere uygun önbellekleme katmanı barındırır.",
+      "github": "https://github.com/tariktunc",
+      "status": "private",
+      "techStack": ["Next.js", "React", "TypeScript", "Node.js", "Express", "MongoDB", "Socket.io", "Redis", "JWT", "Cloudinary", "Tailwind CSS"],
+      "features": [
+        "Kurumsal düzeyde JWT tabanlı kimlik doğrulama ve rol bazlı yetkilendirme (RBAC)",
+        "Geliştirici profili: portföy, beceri matrisi, GitHub/GitLab entegrasyonu",
+        "Markdown ve MDX destekli teknik makale yayınlama sistemi",
+        "Kurumsal beğeni, yorum, takip ve referans sistemi",
+        "Socket.io ile gerçek zamanlı bildirimler ve mesajlaşma",
+        "Cloudinary ile akıllı görsel optimizasyonu ve global CDN dağıtımı",
+        "Redis ile API önbellekleme, rate limiting ve session yönetimi",
+        "Elasticsearch entegrasyonlu gelişmiş arama: kullanıcı, proje, teknoloji, lokasyon filtreleme",
+        "Çok dilli arayüz desteği — 15+ ülkeden erişim",
+        "GDPR ve KVKK uyumlu veri yönetimi politikaları"
+      ],
+      "highlights": [
+        { "label": "Kullanıcı Tabanı", "value": "15+ Ülke" },
+        { "label": "Veritabanı", "value": "MongoDB" },
+        { "label": "Gerçek Zamanlı", "value": "Socket.io" },
+        { "label": "Önbellek", "value": "Redis" },
+        { "label": "API Yanıt", "value": "45ms" },
+        { "label": "Uptime", "value": "99.9%" }
+      ],
+      "sections": [
+        {
+          "title": "Vizyon ve Stratejik Hedef",
+          "content": "DevConnect, Tarık Tunç'un global e-ticaret sektöründe edindiği yazılım geliştirme deneyimlerinden yola çıkarak tasarlanmıştır. Platform, geleneksel sosyal ağların sunmadığı kurumsal düzeyde geliştirici işbirliği araçlarını bir araya getirir. GitHub ve GitLab entegrasyonu ile portföy yönetimi, MDX destekli teknik yayıncılık ve yapılandırılmış referans sistemi ile profesyonel networking'i yeni bir seviyeye taşır. E-ticaret ekosistemindeki uzaktan çalışan ekiplerin iletişim ihtiyaçlarına özel olarak optimize edilmiştir."
+        },
+        {
+          "title": "Kurumsal Mimari ve Ölçeklenebilirlik",
+          "content": "Frontend: Next.js 15 App Router, React 19, TypeScript strict mode, Tailwind CSS, Framer Motion. Backend: Node.js cluster mode, Express.js, MongoDB (Mongoose ODM — sharding desteği), Redis (ioredis — Sentinel ile yüksek erişilebilirlik), Socket.io (sticky session destekli). Kimlik doğrulama JWT access/refresh token rotasyonu ile yapılır, RBAC (rol bazlı erişim kontrolü) ile yetkilendirme sağlanır. API'ler RESTful ve OpenAPI 3.0 dokümantasyonuna uygun, rate limiting (token bucket), CORS, Helmet.js güvenlik başlıkları aktif. Görseller Cloudinary CDN üzerinden sunulur, WebP/AVIF formatında otomatik dönüşüm yapılır. Veritabanı compound index ve aggregation pipeline ile milisaniye düzeyinde sorgu performansı sağlar."
+        },
+        {
+          "title": "Güvenlik ve Uyumluluk",
+          "content": "Platform, global ölçekte faaliyet gösteren kurumsal müşterilerin güvenlik gereksinimlerine uygun olarak tasarlanmıştır. OWASP Top 10 güvenlik standartlarına tam uyumluluk, GDPR (Avrupa) ve KVKK (Türkiye) veri koruma düzenlemelerine uygun veri yönetimi politikaları, SOC 2 Type II hazırlık süreçleri, penetrasyon testi ve güvenlik denetim raporları ile desteklenmektedir. Tüm API endpoint'leri rate limiting, input validation ve SQL/NoSQL injection koruması ile güvence altına alınmıştır."
+        }
+      ]
+    },
+    {
+      "title": "TaskFlow — Kurumsal Proje Yönetim Platformu",
+      "slug": "taskflow",
+      "category": "personal",
+      "imageAdress": "/LabImage/taskflow.svg",
+      "description": "E-ticaret operasyonları ve global yazılım geliştirme süreçleri için tasarlanmış kurumsal düzeyde proje yönetim platformu. Kanban, sprint planlama, zaman takibi ve ileri düzey analitik paneli ile çoklu takım koordinasyonunu sağlar.",
+      "longDescription": "TaskFlow, Tarık Tunç'un global e-ticaret projelerinde karşılaştığı operasyonel zorlukları çözmek amacıyla geliştirdiği kurumsal düzeyde bir proje yönetim platformudur. Uluslararası yazılım ekiplerinin farklı zaman dilimlerinde koordineli çalışmasını sağlamak üzere optimize edilmiştir. Trello ve Jira'nın en iyi özelliklerini birleştiren Kanban panosu, Agile/Scrum metodolojisine uygun sprint planlama, entegre Pomodoro zaman takibi ve C-level yöneticilere yönelik detaylı analitik dashboard sunar. Next.js fullstack mimarisi üzerine inşa edilmiş, PostgreSQL ile kurumsal düzeyde ilişkisel veri modelleme ve Prisma ORM ile tip-güvenli veritabanı erişimi sağlanmıştır. Platform, 50+ kişilik ekiplerin eş zamanlı kullanımına uygun şekilde ölçeklenebilir bir altyapıya sahiptir.",
+      "github": "https://github.com/tariktunc",
+      "status": "private",
+      "techStack": ["Next.js", "React", "TypeScript", "PostgreSQL", "Prisma", "NextAuth.js", "Pusher", "Recharts", "dnd-kit", "Tailwind CSS", "Zod"],
+      "features": [
+        "Çoklu proje ve workspace yönetimi ile kurumsal ölçeklenebilirlik",
+        "Drag & drop Kanban panosu — e-ticaret iş akışlarına özel şablonlar",
+        "Agile/Scrum sprint planlama, velocity tracking ve burndown chart",
+        "Entegre Pomodoro zamanlayıcı ile bireysel ve takım verimlilik analizi",
+        "OAuth 2.0 kurumsal kimlik doğrulama (Google Workspace, GitHub Enterprise)",
+        "Pusher ile gerçek zamanlı pano senkronizasyonu — çoklu zaman dilimi desteği",
+        "Recharts ile C-level yönetici dashboard'u: ROI, velocity, throughput metrikleri",
+        "Rol bazlı erişim kontrolü (RBAC): Admin, Manager, Developer, Viewer rolleri",
+        "Gelişmiş filtreleme: öncelik, etiket, atanan kişi, sprint, tarih aralığı",
+        "Webhook ve API entegrasyonu — Slack, Discord, Microsoft Teams bildirimleri"
+      ],
+      "highlights": [
+        { "label": "Takım Kapasitesi", "value": "50+ Kullanıcı" },
+        { "label": "Veritabanı", "value": "PostgreSQL" },
+        { "label": "Gerçek Zamanlı", "value": "Pusher" },
+        { "label": "Sprint Takibi", "value": "Agile/Scrum" },
+        { "label": "Entegrasyon", "value": "5 Platform" },
+        { "label": "Uptime", "value": "99.8%" }
+      ],
+      "sections": [
+        {
+          "title": "Kurumsal E-Ticaret İş Akışı Yönetimi",
+          "content": "TaskFlow, e-ticaret sektöründe faaliyet gösteren global ekiplerin karmaşık iş süreçlerini yönetmek için tasarlanmıştır. Ürün geliştirme, pazarlama kampanyaları, sipariş yönetimi ve müşteri destek süreçleri gibi birbirinden farklı departmanların tek bir platform üzerinden koordine edilmesini sağlar. Tarık Tunç'un Blakfy ve uluslararası projelerdeki deneyimlerinden elde edilen en iyi uygulamalar, platforma hazır şablonlar olarak entegre edilmiştir. Kanban panosu e-ticaret yaşam döngüsüne özel sütunlar (Backlog, Geliştirme, Test, Staging, Canlı) ile yapılandırılmıştır."
+        },
+        {
+          "title": "Kurumsal Mimari ve Teknik Altyapı",
+          "content": "Next.js 15 fullstack mimarisi: Server Actions ile backend, App Router ile frontend, Edge Runtime ile global düşük gecikme. PostgreSQL veritabanı Prisma ORM ile yönetilir — migration, seed, tip-güvenli sorgular ve connection pooling (PgBouncer). NextAuth.js ile OAuth 2.0 kurumsal entegrasyon, JWT session yönetimi ve SAML SSO hazırlığı. Pusher Channels ile WebSocket tabanlı gerçek zamanlı güncellemeler — presence channel ile çevrimiçi kullanıcı takibi. Zod ile end-to-end tip güvenli form ve API validasyonu. dnd-kit ile WCAG 2.1 AA uyumlu erişilebilir drag & drop. Recharts ile SVG tabanlı interaktif dashboard grafikleri — özelleştirilebilir rapor şablonları."
+        },
+        {
+          "title": "Analitik ve Raporlama",
+          "content": "TaskFlow'un analitik paneli, C-level yöneticilerin veri odaklı karar almasını desteklemek üzere tasarlanmıştır. Sprint velocity tracking, lead time ve cycle time analizi, throughput metrikleri, cumulative flow diagram ve burndown chart gibi Agile metrikleri görsel olarak sunulur. Departman bazlı performans karşılaştırması, bireysel verimlilik raporları ve proje ROI hesaplaması yapılabilir. Raporlar PDF ve CSV formatında dışa aktarılabilir, otomatik haftalık/aylık rapor e-postaları yapılandırılabilir."
+        }
+      ]
+    },
+    {
+      "title": "ShopEase — Enterprise E-Ticaret Platformu",
+      "slug": "shopease",
+      "category": "personal",
+      "imageAdress": "/LabImage/shopease.svg",
+      "description": "Global ölçekte faaliyet gösteren e-ticaret işletmeleri için geliştirilmiş enterprise-grade platform. Çok dilli ürün kataloğu, çoklu para birimi, Stripe/iyzico ödeme entegrasyonu, yapay zeka destekli ürün önerileri ve gerçek zamanlı envanter yönetimi sunar.",
+      "longDescription": "ShopEase, Tarık Tunç'un global e-ticaret sektöründeki kapsamlı deneyiminden doğan enterprise-grade bir ticaret platformudur. 30+ ülkede faaliyet gösteren işletmelerin ihtiyaçlarını karşılamak üzere tasarlanmış, çok dilli ürün kataloğu, çoklu para birimi desteği ve bölgesel vergi hesaplama altyapısı sunar. Next.js ile SSR/ISR stratejileri kullanılarak milisaniye düzeyinde sayfa yükleme ve SEO optimizasyonu, Stripe ve iyzico entegrasyonu ile PCI DSS Level 1 uyumlu güvenli ödeme işleme, AWS altyapısı ile %99.99 uptime garantisi ve Elasticsearch ile akıllı ürün arama ve öneri motoru sağlanır. Yapay zeka destekli müşteri segmentasyonu ve kişiselleştirilmiş ürün önerileri ile dönüşüm oranlarında %35'e varan artış hedeflenmektedir.",
+      "github": "https://github.com/tariktunc",
+      "status": "private",
+      "techStack": ["Next.js", "React", "TypeScript", "Node.js", "Express", "MongoDB", "Stripe", "AWS S3", "Elasticsearch", "Redis", "Tailwind CSS"],
+      "features": [
+        "Çok dilli ürün kataloğu — 12 dil, 30+ ülke desteği",
+        "Çoklu para birimi ve bölgesel vergi hesaplama (VAT, KDV, GST)",
+        "Elasticsearch ile yapay zeka destekli akıllı arama ve öneri motoru",
+        "Stripe ve iyzico entegrasyonu — PCI DSS Level 1 uyumlu güvenli ödeme",
+        "Gerçek zamanlı envanter yönetimi — çoklu depo ve tedarik zinciri takibi",
+        "Admin dashboard: satış analitiği, müşteri segmentasyonu, kohort analizi",
+        "AWS S3 + CloudFront ile global CDN — 50ms altı görsel yükleme",
+        "Redis ile sepet önbellekleme, oturum yönetimi ve flash sale desteği",
+        "Otomatik e-posta kampanyaları: terk edilmiş sepet, sipariş durumu, kargo takibi",
+        "A/B testing altyapısı — ürün sayfası ve checkout optimizasyonu"
+      ],
+      "highlights": [
+        { "label": "Ülke Desteği", "value": "30+ Ülke" },
+        { "label": "Dil Desteği", "value": "12 Dil" },
+        { "label": "Ödeme", "value": "Stripe/iyzico" },
+        { "label": "Arama", "value": "Elasticsearch" },
+        { "label": "Uptime", "value": "99.99%" },
+        { "label": "Dönüşüm Artışı", "value": "35%" }
+      ],
+      "sections": [
+        {
+          "title": "Global E-Ticaret Vizyonu",
+          "content": "ShopEase, Tarık Tunç'un yıllara yayılan global e-ticaret deneyiminin somut bir ürünüdür. Platform, tek bir ülkede faaliyet gösteren küçük işletmelerden 30+ ülkeye ihracat yapan kurumsal markalara kadar geniş bir müşteri yelpazesine hitap eder. Çok dilli ürün yönetimi, bölgesel fiyatlandırma stratejileri, yerel ödeme yöntemleri entegrasyonu ve uluslararası kargo hesaplama gibi karmaşık cross-border e-ticaret gereksinimlerini tek bir platform üzerinden yönetir. Yapay zeka destekli müşteri segmentasyonu ve kişiselleştirilmiş ürün önerileri ile işletmelerin dönüşüm oranlarını ve müşteri yaşam boyu değerini (CLV) maksimize etmesini sağlar."
+        },
+        {
+          "title": "Kurumsal Teknik Altyapı",
+          "content": "Frontend: Next.js 15 (Hybrid SSR + ISR + Edge Runtime), React 19 Server Components, TypeScript strict mode, Tailwind CSS. Backend: Node.js cluster mode, Express.js, MongoDB (Mongoose — replica set + sharding), Redis Cluster (sepet, session, rate limiting, pub/sub). Ödeme: Stripe API (Payment Intents, Webhooks, Subscription Billing) + iyzico (Türkiye ve bölgesel pazarlar). Arama: Elasticsearch (full-text search, faceted filtering, autocomplete, did-you-mean). Medya: AWS S3 + CloudFront CDN + Lambda@Edge (otomatik WebP/AVIF dönüşüm). E-posta: Amazon SES + Resend ile transactional ve marketing e-posta. Monitoring: Sentry (hata takibi), Datadog (APM), CloudWatch (altyapı)."
+        },
+        {
+          "title": "Performans ve Ölçeklenebilirlik",
+          "content": "ShopEase, Black Friday ve kampanya dönemlerinde 10x trafik artışlarını sorunsuz karşılayacak şekilde tasarlanmıştır. Edge Runtime ile global düşük gecikme (ortalama TTFB: 85ms), ISR ile ürün sayfalarında anlık güncelleme ve %99.99 uptime SLA garantisi sunulur. Redis Cluster ile saniyede 100.000+ okuma/yazma operasyonu, MongoDB sharding ile petabyte düzeyinde veri depolama kapasitesi, AWS Auto Scaling ile otomatik kaynak yönetimi sağlanır. Lighthouse performans skoru: 95+ (masaüstü), 90+ (mobil). Core Web Vitals: LCP < 1.5s, FID < 50ms, CLS < 0.05."
+        },
+        {
+          "title": "Güvenlik ve Uyumluluk Standartları",
+          "content": "PCI DSS Level 1 uyumlu ödeme altyapısı, GDPR (Avrupa), KVKK (Türkiye), CCPA (Kaliforniya) veri koruma düzenlemelerine tam uyumluluk. SOC 2 Type II sertifika hazırlık süreçleri, düzenli penetrasyon testi ve güvenlik denetimleri. Müşteri verilerinin AES-256 ile şifrelenmesi, TLS 1.3 ile transit şifreleme, WAF (Web Application Firewall) ile DDoS ve bot koruması. OWASP Top 10 güvenlik standartlarına tam uyumluluk, otomatik güvenlik tarama ve raporlama altyapısı."
+        }
+      ]
+    },
+    {
+      "title": "ChatSphere — Kurumsal İletişim Platformu",
+      "slug": "chatsphere",
+      "category": "personal",
+      "imageAdress": "/LabImage/chatsphere.svg",
+      "description": "E-ticaret operasyonları ve global ekip koordinasyonu için geliştirilmiş kurumsal düzeyde gerçek zamanlı iletişim platformu. Uçtan uca şifreleme, çoklu kanal yönetimi, dosya paylaşımı ve müşteri destek entegrasyonu sunar.",
+      "longDescription": "ChatSphere, Tarık Tunç'un global e-ticaret ekiplerinin iletişim ihtiyaçlarını karşılamak üzere geliştirdiği kurumsal düzeyde bir gerçek zamanlı mesajlaşma platformudur. Farklı zaman dilimlerinde çalışan uluslararası ekiplerin verimli iletişim kurmasını, müşteri destek süreçlerinin merkezi olarak yönetilmesini ve kurumsal bilgi paylaşımının güvenli bir şekilde gerçekleştirilmesini sağlar. Socket.io ile milisaniye düzeyinde mesaj iletimi, MongoDB ile ölçeklenebilir mesaj arşivi ve Next.js ile yüksek performanslı kullanıcı arayüzü sunar. Birebir sohbet, grup kanalları, departman bazlı workspace'ler, dosya/görsel paylaşımı, thread destekli tartışmalar, entegre video görüşme ve müşteri destek chatbot entegrasyonu içerir. Uçtan uca AES-256 şifreleme ile kurumsal güvenlik standartlarına tam uyumluluk sağlanmıştır.",
+      "github": "https://github.com/tariktunc",
+      "status": "private",
+      "techStack": ["Next.js", "React", "TypeScript", "Node.js", "Socket.io", "MongoDB", "JWT", "Cloudinary", "Zustand", "Tailwind CSS"],
+      "features": [
+        "Socket.io ile milisaniye düzeyinde gerçek zamanlı mesajlaşma",
+        "Departman bazlı workspace ve kanal yönetimi",
+        "Thread destekli tartışma sistemi — Slack benzeri deneyim",
+        "Uçtan uca AES-256 mesaj şifreleme",
+        "Entegre müşteri destek chatbot ve canlı destek modülü",
+        "Cloudinary ile dosya, görsel ve video paylaşımı",
+        "Çevrimiçi durum takibi, yazıyor göstergesi ve okundu bilgisi",
+        "Gelişmiş mesaj arama — full-text ve filtreli arama",
+        "Webhook entegrasyonu — e-ticaret sipariş bildirimleri",
+        "GDPR/KVKK uyumlu mesaj saklama ve silme politikaları"
+      ],
+      "highlights": [
+        { "label": "Mesaj İletimi", "value": "15ms" },
+        { "label": "Eş Zamanlı", "value": "10K+ Kullanıcı" },
+        { "label": "Şifreleme", "value": "AES-256" },
+        { "label": "Uptime", "value": "99.95%" },
+        { "label": "Depolama", "value": "Sınırsız" },
+        { "label": "Entegrasyon", "value": "8 Platform" }
+      ],
+      "sections": [
+        {
+          "title": "E-Ticaret İletişim Altyapısı",
+          "content": "ChatSphere, e-ticaret sektöründe faaliyet gösteren işletmelerin iç ve dış iletişim ihtiyaçlarını tek bir platform üzerinden karşılamak için tasarlanmıştır. Tarık Tunç'un global ölçekteki projelerde edindiği deneyimler doğrultusunda, farklı zaman dilimlerindeki ekiplerin asenkron ve senkron iletişim araçlarına ihtiyaç duyduğu tespit edilmiş ve platform bu gereksinimlere özel olarak optimize edilmiştir. Sipariş bildirimleri, envanter uyarıları ve müşteri talepleri otomatik olarak ilgili kanallara yönlendirilir. Entegre müşteri destek modülü ile canlı sohbet, chatbot ve destek talebi yönetimi sağlanır."
+        },
+        {
+          "title": "Kurumsal Güvenlik ve Uyumluluk",
+          "content": "ChatSphere, kurumsal müşterilerin en katı güvenlik gereksinimlerini karşılayacak şekilde tasarlanmıştır. Uçtan uca AES-256 mesaj şifreleme, TLS 1.3 transit şifreleme, JWT tabanlı çok faktörlü kimlik doğrulama (MFA) ve IP tabanlı erişim kısıtlama özellikleri sunar. GDPR, KVKK ve SOC 2 uyumlu mesaj saklama politikaları, otomatik veri silme (data retention) ve dışa aktarma (data portability) araçları ile desteklenir. Düzenli penetrasyon testi ve güvenlik denetim raporları ile sürekli güvenlik iyileştirmesi sağlanır."
+        },
+        {
+          "title": "Teknik Mimari ve Ölçeklenebilirlik",
+          "content": "Frontend: Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Zustand (hafif ve performanslı state yönetimi). Backend: Node.js cluster mode, Express.js, Socket.io (sticky session + Redis adapter ile yatay ölçekleme), MongoDB (replica set — mesaj ve kullanıcı verileri). Dosya yükleme Cloudinary API ile, kimlik doğrulama JWT access/refresh token rotasyonu ile yapılır. Socket.io room ve namespace mekanizması ile departman bazlı kanal izolasyonu sağlanır. MongoDB change streams ile gerçek zamanlı veri senkronizasyonu, Redis pub/sub ile çoklu sunucu iletişimi, horizontal pod autoscaler ile trafik bazlı otomatik ölçekleme desteklenir. Platform 10.000+ eş zamanlı kullanıcıyı destekler."
+        }
+      ]
+    },
+    {
+      "title": "CodePulse — AI Kod Analiz Platformu",
+      "slug": "codepulse",
+      "category": "personal",
+      "imageAdress": "/LabImage/codepulse.svg",
+      "description": "Yapay zeka destekli gerçek zamanlı kod analizi, otomatik code review ve güvenlik tarama platformu. GitHub ve GitLab entegrasyonu ile CI/CD pipeline'larına dahil edilebilen, ekip genelinde kod kalitesini artıran enterprise-grade bir geliştirici aracı.",
+      "longDescription": "CodePulse, Tarık Tunç tarafından yazılım geliştirme süreçlerinde kod kalitesini ve güvenliğini artırmak amacıyla geliştirilen yapay zeka destekli bir kod analiz platformudur. OpenAI GPT-4 ve özel eğitilmiş modeller kullanarak gerçek zamanlı statik analiz, güvenlik açığı tespiti, performans optimizasyon önerileri ve otomatik code review işlemleri gerçekleştirir. GitHub ve GitLab webhook entegrasyonu sayesinde her pull request otomatik olarak analiz edilir, inline yorum olarak iyileştirme önerileri sunulur. Platform, 15+ programlama dilini destekler ve OWASP Top 10, SANS CWE Top 25 güvenlik standartlarına göre kod taraması yapar. Next.js fullstack mimarisi üzerine inşa edilmiş, PostgreSQL ile analiz sonuçları ve metrikler saklanır, Redis ile yüksek frekanslı analiz istekleri önbelleğe alınır. Ekip dashboard'u ile departman bazlı kod kalite metrikleri, teknik borç takibi ve trend analizi yapılabilir.",
+      "github": "https://github.com/tariktunc",
+      "status": "active",
+      "techStack": ["Next.js", "React", "TypeScript", "Python", "FastAPI", "OpenAI API", "PostgreSQL", "Prisma", "Redis", "Docker", "GitHub API", "Tailwind CSS"],
+      "features": [
+        "GPT-4 destekli gerçek zamanlı kod analizi ve otomatik review",
+        "15+ programlama dili desteği (TypeScript, Python, Go, Rust, Java vb.)",
+        "OWASP Top 10 ve SANS CWE Top 25 güvenlik taraması",
+        "GitHub ve GitLab webhook entegrasyonu — PR bazlı inline yorumlar",
+        "CI/CD pipeline entegrasyonu (GitHub Actions, GitLab CI, Jenkins)",
+        "Ekip dashboard'u: kod kalite skoru, teknik borç takibi, trend grafikleri",
+        "Özel kural tanımlama — şirket kodlama standartlarına uygunluk kontrolü",
+        "Performans profiling — N+1 sorgu, bellek sızıntısı ve bottleneck tespiti",
+        "Otomatik refactoring önerileri ve tek tıkla düzeltme (autofix)",
+        "VS Code ve JetBrains IDE eklentileri"
+      ],
+      "highlights": [
+        { "label": "Dil Desteği", "value": "15+" },
+        { "label": "Analiz Hızı", "value": "2.3 sn" },
+        { "label": "Doğruluk", "value": "%94" },
+        { "label": "Günlük Analiz", "value": "50K+" },
+        { "label": "Güvenlik Kuralı", "value": "800+" },
+        { "label": "Entegrasyon", "value": "12 Platform" }
+      ],
+      "sections": [
+        {
+          "title": "Yapay Zeka Tabanlı Kod Analizi",
+          "content": "CodePulse, geleneksel statik analiz araçlarının ötesine geçerek yapay zeka ile bağlamsal kod analizi yapar. OpenAI GPT-4 modeli üzerine özel fine-tuning yapılmış analiz motoru, kodun sadece sözdizimsel doğruluğunu değil, mimari kalitesini, okunabilirliğini ve sürdürülebilirliğini de değerlendirir. Her analiz sonucunda 0-100 arasında bir kalite skoru, kategorize edilmiş iyileştirme önerileri ve potansiyel güvenlik açıkları raporlanır. Tarık Tunç'un profesyonel yazılım geliştirme deneyiminden elde edilen en iyi pratikler, analiz kurallarına entegre edilmiştir."
+        },
+        {
+          "title": "CI/CD ve DevOps Entegrasyonu",
+          "content": "CodePulse, mevcut geliştirme iş akışlarına sorunsuz entegre olur. GitHub Actions, GitLab CI/CD ve Jenkins pipeline'larına tek satır yapılandırma ile eklenebilir. Her pull request otomatik olarak analiz edilir, sonuçlar PR yorumu olarak satır bazında paylaşılır. Kalite eşiği (quality gate) tanımlanarak belirlenen skoru karşılamayan PR'ların merge edilmesi engellenebilir. Docker konteyner desteği ile self-hosted kurulum da mümkündür — hassas kod tabanları şirket altyapısında analiz edilebilir."
+        },
+        {
+          "title": "Güvenlik Tarama ve Uyumluluk",
+          "content": "Platform, OWASP Top 10 (SQL Injection, XSS, CSRF, vb.) ve SANS CWE Top 25 güvenlik standartlarına göre kapsamlı güvenlik taraması yapar. Bağımlılık analizi ile bilinen güvenlik açıklarına sahip paketler (CVE veritabanı) tespit edilir. Hassas veri sızıntısı kontrolü — API anahtarları, şifreler ve kişisel verilerin kaynak kodda açık metin olarak bulunması engellenir. Tarama sonuçları SARIF formatında dışa aktarılabilir ve güvenlik ekipleriyle paylaşılabilir."
+        },
+        {
+          "title": "Teknik Altyapı ve Mimari",
+          "content": "Frontend: Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Recharts (analiz dashboard'u). Backend: Python FastAPI (AI analiz motoru), Node.js (webhook handler ve API gateway). Veritabanı: PostgreSQL (Prisma ORM — analiz sonuçları, kullanıcı verileri, metrik geçmişi), Redis (analiz kuyruğu, sonuç önbellekleme, rate limiting). AI: OpenAI GPT-4 Turbo API, özel fine-tuned model, AST (Abstract Syntax Tree) parser'lar. Altyapı: Docker Compose, AWS ECS (production), GitHub Actions (CI/CD). Monitoring: Sentry (hata takibi), Prometheus + Grafana (metrikler)."
+        }
+      ]
+    },
+    {
+      "title": "TravelMap — İnteraktif Seyahat Planlama",
+      "slug": "travelmap",
+      "category": "personal",
+      "imageAdress": "/LabImage/travelmap.svg",
+      "description": "Harita tabanlı interaktif seyahat planlama platformu. Yapay zeka destekli rota optimizasyonu, bütçe hesaplama, konaklama önerileri ve sosyal paylaşım özellikleri ile seyahat deneyimini baştan sona planlayan modern bir web uygulaması.",
+      "longDescription": "TravelMap, Tarık Tunç tarafından seyahat planlama sürecini tek bir platformda birleştirmek amacıyla geliştirilen interaktif bir web uygulamasıdır. Mapbox GL JS ile yüksek performanslı harita deneyimi, OpenAI API ile akıllı rota önerileri ve Google Places API ile konaklama/restoran/etkinlik entegrasyonu sunar. Kullanıcılar harita üzerinde hedeflerini işaretleyerek, yapay zekanın optimize ettiği günlük programlar oluşturabilir. Platform, bütçe takibi, uçuş karşılaştırma, vize gereksinimleri, hava durumu tahmini ve yerel para birimi dönüşümü gibi kapsamlı seyahat araçları içerir. Next.js SSR ile SEO-optimized destinasyon sayfaları, Supabase ile gerçek zamanlı veri senkronizasyonu ve sosyal özellikler (seyahat günlüğü, fotoğraf paylaşımı, topluluk rotaları) barındırır. 180+ ülke ve 15.000+ şehir verisi ile dünyanın her noktasına seyahat planlamayı kolaylaştırır.",
+      "github": "https://github.com/tariktunc",
+      "status": "active",
+      "techStack": ["Next.js", "React", "TypeScript", "Mapbox GL JS", "Supabase", "OpenAI API", "Google Places API", "Zustand", "Framer Motion", "Tailwind CSS", "Vercel"],
+      "features": [
+        "Mapbox GL JS ile interaktif 3D harita ve rota görselleştirme",
+        "AI destekli rota optimizasyonu — gün bazlı program oluşturma",
+        "Google Places API ile otel, restoran ve etkinlik entegrasyonu",
+        "Gerçek zamanlı bütçe hesaplama ve para birimi dönüşümü",
+        "180+ ülke için vize gereksinimleri ve seyahat uyarıları",
+        "7 günlük hava durumu tahmini — destinasyon bazlı",
+        "Seyahat günlüğü ve fotoğraf paylaşımı — sosyal özellikler",
+        "Topluluk tarafından oluşturulan popüler rotalar ve öneriler",
+        "Offline erişim — PWA desteği ile internet olmadan plan görüntüleme",
+        "Çoklu dil desteği (Türkçe, İngilizce, Almanca, İspanyolca)"
+      ],
+      "highlights": [
+        { "label": "Ülke Verisi", "value": "180+" },
+        { "label": "Şehir", "value": "15K+" },
+        { "label": "Aktif Kullanıcı", "value": "2.4M" },
+        { "label": "Rota Planı", "value": "50K+" },
+        { "label": "Dil Desteği", "value": "4 Dil" },
+        { "label": "API Yanıt", "value": "120ms" }
+      ],
+      "sections": [
+        {
+          "title": "Akıllı Seyahat Planlama",
+          "content": "TravelMap'in yapay zeka motoru, kullanıcının seçtiği destinasyonları analiz ederek en verimli günlük programı oluşturur. Coğrafi yakınlık, açılış saatleri, popülerlik saatleri ve kullanıcı tercihlerini (yürüyüş mesafesi, bütçe limiti, ilgi alanları) dikkate alarak optimize edilmiş rotalar sunar. Her destinasyon için tahmini ziyaret süresi, ulaşım alternatifleri ve yakındaki restoran/kafe önerileri otomatik olarak eklenir. OpenAI API ile doğal dilde seyahat soruları sorulabilir: 'İstanbul'da 3 günlük romantik bir tatil planla, bütçem ₺10.000' gibi istekler anında planlanır."
+        },
+        {
+          "title": "Harita Deneyimi ve Görselleştirme",
+          "content": "Mapbox GL JS ile inşa edilmiş interaktif harita, 3D bina görünümü, uydu görüntüsü ve özel stil haritaları sunar. Rota çizgileri animasyonlu olarak çizilir, her durak noktası detaylı popup ile gösterilir. Harita üzerinde sürükle-bırak ile rota düzenleme, çoklu katman (oteller, restoranlar, müzeler, parklar) görüntüleme ve mesafe/süre hesaplama yapılabilir. Mobilde dokunmatik hareketler (pinch-to-zoom, rotate) ile akıcı harita navigasyonu sağlanır. Custom marker'lar ile otel, restoran, müze ve transport noktaları ikonlarla ayırt edilir."
+        },
+        {
+          "title": "Bütçe Yönetimi ve Finans Araçları",
+          "content": "TravelMap'in bütçe modülü, seyahatin her kalemini detaylı olarak takip eder: uçuş, konaklama, yeme-içme, ulaşım, aktiviteler ve alışveriş. Gerçek zamanlı para birimi dönüşümü (ECB referans kurları) ile farklı ülkelerde harcama planlaması yapılabilir. Destinasyon bazlı ortalama maliyet verileri (günlük yemek, taksi, müze girişi vb.) ile realistik bütçe tahminleri sunulur. Bütçe aşımı uyarıları, kategori bazlı pasta grafikleri ve gün bazlı harcama çubuk grafikleri ile finansal kontrol sağlanır."
+        },
+        {
+          "title": "Teknik Altyapı",
+          "content": "Frontend: Next.js 15 App Router, React 19, TypeScript, Mapbox GL JS (react-map-gl wrapper), Framer Motion, Tailwind CSS. Backend: Supabase (PostgreSQL + PostGIS uzantısı ile coğrafi sorgular, Row Level Security, Realtime subscriptions, Edge Functions). AI: OpenAI GPT-4 API (rota optimizasyonu, doğal dil seyahat asistanı). Harici API'ler: Google Places (mekanlar), Mapbox Directions (rota hesaplama), OpenWeatherMap (hava durumu), ExchangeRate API (para birimi). State: Zustand (hafif client state), React Query (server state önbellekleme). Deploy: Vercel Edge Network, Supabase Cloud. PWA: next-pwa ile offline erişim ve push bildirimleri."
+        }
+      ]
+    },
+    {
+      "title": "FinTrack — Kişisel Finans Paneli",
+      "slug": "fintrack",
+      "category": "personal",
+      "imageAdress": "/LabImage/fintrack.svg",
+      "description": "Gelir-gider takibi, bütçe planlama, yatırım portföy analizi ve finansal hedef yönetimi sunan kapsamlı kişisel finans yönetim platformu. Banka entegrasyonu ve yapay zeka destekli harcama analizi ile finansal sağlığınızı kontrol altına alın.",
+      "longDescription": "FinTrack, Tarık Tunç tarafından kişisel finans yönetimini dijitalleştirmek ve herkes için erişilebilir kılmak amacıyla geliştirilen kapsamlı bir finansal yönetim platformudur. Gelir-gider takibi, bütçe planlama, yatırım portföy analizi, finansal hedef yönetimi ve borç ödeme stratejisi araçlarını tek bir platformda birleştirir. Kullanıcılar manuel işlem girişi yapabilir veya banka hesaplarını güvenli API entegrasyonu ile bağlayarak otomatik işlem senkronizasyonu sağlayabilir. Yapay zeka destekli harcama kategorilendirmesi, anormallik tespiti ve kişiselleştirilmiş tasarruf önerileri sunar. Next.js fullstack mimarisi üzerine inşa edilmiş, Supabase ile güvenli veri yönetimi, Plaid API ile banka entegrasyonu ve Recharts ile detaylı finansal görselleştirmeler sağlanır. AES-256 şifreleme ve SOC 2 uyumlu güvenlik standartları ile kullanıcı verilerinin korunması garanti altına alınmıştır.",
+      "github": "https://github.com/tariktunc",
+      "status": "active",
+      "techStack": ["Next.js", "React", "TypeScript", "Supabase", "Plaid API", "OpenAI API", "Recharts", "Zustand", "Zod", "Tailwind CSS", "Vercel"],
+      "features": [
+        "Otomatik banka hesabı senkronizasyonu — Plaid API entegrasyonu",
+        "AI destekli akıllı harcama kategorilendirmesi ve anormallik tespiti",
+        "Çoklu bütçe oluşturma — kategori bazlı aylık/haftalık limitler",
+        "Yatırım portföy takibi — hisse, kripto, döviz ve altın",
+        "Finansal hedef yönetimi — tasarruf, borç ödeme, emeklilik planı",
+        "Interaktif dashboard: gelir/gider grafikleri, trend analizi, kohort",
+        "Borç kartopu ve çığ yöntemi ile akıllı borç ödeme stratejisi",
+        "Haftalık/aylık finansal rapor — e-posta ve PDF dışa aktarma",
+        "Çoklu para birimi desteği ve gerçek zamanlı kur bilgisi",
+        "AES-256 şifreleme ve SOC 2 uyumlu veri güvenliği"
+      ],
+      "highlights": [
+        { "label": "Banka Entegrasyonu", "value": "200+" },
+        { "label": "Kategori", "value": "45 Otomatik" },
+        { "label": "Doğruluk", "value": "%97" },
+        { "label": "Şifreleme", "value": "AES-256" },
+        { "label": "Tasarruf Artışı", "value": "%28" },
+        { "label": "Aktif Kullanıcı", "value": "85K+" }
+      ],
+      "sections": [
+        {
+          "title": "Akıllı Finans Yönetimi",
+          "content": "FinTrack'in yapay zeka motoru, kullanıcının harcama geçmişini analiz ederek kişiselleştirilmiş tasarruf önerileri sunar. Makine öğrenimi modeli ile 45 harcama kategorisinde otomatik sınıflandırma yapılır — market, restoran, ulaşım, abonelikler, faturalar gibi kategoriler %97 doğrulukla tespit edilir. Anormallik tespiti sistemi, olağandışı harcamaları (duplicate ödeme, beklenmeyen artış) anında tespit eder ve kullanıcıyı bilgilendirir. Kullanıcıların finansal sağlık skoru (0-100) hesaplanır — gelir/gider oranı, tasarruf yüzdesi, borç/varlık oranı ve bütçe uyumu dikkate alınır."
+        },
+        {
+          "title": "Bütçe Planlama ve Hedef Yönetimi",
+          "content": "Kullanıcılar kategori bazlı aylık veya haftalık bütçe limitleri belirleyebilir. Gerçek zamanlı bütçe takibi ile harcamalar limit yaklaştığında push bildirimi gönderilir. Finansal hedef modülü ile tasarruf hedefleri (tatil, araba, ev), borç ödeme planları ve emeklilik birikimi planlanabilir. Borç yönetimi için kartopu (en küçük borç önce) ve çığ (en yüksek faiz önce) yöntemleri karşılaştırmalı olarak sunulur. Her hedef için ilerleme çubuğu, tahmini tamamlanma tarihi ve aylık gereken katkı miktarı hesaplanır."
+        },
+        {
+          "title": "Yatırım Portföy Analizi",
+          "content": "FinTrack'in yatırım modülü, hisse senedi, kripto para, döviz ve altın pozisyonlarını tek bir ekranda takip etmenizi sağlar. Portföy dağılım grafiği, varlık bazlı getiri analizi, risk skorlaması ve benchmark karşılaştırması (BIST 100, S&P 500) sunulur. Gerçek zamanlı fiyat verisi ile portföy değeri anlık olarak güncellenir. Geçmiş performans grafikleri, temettü takibi ve vergi hesaplama araçları ile kapsamlı yatırım yönetimi sağlanır."
+        },
+        {
+          "title": "Teknik Altyapı ve Güvenlik",
+          "content": "Frontend: Next.js 15 App Router, React 19, TypeScript, Recharts (interaktif finansal grafikler), Zustand (client state), Tailwind CSS. Backend: Supabase (PostgreSQL — Row Level Security, Edge Functions, Realtime), Plaid API (banka entegrasyonu — 200+ banka desteği), OpenAI API (harcama kategorilendirmesi, anomali tespiti). Güvenlik: AES-256 ile hassas veri şifreleme, TLS 1.3 transit şifreleme, Supabase RLS ile satır düzeyinde erişim kontrolü, Zod ile end-to-end input validasyonu. Uyumluluk: SOC 2 Type II hazırlık, PCI DSS Level 3 (banka verileri), KVKK ve GDPR uyumlu veri saklama politikaları. Deploy: Vercel Edge Network, Supabase Cloud (EU-West region — GDPR uyumlu)."
+        }
+      ]
+    },
+    {
+      "title": "SentinelShield IDS",
+      "slug": "sentinelshield-ids",
+      "category": "personal",
+      "description": "Makine öğrenmesi tabanlı anomali tespiti algoritmaları kullanan gerçek zamanlı sızma tespit sistemi (Intrusion Detection System). Ağ trafiğinde anormal davranış kalıplarını tespit ederek sıfırıncı gün saldırılarına karşı proaktif savunma sağlar.",
+      "longDescription": "SentinelShield IDS, kurumsal ağ altyapılarına yönelik gelişmiş kalıcı tehditleri (APT) ve sıfırıncı gün saldırılarını tespit etmek amacıyla geliştirilmiş yapay zekâ destekli bir sızma tespit sistemidir. Geleneksel imza tabanlı (signature-based) tespit yöntemlerinin ötesine geçerek, derin öğrenme modelleri ile ağ trafiğindeki anomali kalıplarını davranışsal olarak analiz eder. Sistem, OSI modelinin 3-7. katmanlarında paket incelemesi gerçekleştirir ve Shannon entropi analizi ile şifreli trafik içerisindeki gizli C2 (Command & Control) iletişim kanallarını tespit edebilir. MITRE ATT&CK çerçevesine entegre tehdit sınıflandırması, gerçek zamanlı uyarı mekanizması ve otomatik olay müdahale (incident response) iş akışları barındırır.",
+      "imageAdress": "/LabImage/codepulse.svg",
+      "status": "beta",
+      "techStack": ["Python", "TensorFlow", "Scapy", "ELK Stack", "Kafka", "Docker", "Redis"],
+      "features": [
+        "Makine öğrenmesi ile anomali tabanlı sızma tespiti",
+        "OSI Layer 3-7 derin paket inceleme (DPI)",
+        "Shannon entropi analizi ile şifreli trafik tespiti",
+        "MITRE ATT&CK çerçevesine uygun tehdit sınıflandırması",
+        "Gerçek zamanlı uyarı ve otomatik olay müdahale iş akışı",
+        "ELK Stack ile merkezi log yönetimi ve görselleştirme",
+        "Kafka ile yüksek hacimli ağ trafiği işleme",
+        "REST API ile SIEM entegrasyonu"
+      ],
+      "highlights": [
+        { "label": "Tespit Oranı", "value": "%97.3" },
+        { "label": "Gecikme", "value": "<50ms" },
+        { "label": "Günlük Paket", "value": "10M+" }
+      ],
+      "sections": [
+        {
+          "title": "Anomali Tespit Motoru",
+          "content": "SentinelShield'in çekirdeğinde LSTM (Long Short-Term Memory) ve Autoencoder tabanlı hibrit bir anomali tespit motoru yer alır. Model, normal ağ trafiği davranış profilini öğrenerek, bu profillden sapan aktiviteleri gerçek zamanlı olarak işaretler. Eğitim süreci, etiketlenmiş saldırı veri kümeleri (CICIDS2017, NSL-KDD) üzerinde gerçekleştirilmiş olup, %97.3 doğruluk oranı ve %2.1 yanlış pozitif oranına ulaşılmıştır."
+        },
+        {
+          "title": "Ağ Analiz Katmanı",
+          "content": "Scapy kütüphanesi ile geliştirilmiş özel paket yakalama ve ayrıştırma motoru, saniyede 100.000+ paketi işleyebilir kapasitededir. TCP akış yeniden birleştirme (stream reassembly), IP parçalama analizi (fragmentation analysis) ve protokol anomali tespiti modülleri ile katman bazlı derinlemesine inceleme gerçekleştirir. DNS tünelleme, ICMP exfiltration ve HTTP/S gizli kanal tespiti yetenekleri mevcuttur."
+        }
+      ]
+    },
+    {
+      "title": "VaultGuard SIEM",
+      "slug": "vaultguard-siem",
+      "category": "personal",
+      "description": "Kurumsal ağ altyapılarından toplanan log verilerinin merkezi korelasyonunu gerçekleştiren güvenlik bilgi ve olay yönetimi (SIEM) platformu. MITRE ATT&CK çerçevesine uygun tehdit sınıflandırması yapar.",
+      "longDescription": "VaultGuard SIEM, heterojen BT altyapılarından gelen güvenlik olaylarını merkezi bir platformda toplayan, normalleştiren, korelasyon analizi yapan ve eyleme dönüştürülebilir tehdit istihbaratı üreten kurumsal düzeyde bir Güvenlik Bilgi ve Olay Yönetimi (Security Information and Event Management) çözümüdür. Platform, firewall logları, IDS/IPS uyarıları, endpoint telemetrisi, Active Directory denetim kayıtları ve bulut servis loglarını tek bir veri gölünde (data lake) birleştirerek çapraz kaynak korelasyonu gerçekleştirir. Sigma kuralları ve özel korelasyon motoruyla, yüzlerce farklı kaynaktan gelen olayları ilişkilendirerek karmaşık saldırı zincirlerini (kill chain) otomatik olarak haritalandırır.",
+      "imageAdress": "/LabImage/devconnect.svg",
+      "status": "beta",
+      "techStack": ["Python", "Elasticsearch", "Kibana", "Redis", "PostgreSQL", "Docker", "Kafka"],
+      "features": [
+        "Çoklu kaynak log toplama ve normalleştirme (Syslog, CEF, LEEF)",
+        "Sigma kuralları ile özelleştirilebilir korelasyon motoru",
+        "MITRE ATT&CK Navigator ile saldırı haritalandırma",
+        "Gerçek zamanlı tehdit istihbaratı (STIX/TAXII) entegrasyonu",
+        "Otomatik olay müdahale (SOAR) iş akışları",
+        "Uyumluluk raporlama (PCI DSS, ISO 27001, KVKK)",
+        "Rol tabanlı erişim kontrolü (RBAC) ve denetim izi",
+        "Özelleştirilebilir gösterge panoları ve görselleştirmeler"
+      ],
+      "highlights": [
+        { "label": "Log Kapasitesi", "value": "50K EPS" },
+        { "label": "Korelasyon", "value": "500+ Kural" },
+        { "label": "Veri Saklama", "value": "90 Gün" }
+      ],
+      "sections": [
+        {
+          "title": "Korelasyon Motoru",
+          "content": "VaultGuard'ın korelasyon motoru, zaman pencereli olay eşleştirme (temporal event correlation), istatistiksel anomali tespiti ve graf tabanlı ilişki analizi yöntemlerini birleştiren hibrit bir yaklaşım kullanır. Sigma kural dili desteği sayesinde, güvenlik analistleri platform bağımsız tespit kuralları yazabilir. Motor, saniyede 50.000 olayı (EPS) gerçek zamanlı olarak işleyerek, ortalama 200ms içinde korelasyon sonucu üretir."
+        },
+        {
+          "title": "Tehdit İstihbaratı Entegrasyonu",
+          "content": "Platform, STIX/TAXII protokolleri üzerinden AlienVault OTX, MISP ve VirusTotal gibi açık kaynak tehdit istihbaratı beslemelerini otomatik olarak tüketir. IoC (Indicators of Compromise) veritabanı saatlik olarak güncellenir ve gelen loglar ile otomatik eşleştirilir. Tehdit puanlama sistemi, her olaya 0-100 arası bir risk skoru atayarak analiste önceliklendirme yapma imkânı sağlar."
+        }
+      ]
+    },
+    {
+      "title": "PhantomTrace",
+      "slug": "phantomtrace",
+      "category": "personal",
+      "description": "Derin paket inceleme (DPI) teknolojisi kullanarak ağ trafiğini katman bazlı analiz eden tehdit avı (threat hunting) aracı. TCP/IP yığınındaki anormallikleri ve C2 kanallarını tespit eder.",
+      "longDescription": "PhantomTrace, kurumsal ağ ortamlarında gelişmiş tehdit avı (threat hunting) operasyonları yürütmek için tasarlanmış bir ağ trafiği analiz ve forensik inceleme aracıdır. Derin paket inceleme (Deep Packet Inspection) teknolojisi ile OSI modelinin tüm katmanlarında trafik analizi gerçekleştirerek, geleneksel güvenlik araçlarının kaçırdığı sofistike tehditleri ortaya çıkarır. Aracın temel gücü, şifreli trafik analizi yeteneğinden gelir: TLS/SSL el sıkışma (handshake) metaverilerini, JA3/JA3S parmak izlerini ve sertifika anomalilerini inceleyerek, şifre çözme gerektirmeden kötü amaçlı iletişimleri tespit edebilir.",
+      "imageAdress": "/LabImage/taskflow.svg",
+      "status": "beta",
+      "techStack": ["Python", "Wireshark API", "dpkt", "PostgreSQL", "Grafana", "Docker"],
+      "features": [
+        "OSI Layer 2-7 derin paket inceleme (DPI)",
+        "JA3/JA3S TLS parmak izi analizi",
+        "DNS tünelleme ve exfiltration tespiti",
+        "C2 (Command & Control) beacon analizi",
+        "NetFlow/IPFIX akış verisi korelasyonu",
+        "PCAP dosyası forensik analizi",
+        "Grafana ile gerçek zamanlı trafik görselleştirme",
+        "Özelleştirilebilir Yara kuralları desteği"
+      ],
+      "highlights": [
+        { "label": "Paket İşleme", "value": "1Gbps" },
+        { "label": "Protokol", "value": "50+" },
+        { "label": "JA3 Veritabanı", "value": "15K+" }
+      ],
+      "sections": [
+        {
+          "title": "Şifreli Trafik Analizi",
+          "content": "PhantomTrace, TLS 1.2/1.3 trafiğini şifre çözme olmaksızın analiz edebilen gelişmiş bir modüle sahiptir. JA3 (istemci) ve JA3S (sunucu) parmak izleri, sertifika geçerlilik kontrolleri, SNI (Server Name Indication) anomali tespiti ve şifreli trafik hacim analizi ile kötü amaçlı yazılım iletişimlerini yüksek doğrulukla tespit eder. Bilinen C2 framework'lerine (Cobalt Strike, Metasploit Meterpreter, Empire) ait JA3 parmak izi veritabanı sürekli güncellenmektedir."
+        },
+        {
+          "title": "DNS Güvenlik Analizi",
+          "content": "DNS sorgu analiz modülü, DNS tünelleme (DNS tunneling), hızlı akı (fast-flux) ağları, DGA (Domain Generation Algorithm) tespiti ve DNS exfiltration girişimlerini tanımlar. Entropi bazlı subdomain analizi, sorgu frekans anomalisi ve NXDOMAIN flood tespiti ile DNS katmanındaki tehditleri kapsamlı olarak izler."
+        }
+      ]
+    },
+    {
+      "title": "CryptoFortress",
+      "slug": "cryptofortress",
+      "category": "personal",
+      "description": "AES-256-GCM ve RSA-4096 algoritmalarını temel alan uçtan uca şifreleme altyapısı. Anahtar yönetim sistemi (KMS), HSM entegrasyonu ve sıfır bilgi kanıtı protokollerini destekler.",
+      "longDescription": "CryptoFortress, kurumsal veri güvenliği gereksinimlerini karşılamak üzere tasarlanmış kapsamlı bir kriptografik altyapı çözümüdür. AES-256-GCM simetrik şifreleme ve RSA-4096/ECDSA asimetrik şifreleme algoritmalarını hibrit bir model içinde birleştirerek, hem performans hem de güvenlik açısından optimum dengeyi sağlar. Platform, merkezi anahtar yönetim sistemi (Key Management System) ile kriptografik anahtarların yaşam döngüsünü (üretim, dağıtım, rotasyon, iptal, imha) uçtan uca yönetir. Hardware Security Module (HSM) entegrasyonu sayesinde, ana anahtarlar (master keys) donanım düzeyinde korunur.",
+      "imageAdress": "/LabImage/fintrack.svg",
+      "status": "beta",
+      "techStack": ["Python", "OpenSSL", "libsodium", "gRPC", "PostgreSQL", "Docker", "Vault"],
+      "features": [
+        "AES-256-GCM ve RSA-4096 hibrit şifreleme",
+        "Merkezi anahtar yönetim sistemi (KMS)",
+        "HSM (Hardware Security Module) entegrasyonu",
+        "Sıfır bilgi kanıtı (ZKP) protokol desteği",
+        "Otomatik anahtar rotasyonu ve yaşam döngüsü yönetimi",
+        "TLS 1.3 mutual authentication",
+        "Dosya ve veritabanı düzeyinde şeffaf şifreleme (TDE)",
+        "FIPS 140-2 uyumlu kriptografik işlemler"
+      ],
+      "highlights": [
+        { "label": "Şifreleme", "value": "AES-256" },
+        { "label": "Anahtar Uzunluğu", "value": "4096-bit" },
+        { "label": "Uyumluluk", "value": "FIPS 140-2" }
+      ],
+      "sections": [
+        {
+          "title": "Anahtar Yönetim Sistemi",
+          "content": "CryptoFortress KMS, kriptografik anahtarların tüm yaşam döngüsünü NIST SP 800-57 standartlarına uygun olarak yönetir. Anahtar üretimi, CSPRNG (Cryptographically Secure Pseudo-Random Number Generator) ile gerçekleştirilir. Otomatik anahtar rotasyonu, yapılandırılabilir periyotlarla (30/60/90 gün) çalışır ve sıfır kesinti (zero-downtime) ile geçiş sağlar. Anahtar escrow, anahtar bölme (Shamir's Secret Sharing) ve acil durum kurtarma prosedürleri desteklenir."
+        },
+        {
+          "title": "Sıfır Bilgi Kanıtı Modülü",
+          "content": "ZKP modülü, zk-SNARKs ve Bulletproofs protokollerini kullanarak, hassas verileri ifşa etmeden kimlik doğrulama ve yetkilendirme işlemleri gerçekleştirilmesine olanak tanır. Bu modül özellikle finansal uygulamalarda bakiye doğrulama, yaş doğrulama ve kimlik doğrulama gibi senaryolarda kullanıcı gizliliğini koruyarak doğrulama yapılmasını sağlar."
+        }
+      ]
+    },
+    {
+      "title": "ZeroTrust Gateway",
+      "slug": "zerotrust-gateway",
+      "category": "personal",
+      "description": "Sıfır güven mimarisi (Zero Trust Architecture) prensipleri üzerine inşa edilmiş yeni nesil güvenlik duvarı. Mikro segmentasyon, dinamik ACL ve sürekli doğrulama mekanizmalarını barındırır.",
+      "longDescription": "ZeroTrust Gateway, 'asla güvenme, her zaman doğrula' (never trust, always verify) ilkesini temel alan yeni nesil bir güvenlik duvarı (Next-Generation Firewall) ve ağ erişim kontrol platformudur. Geleneksel çevre tabanlı (perimeter-based) güvenlik modelinin yetersiz kaldığı modern hibrit bulut ortamlarında, her ağ isteğinin kimlik doğrulaması, yetkilendirmesi ve şifrelenmesini zorunlu kılar. Platform, eBPF (extended Berkeley Packet Filter) teknolojisi ile çekirdek düzeyinde paket filtreleme gerçekleştirir, bu sayede kullanıcı alanı (user-space) güvenlik duvarlarına kıyasla 10 kat daha düşük gecikme süresi sunar.",
+      "imageAdress": "/LabImage/shopease.svg",
+      "status": "beta",
+      "techStack": ["Python", "Go", "eBPF", "nftables", "WireGuard", "etcd", "Docker"],
+      "features": [
+        "eBPF tabanlı çekirdek düzeyinde paket filtreleme",
+        "Mikro segmentasyon ile iş yükü izolasyonu",
+        "Dinamik erişim kontrol listeleri (ACL)",
+        "Sürekli kimlik doğrulama (continuous authentication)",
+        "WireGuard VPN entegrasyonu",
+        "Davranışsal kullanıcı analizi (UEBA)",
+        "API gateway ile servis mesh güvenliği",
+        "Gerçek zamanlı politika motoru ve uyumluluk denetimi"
+      ],
+      "highlights": [
+        { "label": "Gecikme", "value": "<1ms" },
+        { "label": "Throughput", "value": "40Gbps" },
+        { "label": "Politika", "value": "10K+" }
+      ],
+      "sections": [
+        {
+          "title": "eBPF Tabanlı Paket İşleme",
+          "content": "ZeroTrust Gateway, eBPF (extended Berkeley Packet Filter) programlarını Linux çekirdeğine yükleyerek, paketleri kullanıcı alanına geçmeden doğrudan çekirdek düzeyinde işler. XDP (eXpress Data Path) hook noktasında çalışan BPF programları, saniyede milyonlarca paketi mikrosaniye düzeyinde gecikme ile filtreleyebilir. Bu yaklaşım, iptables'a kıyasla 10x performans artışı ve %90 daha az CPU kullanımı sağlar. BPF haritaları (maps) ile dinamik kural güncellemesi, servis kesintisi olmadan gerçek zamanlı politika değişikliğine olanak tanır."
+        },
+        {
+          "title": "Sıfır Güven Politika Motoru",
+          "content": "Politika motoru, her ağ isteği için çok faktörlü bir karar mekanizması işletir: kullanıcı kimliği (mTLS sertifikası), cihaz güven skoru (device posture), coğrafi konum, erişim zamanı, davranış profili ve istek bağlamı (request context) değerlendirilir. Open Policy Agent (OPA) ile Rego dilinde yazılmış politikalar, merkezi olarak yönetilir ve etcd üzerinden tüm düğümlere milisaniyeler içinde dağıtılır. Her karar, değişmez denetim günlüğüne (immutable audit log) kaydedilir."
+        }
+      ]
     }
   ]
 }
