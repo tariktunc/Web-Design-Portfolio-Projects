@@ -1,0 +1,247 @@
+<h2>JavaScript Async/Await: Asenkron Programlama Rehberi</h2>
+
+<p>JavaScript tek iş parçacıklı (single-threaded) bir dildir, ancak asenkron programlama ile I/O işlemlerini verimli şekilde yönetir. ES2017 ile gelen <code>async/await</code> sözdizimi, Promise tabanlı asenkron kodları senkron görünümlü ve okunabilir bir şekilde yazmamızı sağlar. Bu rehberde async/await'in temellerinden ileri düzey kullanım pattern'lerine kadar her şeyi ele alıyoruz.</p>
+
+<h3>1. Async/Await Temelleri</h3>
+
+<p><code>async</code> anahtar kelimesi bir fonksiyonu asenkron olarak işaretler ve her zaman bir Promise döndürmesini sağlar. <code>await</code> ise bir Promise'in çözülmesini (resolve) bekler ve sonucunu döner.</p>
+
+<pre><code>// Temel async/await kullanımı
+async function kullaniciBilgisiGetir(id) {
+  const yanit = await fetch(`https://api.example.com/users/${id}`);
+  const kullanici = await yanit.json();
+  return kullanici;
+}
+
+// Arrow fonksiyon ile
+const siparisleriGetir = async (kullaniciId) => {
+  const yanit = await fetch(`https://api.example.com/orders?user=${kullaniciId}`);
+  if (!yanit.ok) {
+    throw new Error(`HTTP Hatası: ${yanit.status}`);
+  }
+  return yanit.json();
+};
+
+// Kullanım
+async function main() {
+  try {
+    const kullanici = await kullaniciBilgisiGetir(1);
+    console.log("Kullanıcı:", kullanici.ad);
+
+    const siparisler = await siparisleriGetir(kullanici.id);
+    console.log("Siparişler:", siparisler.length);
+  } catch (hata) {
+    console.error("Bir hata oluştu:", hata.message);
+  }
+}
+
+main();</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> <code>await</code> yalnızca <code>async</code> fonksiyonlar içinde kullanılabilir. ES2022 ile birlikte modüllerin en üst seviyesinde (top-level await) de kullanılabilir hale gelmiştir.
+</div>
+
+<h3>2. Hata Yönetimi Pattern'leri</h3>
+
+<p>Async/await ile hata yönetimi, geleneksel try/catch blokları ile yapılır. Ancak farklı senaryolar için farklı stratejiler uygulanabilir.</p>
+
+<pre><code>// Pattern 1: try/catch ile kapsamlı hata yönetimi
+async function veriKaydet(veri) {
+  try {
+    const dogrulama = await veriDogrula(veri);
+    const sonuc = await veritabaninaYaz(dogrulama);
+    await bildiriGonder(sonuc.id);
+    return { basarili: true, id: sonuc.id };
+  } catch (hata) {
+    if (hata instanceof DogrulamaHatasi) {
+      console.error("Doğrulama hatası:", hata.alanlar);
+      return { basarili: false, hataTipi: "dogrulama", detay: hata.alanlar };
+    }
+    if (hata instanceof AgHatasi) {
+      console.error("Ağ hatası:", hata.message);
+      return { basarili: false, hataTipi: "ag" };
+    }
+    throw hata; // Bilinmeyen hataları yukarı fırlat
+  }
+}
+
+// Pattern 2: Go tarzı hata döndürme
+async function guvenliGetir(url) {
+  try {
+    const yanit = await fetch(url);
+    const veri = await yanit.json();
+    return [veri, null];
+  } catch (hata) {
+    return [null, hata];
+  }
+}
+
+// Kullanım
+const [veri, hata] = await guvenliGetir("https://api.example.com/data");
+if (hata) {
+  console.error("Hata:", hata.message);
+} else {
+  console.log("Veri:", veri);
+}
+
+// Pattern 3: Wrapper fonksiyon
+function yakala(promise) {
+  return promise
+    .then(veri => [veri, null])
+    .catch(hata => [null, hata]);
+}
+
+const [kullanici, err] = await yakala(kullaniciBilgisiGetir(1));</code></pre>
+
+<h3>3. Paralel ve Sıralı İşlemler</h3>
+
+<p>Birden fazla asenkron işlemi yönetirken, sıralı (sequential) ve paralel (parallel) çalıştırma arasındaki farkı bilmek performans açısından kritiktir.</p>
+
+<pre><code>// ❌ YANLIŞ: Sıralı çalışır, gereksiz yavaş
+async function yavasYontem() {
+  const kullanicilar = await kullanicilariGetir();   // 500ms
+  const urunler = await urunleriGetir();              // 500ms
+  const siparisler = await siparisleriGetir();         // 500ms
+  // Toplam: ~1500ms
+  return { kullanicilar, urunler, siparisler };
+}
+
+// ✅ DOĞRU: Paralel çalışır
+async function hizliYontem() {
+  const [kullanicilar, urunler, siparisler] = await Promise.all([
+    kullanicilariGetir(),   // 500ms
+    urunleriGetir(),        // 500ms
+    siparisleriGetir()      // 500ms
+  ]);
+  // Toplam: ~500ms
+  return { kullanicilar, urunler, siparisler };
+}
+
+// Promise.allSettled — hata olsa bile hepsini bekle
+async function tumSonuclariGetir(idler) {
+  const sonuclar = await Promise.allSettled(
+    idler.map(id => kullaniciBilgisiGetir(id))
+  );
+
+  const basarili = sonuclar
+    .filter(s => s.status === "fulfilled")
+    .map(s => s.value);
+
+  const hatali = sonuclar
+    .filter(s => s.status === "rejected")
+    .map(s => s.reason);
+
+  console.log(`${basarili.length} başarılı, ${hatali.length} hatalı`);
+  return basarili;
+}
+
+// Promise.race — ilk tamamlanan
+async function zamanAsimi(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Zaman aşımı")), ms)
+    )
+  ]);
+}
+
+const veri = await zamanAsimi(uzunIslem(), 5000);</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> <code>Promise.all()</code> içinde bir Promise reject olursa, tüm sonuç reject olur. Tüm sonuçları almak istiyorsanız <code>Promise.allSettled()</code> kullanın.
+</div>
+
+<h3>4. Döngülerde Async/Await</h3>
+
+<p>Döngülerde asenkron işlem yaparken, <code>forEach</code> ile <code>for...of</code> arasındaki davranış farkını bilmek çok önemlidir.</p>
+
+<pre><code>const dosyalar = ["veri1.json", "veri2.json", "veri3.json"];
+
+// ❌ YANLIŞ: forEach await'i beklemez
+dosyalar.forEach(async (dosya) => {
+  const icerik = await dosyaOku(dosya);
+  console.log(icerik); // Sırasız çalışır
+});
+
+// ✅ Sıralı işlem: for...of
+async function siraliOku() {
+  for (const dosya of dosyalar) {
+    const icerik = await dosyaOku(dosya);
+    console.log(dosya, icerik); // Sıralı çalışır
+  }
+}
+
+// ✅ Paralel işlem: map + Promise.all
+async function paralelOku() {
+  const sonuclar = await Promise.all(
+    dosyalar.map(dosya => dosyaOku(dosya))
+  );
+  sonuclar.forEach((icerik, i) => console.log(dosyalar[i], icerik));
+}
+
+// ✅ Sınırlı paralel işlem (concurrency limiti)
+async function sinirliParalel(islemler, limit = 3) {
+  const sonuclar = [];
+  const aktifler = new Set();
+
+  for (const [index, islem] of islemler.entries()) {
+    const promise = islem().then(sonuc => {
+      aktifler.delete(promise);
+      sonuclar[index] = sonuc;
+    });
+    aktifler.add(promise);
+
+    if (aktifler.size >= limit) {
+      await Promise.race(aktifler);
+    }
+  }
+
+  await Promise.all(aktifler);
+  return sonuclar;
+}</code></pre>
+
+<div class="info">
+<strong>Bilgi:</strong> <code>Array.prototype.forEach</code> asenkron fonksiyonları beklemez çünkü callback'in dönüş değerini (Promise) yok sayar. Asenkron döngülerde her zaman <code>for...of</code> veya <code>Promise.all</code> ile <code>map</code> kombinasyonunu tercih edin.
+</div>
+
+<h3>5. Async Generators ve for await...of</h3>
+
+<p>ES2018 ile gelen async generator'lar ve <code>for await...of</code> döngüsü, asenkron veri akışlarını işlemek için güçlü bir yapı sunar.</p>
+
+<pre><code>// Async generator — sayfalı API verisi
+async function* sayfalıVeriGetir(url) {
+  let sayfa = 1;
+  let devamVar = true;
+
+  while (devamVar) {
+    const yanit = await fetch(`${url}?sayfa=${sayfa}&limit=100`);
+    const veri = await yanit.json();
+
+    yield veri.sonuclar;
+
+    devamVar = veri.sonrakiSayfa !== null;
+    sayfa++;
+  }
+}
+
+// for await...of ile kullanım
+async function tumVerileriIsle() {
+  for await (const sayfa of sayfalıVeriGetir("https://api.example.com/items")) {
+    for (const oge of sayfa) {
+      await ogeIsle(oge);
+    }
+    console.log(`Sayfa işlendi: ${sayfa.length} öğe`);
+  }
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Async/await, JavaScript'te asenkron programlamanın en okunabilir ve bakımı kolay yoludur. Temel try/catch hata yönetimi, <code>Promise.all</code> ile paralel işlemler, döngülerde doğru async kullanımı ve async generator'lar ile akış kontrolü konularında ustalaşmak, modern JavaScript geliştirici araç kutunuzun olmazsa olmazlarıdır. Kodunuzu yazarken sıralı/paralel işlem ayrımına dikkat edin ve her zaman hata yönetimini unutmayın.</p>
+
+<h4>Kaynaklar</h4>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous" target="_blank" rel="noopener noreferrer">MDN — Asynchronous JavaScript</a></li>
+  <li><a href="https://javascript.info/async-await" target="_blank" rel="noopener noreferrer">JavaScript.info — Async/Await</a></li>
+  <li><a href="https://v8.dev/blog/fast-async" target="_blank" rel="noopener noreferrer">V8 Blog — Faster Async Functions and Promises</a></li>
+  <li><a href="https://tc39.es/ecma262/#sec-async-function-definitions" target="_blank" rel="noopener noreferrer">ECMAScript Specification — Async Functions</a></li>
+</ul>

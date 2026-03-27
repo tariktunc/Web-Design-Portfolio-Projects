@@ -1,0 +1,270 @@
+<h2>Tailwind CSS Animasyonlar: @keyframes ve Transition</h2>
+
+<p>Web uygulamalarında animasyonlar, kullanıcı deneyimini zenginleştiren ve arayüzü daha canlı hale getiren kritik unsurlardır. Tailwind CSS, hem hazır animasyon utility'leri hem de custom <code>@keyframes</code> tanımlama imkanı sunarak CSS animasyonlarını hızlı ve verimli bir biçimde uygulamanızı sağlar. Bu rehberde Tailwind ile transition, transform ve keyframe animasyonlarını derinlemesine inceleyeceğiz.</p>
+
+<h3>1. Tailwind Transition Temelleri</h3>
+
+<p>Transition, bir CSS özelliğinin bir değerden diğerine yumuşak geçiş yapmasını sağlar. Tailwind, <code>transition-*</code> utility'leri ile bunu kolaylaştırır.</p>
+
+<pre><code>&lt;!-- Temel Transition --&gt;
+&lt;button class="bg-blue-500 hover:bg-blue-700
+               text-white font-bold py-2 px-4 rounded
+               transition-colors duration-300 ease-in-out"&gt;
+  Hover Et
+&lt;/button&gt;
+
+&lt;!-- Çoklu Transition --&gt;
+&lt;div class="transform hover:scale-105 hover:shadow-xl
+            transition-all duration-500 ease-out
+            bg-white rounded-lg p-6"&gt;
+  Büyüyen Card
+&lt;/div&gt;</code></pre>
+
+<h4>Transition Utility Sınıfları</h4>
+
+<table>
+<tr><th>Sınıf</th><th>Açıklama</th></tr>
+<tr><td><code>transition-none</code></td><td>Transition kapalı</td></tr>
+<tr><td><code>transition-all</code></td><td>Tüm özellikler</td></tr>
+<tr><td><code>transition-colors</code></td><td>Renk geçişleri</td></tr>
+<tr><td><code>transition-opacity</code></td><td>Opaklık geçişi</td></tr>
+<tr><td><code>transition-shadow</code></td><td>Gölge geçişi</td></tr>
+<tr><td><code>transition-transform</code></td><td>Transform geçişi</td></tr>
+</table>
+
+<h3>2. Duration ve Timing Function</h3>
+
+<p>Animasyonun süresi ve hız eğrisi, kullanıcı deneyimini doğrudan etkiler. Tailwind bu konuda zengin seçenekler sunar.</p>
+
+<pre><code>&lt;!-- Duration örnekleri --&gt;
+&lt;div class="transition-all duration-75"&gt;Çok hızlı (75ms)&lt;/div&gt;
+&lt;div class="transition-all duration-150"&gt;Hızlı (150ms)&lt;/div&gt;
+&lt;div class="transition-all duration-300"&gt;Normal (300ms)&lt;/div&gt;
+&lt;div class="transition-all duration-500"&gt;Yavaş (500ms)&lt;/div&gt;
+&lt;div class="transition-all duration-1000"&gt;Çok yavaş (1s)&lt;/div&gt;
+
+&lt;!-- Easing örnekleri --&gt;
+&lt;div class="transition ease-linear duration-300"&gt;Lineer&lt;/div&gt;
+&lt;div class="transition ease-in duration-300"&gt;Yavaş başla&lt;/div&gt;
+&lt;div class="transition ease-out duration-300"&gt;Yavaş bitir&lt;/div&gt;
+&lt;div class="transition ease-in-out duration-300"&gt;Yavaş başla/bitir&lt;/div&gt;</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Kullanıcı arayüzü etkileşimleri için 150-300ms arası süreler idealdir. 300ms üzerindeki süreler kullanıcıya yavaş hissettirebilir.
+</div>
+
+<h3>3. Transform Utility'leri</h3>
+
+<p>Tailwind'in transform sınıfları, elementleri döndürme, ölçekleme, kaydırma ve eğme işlemleri için kullanılır.</p>
+
+<pre><code>&lt;!-- Scale --&gt;
+&lt;div class="hover:scale-110 transition-transform duration-300"&gt;
+  Büyü
+&lt;/div&gt;
+
+&lt;!-- Rotate --&gt;
+&lt;div class="hover:rotate-12 transition-transform duration-300"&gt;
+  Döndür
+&lt;/div&gt;
+
+&lt;!-- Translate --&gt;
+&lt;div class="hover:-translate-y-2 transition-transform duration-300"&gt;
+  Yukarı Kaydir
+&lt;/div&gt;
+
+&lt;!-- Skew --&gt;
+&lt;div class="hover:skew-x-6 transition-transform duration-300"&gt;
+  Eğ
+&lt;/div&gt;
+
+&lt;!-- Birleşik Transform --&gt;
+&lt;div class="hover:scale-105 hover:-translate-y-1 hover:rotate-1
+            transition-transform duration-500 ease-out"&gt;
+  Kombine Efekt
+&lt;/div&gt;</code></pre>
+
+<h3>4. Tailwind Hazır Animasyonlar</h3>
+
+<p>Tailwind CSS, sıkça kullanılan animasyonları varsayılan olarak sunar. Bunlar <code>animate-*</code> sınıfları ile kullanılır.</p>
+
+<pre><code>&lt;!-- Spin — Dönen yükleme ikonu --&gt;
+&lt;svg class="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24"&gt;
+  &lt;circle cx="12" cy="12" r="10" stroke="currentColor"
+          stroke-width="4" fill="none" opacity="0.25"&gt;&lt;/circle&gt;
+  &lt;path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"&gt;&lt;/path&gt;
+&lt;/svg&gt;
+
+&lt;!-- Ping — Bildirim noktası --&gt;
+&lt;span class="relative flex h-3 w-3"&gt;
+  &lt;span class="animate-ping absolute inline-flex h-full w-full
+               rounded-full bg-red-400 opacity-75"&gt;&lt;/span&gt;
+  &lt;span class="relative inline-flex rounded-full h-3 w-3
+               bg-red-500"&gt;&lt;/span&gt;
+&lt;/span&gt;
+
+&lt;!-- Pulse — İskelet yükleme --&gt;
+&lt;div class="animate-pulse bg-gray-200 h-4 w-48 rounded"&gt;&lt;/div&gt;
+
+&lt;!-- Bounce — Aşağı kaydır ikonu --&gt;
+&lt;div class="animate-bounce text-2xl"&gt;&amp;darr;&lt;/div&gt;</code></pre>
+
+<h3>5. Custom @keyframes Tanımlama</h3>
+
+<p>Tailwind'in varsayılan animasyonları yetmediğinde, kendi <code>@keyframes</code> animasyonlarınızı tanımlayabilirsiniz.</p>
+
+<pre><code>/* Tailwind v4 — CSS dosyasında */
+@import "tailwindcss";
+
+@theme {
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.6s ease-out;
+  --animate-wiggle: wiggle 1s ease-in-out infinite;
+  --animate-gradient: gradient-shift 3s ease infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}</code></pre>
+
+<pre><code>&lt;!-- Custom animasyonları kullanma --&gt;
+&lt;div class="animate-fade-in"&gt;Yumuşak Giriş&lt;/div&gt;
+&lt;div class="animate-slide-up"&gt;Aşağıdan Gelme&lt;/div&gt;
+&lt;div class="animate-wiggle"&gt;Sallanan Element&lt;/div&gt;</code></pre>
+
+<h3>6. Scroll-Triggered Animasyonlar</h3>
+
+<p>Tailwind v4 ile birlikte CSS scroll-driven animasyonlarını da destekleyebilirsiniz. Intersection Observer ile birleştirilerek scroll bazlı animasyonlar oluşturulabilir.</p>
+
+<pre><code>// JavaScript ile scroll-triggered class ekleme
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('animate-fade-in');
+      entry.target.classList.remove('opacity-0');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.scroll-animate').forEach(el => {
+  el.classList.add('opacity-0');
+  observer.observe(el);
+});</code></pre>
+
+<pre><code>&lt;!-- Kullanım --&gt;
+&lt;div class="scroll-animate transition-all duration-700"&gt;
+  Bu element görünür olduğunda animasyon başlar
+&lt;/div&gt;</code></pre>
+
+<h3>7. Animasyon Delay ve Stagger Efekti</h3>
+
+<p>Birden fazla elementi sırayla canlandırmak, etkileyici bir görsel efekt oluşturur.</p>
+
+<pre><code>&lt;!-- Stagger efekti --&gt;
+&lt;div class="space-y-4"&gt;
+  &lt;div class="animate-fade-in" style="animation-delay: 0ms"&gt;Birinci&lt;/div&gt;
+  &lt;div class="animate-fade-in" style="animation-delay: 100ms"&gt;İkinci&lt;/div&gt;
+  &lt;div class="animate-fade-in" style="animation-delay: 200ms"&gt;Üçüncü&lt;/div&gt;
+  &lt;div class="animate-fade-in" style="animation-delay: 300ms"&gt;Dördüncü&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Tailwind arbitrary value ile delay --&gt;
+&lt;div class="animate-fade-in [animation-delay:200ms]"&gt;
+  Gecikmeli Animasyon
+&lt;/div&gt;</code></pre>
+
+<h3>8. Reduced Motion Erişilebilirlik</h3>
+
+<p>Bazı kullanıcılar hareket hassasiyetine sahip olabilir. Tailwind'in <code>motion-reduce</code> ve <code>motion-safe</code> modifier'ları ile erişilebilir animasyonlar oluşturabilirsiniz.</p>
+
+<pre><code>&lt;!-- Erişilebilir animasyon --&gt;
+&lt;div class="motion-safe:animate-bounce motion-reduce:animate-none"&gt;
+  Hareket tercihine duyarlı animasyon
+&lt;/div&gt;
+
+&lt;!-- Transition için --&gt;
+&lt;button class="motion-safe:transition-all motion-safe:duration-300
+               motion-reduce:transition-none
+               hover:scale-105 hover:bg-blue-700
+               bg-blue-500 text-white px-4 py-2 rounded"&gt;
+  Erişilebilir Buton
+&lt;/button&gt;</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> <code>prefers-reduced-motion</code> ayarını her zaman göz önünde bulundurun. Animasyonlar dekoratif ise <code>motion-reduce:animate-none</code> ile devre dışı bırakın.
+</div>
+
+<h3>9. Pratik Örnekler</h3>
+
+<h4>Skeleton Loading</h4>
+
+<pre><code>&lt;div class="space-y-4 p-6 max-w-sm"&gt;
+  &lt;div class="animate-pulse flex space-x-4"&gt;
+    &lt;div class="rounded-full bg-gray-300 h-12 w-12"&gt;&lt;/div&gt;
+    &lt;div class="flex-1 space-y-3 py-1"&gt;
+      &lt;div class="h-3 bg-gray-300 rounded w-3/4"&gt;&lt;/div&gt;
+      &lt;div class="h-3 bg-gray-300 rounded w-1/2"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<h4>Hover Card Efekti</h4>
+
+<pre><code>&lt;div class="group cursor-pointer bg-white rounded-xl p-6
+            shadow-md hover:shadow-2xl
+            transition-all duration-500 ease-out
+            hover:-translate-y-2"&gt;
+  &lt;h3 class="text-lg font-bold group-hover:text-blue-600
+             transition-colors duration-300"&gt;
+    Kart Başlığı
+  &lt;/h3&gt;
+  &lt;p class="text-gray-600 mt-2 group-hover:text-gray-800
+            transition-colors duration-300"&gt;
+    Kart açıklaması buraya gelir.
+  &lt;/p&gt;
+  &lt;span class="inline-block mt-4 text-blue-500
+               group-hover:translate-x-2
+               transition-transform duration-300"&gt;
+    Devamını Oku &amp;rarr;
+  &lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Tailwind CSS ile animasyonlar oluşturmak hem hızlı hem de bakımı kolaydır. Hazır <code>animate-*</code> sınıfları basit durumlar için yeterli olurken, <code>@keyframes</code> ve <code>@theme</code> ile istediğiniz karmaşıklıkta animasyonlar tanımlayabilirsiniz. Transition ve transform utility'leri hover, focus gibi etkileşimler için idealdir. Erişilebilirlik için <code>motion-reduce</code> modifier'ını unutmayın ve performans için <code>will-change</code> özelliğini dikkatli kullanın.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://tailwindcss.com/docs/animation" target="_blank">Tailwind CSS Animation Docs</a></li>
+<li><a href="https://tailwindcss.com/docs/transition-property" target="_blank">Tailwind CSS Transition Docs</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@keyframes" target="_blank">MDN — @keyframes</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_animations/Using_CSS_animations" target="_blank">MDN — CSS Animasyonları Kullanma</a></li>
+<li><a href="https://web.dev/animations-guide/" target="_blank">web.dev — Animasyon Rehberi</a></li>
+</ul>

@@ -1,0 +1,224 @@
+<h2>Tailwind CSS ile Responsive Tasarım Stratejileri</h2>
+
+<p>Tailwind CSS, mobile-first responsive tasarım için güçlü bir breakpoint sistemi sunar. Responsive modifier'lar sayesinde, farklı ekran boyutlarına özel stiller tanımlamak son derece kolay ve sezgiseldir. Bu rehberde Tailwind'in responsive sistemini derinlemesine inceleyecek, gerçek dünya layout pattern'lerini ve container query entegrasyonunu ele alacağız.</p>
+
+<h3>1. Breakpoint Sistemi ve Mobile-First Yaklaşım</h3>
+
+<p>Tailwind, mobile-first yaklaşımı benimser. Modifier olmadan yazılan stiller tüm ekran boyutlarında geçerlidir. <code>sm:</code>, <code>md:</code>, <code>lg:</code> modifier'ları <code>min-width</code> media query'leri oluşturur.</p>
+
+<pre><code>&lt;!-- Varsayılan Breakpoint'ler (Tailwind v4) --&gt;
+&lt;!-- sm: 640px, md: 768px, lg: 1024px, xl: 1280px, 2xl: 1536px --&gt;
+
+&lt;!-- Responsive Grid: Mobilde 1, tablette 2, masaüstünde 3 sütun --&gt;
+&lt;div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"&gt;
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;Card 1&lt;/div&gt;
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;Card 2&lt;/div&gt;
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;Card 3&lt;/div&gt;
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;Card 4&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Responsive Typography --&gt;
+&lt;h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl
+           font-bold leading-tight"&gt;
+  Modern Web Geliştirme Rehberi
+&lt;/h1&gt;
+
+&lt;!-- Responsive Padding ve Margin --&gt;
+&lt;section class="px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20"&gt;
+  &lt;div class="max-w-7xl mx-auto"&gt;
+    &lt;!-- İçerik --&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!-- Responsive Visibility --&gt;
+&lt;nav class="flex items-center justify-between"&gt;
+  &lt;a href="/" class="text-xl font-bold"&gt;Logo&lt;/a&gt;
+
+  &lt;!-- Masaüstü menü (mobilde gizli) --&gt;
+  &lt;div class="hidden md:flex items-center gap-6"&gt;
+    &lt;a href="#"&gt;Ana Sayfa&lt;/a&gt;
+    &lt;a href="#"&gt;Blog&lt;/a&gt;
+    &lt;a href="#"&gt;İletişim&lt;/a&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Hamburger butonu (masaüstünde gizli) --&gt;
+  &lt;button class="md:hidden p-2"&gt;
+    &lt;svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"&gt;
+      &lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16" /&gt;
+    &lt;/svg&gt;
+  &lt;/button&gt;
+&lt;/nav&gt;</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Tailwind'de responsive modifier'lar <code>min-width</code> kullanır, yani <code>md:flex</code> "768px ve üzerinde flex uygula" anlamına gelir. <code>max-width</code> için <code>max-md:</code> modifier'ını kullanabilirsiniz.
+</div>
+
+<h3>2. Gerçek Dünya Layout Pattern'leri</h3>
+
+<p>Responsive tasarımda en sık karşılaşılan layout senaryoları ve bunların Tailwind ile nasıl çözüldüğüne bakalım:</p>
+
+<pre><code>&lt;!-- Dashboard Layout --&gt;
+&lt;div class="min-h-screen flex"&gt;
+  &lt;!-- Sidebar: Mobilde gizli, masaüstünde sabit --&gt;
+  &lt;aside class="hidden lg:block lg:w-64 lg:flex-shrink-0
+                bg-gray-900 text-white"&gt;
+    &lt;nav class="p-4 space-y-2"&gt;
+      &lt;a href="#" class="block px-4 py-2 rounded-lg bg-gray-800"&gt;Dashboard&lt;/a&gt;
+      &lt;a href="#" class="block px-4 py-2 rounded-lg hover:bg-gray-800"&gt;Projeler&lt;/a&gt;
+      &lt;a href="#" class="block px-4 py-2 rounded-lg hover:bg-gray-800"&gt;Ayarlar&lt;/a&gt;
+    &lt;/nav&gt;
+  &lt;/aside&gt;
+
+  &lt;!-- Ana İçerik --&gt;
+  &lt;main class="flex-1 p-4 sm:p-6 lg:p-8"&gt;
+    &lt;!-- Stats Grid --&gt;
+    &lt;div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8"&gt;
+      &lt;div class="bg-white rounded-xl p-6 shadow-sm border"&gt;
+        &lt;p class="text-sm text-gray-500"&gt;Toplam Gelir&lt;/p&gt;
+        &lt;p class="text-2xl font-bold mt-1"&gt;₺124,500&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;!-- Diğer stat card'ları --&gt;
+    &lt;/div&gt;
+
+    &lt;!-- İki sütunlu alan --&gt;
+    &lt;div class="grid grid-cols-1 lg:grid-cols-3 gap-6"&gt;
+      &lt;div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm"&gt;
+        &lt;!-- Grafik alanı --&gt;
+      &lt;/div&gt;
+      &lt;div class="bg-white rounded-xl p-6 shadow-sm"&gt;
+        &lt;!-- Yan panel --&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/main&gt;
+&lt;/div&gt;
+
+&lt;!-- Blog Post Layout --&gt;
+&lt;article class="max-w-none lg:max-w-4xl mx-auto px-4 sm:px-6 py-12"&gt;
+  &lt;header class="mb-8 sm:mb-12"&gt;
+    &lt;h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4"&gt;
+      Yazı Başlığı
+    &lt;/h1&gt;
+    &lt;div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4
+                text-sm text-gray-500"&gt;
+      &lt;span&gt;Tarik Tunç&lt;/span&gt;
+      &lt;span class="hidden sm:inline"&gt;·&lt;/span&gt;
+      &lt;time&gt;15 Mart 2026&lt;/time&gt;
+      &lt;span class="hidden sm:inline"&gt;·&lt;/span&gt;
+      &lt;span&gt;8 dk okuma&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/header&gt;
+&lt;/article&gt;</code></pre>
+
+<h3>3. Responsive Image ve Media Stratejileri</h3>
+
+<p>Tailwind ile görsellerin responsive davranışını kontrol etmek ve farklı ekran boyutlarında farklı düzenler uygulamak oldukça kolaydır.</p>
+
+<pre><code>&lt;!-- Responsive Hero —  Mobilde dikey, masaüstünde yatay --&gt;
+&lt;section class="flex flex-col-reverse lg:flex-row items-center
+                gap-8 lg:gap-16 px-4 py-12 lg:py-24"&gt;
+  &lt;div class="flex-1 text-center lg:text-left"&gt;
+    &lt;h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4"&gt;
+      Modern Web Geliştirme
+    &lt;/h1&gt;
+    &lt;p class="text-gray-600 text-lg mb-8 max-w-xl mx-auto lg:mx-0"&gt;
+      Tailwind CSS ile hızlı ve responsive arayüzler oluşturun.
+    &lt;/p&gt;
+    &lt;div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"&gt;
+      &lt;button class="px-8 py-3 bg-blue-500 text-white rounded-lg
+                     hover:bg-blue-600"&gt;
+        Başla
+      &lt;/button&gt;
+      &lt;button class="px-8 py-3 border-2 border-gray-300 rounded-lg
+                     hover:border-gray-400"&gt;
+        Daha Fazla
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="flex-1"&gt;
+    &lt;img src="/hero.webp" alt="Hero görsel"
+         class="w-full max-w-lg mx-auto rounded-2xl shadow-xl" /&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!-- Responsive Aspect Ratio --&gt;
+&lt;div class="aspect-video sm:aspect-[4/3] lg:aspect-[21/9] overflow-hidden rounded-xl"&gt;
+  &lt;img src="/banner.webp" alt="Banner"
+       class="w-full h-full object-cover" /&gt;
+&lt;/div&gt;
+
+&lt;!-- Responsive Spacing Scale --&gt;
+&lt;div class="space-y-4 sm:space-y-6 lg:space-y-8"&gt;
+  &lt;!-- Elemanlar arası responsive boşluk --&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Tailwind v4'te <code>@theme</code> ile özel breakpoint'ler tanımlayabilirsiniz: <code>--breakpoint-xs: 480px;</code>. Ayrıca <code>min-[800px]:flex</code> gibi arbitrary breakpoint'ler de kullanabilirsiniz.
+</div>
+
+<h3>4. Container Queries ve @screen Direktifi</h3>
+
+<p>Tailwind CSS v4, container query desteğini yerleşik olarak sunar. <code>@container</code> modifier'ı ile component bazlı responsive tasarım yapabilirsiniz.</p>
+
+<pre><code>&lt;!-- Container Query ile Responsive Card --&gt;
+&lt;div class="@container"&gt;
+  &lt;div class="flex flex-col @md:flex-row gap-4 p-4 bg-white rounded-xl"&gt;
+    &lt;img src="/image.webp" alt=""
+         class="w-full @md:w-48 aspect-video @md:aspect-square
+                object-cover rounded-lg" /&gt;
+    &lt;div class="flex-1"&gt;
+      &lt;h3 class="text-base @md:text-lg @lg:text-xl font-bold"&gt;
+        Başlık
+      &lt;/h3&gt;
+      &lt;p class="text-sm text-gray-600 mt-2
+                hidden @sm:block"&gt;
+        Bu açıklama sadece container yeterince genişse görünür.
+      &lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Named Container --&gt;
+&lt;div class="@container/sidebar"&gt;
+  &lt;div class="@md/sidebar:grid @md/sidebar:grid-cols-2 gap-4"&gt;
+    &lt;!-- Sidebar genişliğine göre değişen layout --&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Responsive Table Alternatifi --&gt;
+&lt;div class="@container"&gt;
+  &lt;div class="@md:hidden space-y-4"&gt;
+    &lt;!-- Card görünümü (dar container) --&gt;
+    &lt;div class="bg-white p-4 rounded-lg shadow-sm"&gt;
+      &lt;p class="font-bold"&gt;Ürün Adı&lt;/p&gt;
+      &lt;p class="text-gray-500"&gt;₺299&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;table class="hidden @md:table w-full"&gt;
+    &lt;!-- Tablo görünümü (geniş container) --&gt;
+    &lt;thead&gt;
+      &lt;tr class="border-b"&gt;
+        &lt;th class="text-left py-3"&gt;Ürün&lt;/th&gt;
+        &lt;th class="text-left py-3"&gt;Fiyat&lt;/th&gt;
+        &lt;th class="text-left py-3"&gt;Stok&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Container query class'ları (<code>@container</code>, <code>@md:</code>) Tailwind v4'te yerleşik olarak desteklenir. Tailwind v3 kullanıyorsanız <code>@tailwindcss/container-queries</code> eklentisini yüklemeniz gerekir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Tailwind CSS'in responsive sistemi, mobile-first yaklaşım ve sezgisel modifier söz dizimi ile responsive tasarımı kolaylaştırır. Breakpoint modifier'ları ile viewport bazlı, container query'ler ile component bazlı responsive tasarım yapabilirsiniz. Önemli olan mobile-first düşünmek ve her breakpoint'te sadece değişmesi gereken özellikleri tanımlamaktır. Tailwind'in IntelliSense eklentisi (VS Code) ile autocomplete desteği, doğru class isimlerini bulmayı büyük ölçüde kolaylaştırır.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://tailwindcss.com/docs/responsive-design" target="_blank">Tailwind CSS: Responsive Design</a></li>
+  <li><a href="https://tailwindcss.com/docs/container-queries" target="_blank">Tailwind CSS: Container Queries</a></li>
+  <li><a href="https://tailwindcss.com/docs/screens" target="_blank">Tailwind CSS: Customizing Screens</a></li>
+  <li><a href="https://www.youtube.com/watch?v=2-bMBxRnmJc" target="_blank">Tailwind CSS Responsive Design Tutorial</a></li>
+</ul>

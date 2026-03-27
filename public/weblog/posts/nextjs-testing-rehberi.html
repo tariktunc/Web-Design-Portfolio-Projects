@@ -1,0 +1,420 @@
+<h2>Next.js Test Yazma: Playwright ve Vitest</h2>
+
+<p>Test yazma, güvenilir ve sürdürülebilir Next.js uygulamaları geliştirmenin temel taşıdır. <strong>Vitest</strong> ile birim ve entegrasyon testleri, <strong>Playwright</strong> ile uçtan uca (E2E) testler yazarak uygulamanızın her katmanını güvence altına alabilirsiniz. Bu yazıda her iki aracın kurulumunu, yapılandırmasını ve pratik test senaryolarını adım adım inceleyeceğiz.</p>
+
+<h3>Test Piramidi</h3>
+
+<ul>
+  <li><strong>Birim Testleri (Unit):</strong> Tek bir fonksiyon veya bileşen - Vitest + React Testing Library</li>
+  <li><strong>Entegrasyon Testleri:</strong> Bileşenlerin birlikte çalışması - Vitest + MSW</li>
+  <li><strong>E2E Testleri:</strong> Tam kullanıcı senaryoları - Playwright</li>
+</ul>
+
+<h3>Vitest Kurulumu</h3>
+
+<pre><code>npm install -D vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom</code></pre>
+
+<pre><code>// vitest.config.js
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.js'],
+    include: ['**/*.test.{js,jsx,ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      exclude: ['node_modules/', 'tests/setup.js'],
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, '.'),
+    },
+  },
+});</code></pre>
+
+<pre><code>// tests/setup.js
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
+afterEach(() =&gt; {
+  cleanup();
+});</code></pre>
+
+<h3>Birim Testleri - Utility Fonksiyonlar</h3>
+
+<pre><code>// lib/utils.js
+export function formatCurrency(amount, locale = 'tr-TR') {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'TRY',
+  }).format(amount);
+}
+
+export function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+export function truncate(text, maxLength) {
+  if (text.length &lt;= maxLength) return text;
+  return text.slice(0, maxLength).trimEnd() + '...';
+}</code></pre>
+
+<pre><code>// lib/utils.test.js
+import { describe, it, expect } from 'vitest';
+import { formatCurrency, slugify, truncate } from './utils';
+
+describe('formatCurrency', () =&gt; {
+  it('TRY formatında para birimi döner', () =&gt; {
+    expect(formatCurrency(1500)).toContain('1.500');
+  });
+
+  it('ondalıklı değerleri doğru formatlar', () =&gt; {
+    expect(formatCurrency(29.99)).toContain('29,99');
+  });
+});
+
+describe('slugify', () =&gt; {
+  it('boşlukları tire ile değiştirir', () =&gt; {
+    expect(slugify('Merhaba Dunya')).toBe('merhaba-dunya');
+  });
+
+  it('özel karakterleri kaldırır', () =&gt; {
+    expect(slugify('React & Next')).toBe('react--next');
+  });
+});
+
+describe('truncate', () =&gt; {
+  it('uzun metni keser ve ... ekler', () =&gt; {
+    expect(truncate('Bu cok uzun bir metin', 10)).toBe('Bu cok...');
+  });
+
+  it('kısa metni değiştirmez', () =&gt; {
+    expect(truncate('Kisa', 10)).toBe('Kisa');
+  });
+});</code></pre>
+
+<h3>Bileşen Testleri</h3>
+
+<pre><code>// components/SearchInput.jsx
+'use client';
+import { useState } from 'react';
+
+export function SearchInput({ onSearch, placeholder = 'Ara...' }) {
+  const [query, setQuery] = useState('');
+
+  const handleSubmit = (e) =&gt; {
+    e.preventDefault();
+    if (query.trim()) {
+      onSearch(query.trim());
+    }
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit} role="search"&gt;
+      &lt;input
+        type="text"
+        value={query}
+        onChange={(e) =&gt; setQuery(e.target.value)}
+        placeholder={placeholder}
+        aria-label="Arama"
+      /&gt;
+      &lt;button type="submit" disabled={!query.trim()}&gt;
+        Ara
+      &lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+<pre><code>// components/SearchInput.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi } from 'vitest';
+import { SearchInput } from './SearchInput';
+
+describe('SearchInput', () =&gt; {
+  it('placeholder ile render edilir', () =&gt; {
+    render(&lt;SearchInput onSearch={vi.fn()} placeholder="Urun ara..." /&gt;);
+    expect(screen.getByPlaceholderText('Urun ara...')).toBeInTheDocument();
+  });
+
+  it('bos input ile buton disabled olur', () =&gt; {
+    render(&lt;SearchInput onSearch={vi.fn()} /&gt;);
+    expect(screen.getByRole('button', { name: 'Ara' })).toBeDisabled();
+  });
+
+  it('metin girilince buton aktif olur', async () =&gt; {
+    const user = userEvent.setup();
+    render(&lt;SearchInput onSearch={vi.fn()} /&gt;);
+
+    await user.type(screen.getByRole('textbox'), 'react');
+    expect(screen.getByRole('button', { name: 'Ara' })).toBeEnabled();
+  });
+
+  it('form submit edilince onSearch cagrilir', async () =&gt; {
+    const user = userEvent.setup();
+    const mockSearch = vi.fn();
+    render(&lt;SearchInput onSearch={mockSearch} /&gt;);
+
+    await user.type(screen.getByRole('textbox'), 'next.js');
+    await user.click(screen.getByRole('button', { name: 'Ara' }));
+
+    expect(mockSearch).toHaveBeenCalledWith('next.js');
+    expect(mockSearch).toHaveBeenCalledTimes(1);
+  });
+});</code></pre>
+
+<h3>API Mocking - MSW</h3>
+
+<pre><code>npm install -D msw</code></pre>
+
+<pre><code>// tests/mocks/handlers.js
+import { http, HttpResponse } from 'msw';
+
+export const handlers = [
+  http.get('/api/posts', () =&gt; {
+    return HttpResponse.json([
+      { id: 1, title: 'Test Yazisi', slug: 'test-yazisi' },
+      { id: 2, title: 'Ikinci Yazi', slug: 'ikinci-yazi' },
+    ]);
+  }),
+
+  http.post('/api/posts', async ({ request }) =&gt; {
+    const body = await request.json();
+    return HttpResponse.json(
+      { id: 3, ...body },
+      { status: 201 }
+    );
+  }),
+];
+
+// tests/mocks/server.js
+import { setupServer } from 'msw/node';
+import { handlers } from './handlers';
+
+export const server = setupServer(...handlers);</code></pre>
+
+<pre><code>// tests/setup.js - MSW entegrasyonu ekle
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+import { afterAll, afterEach, beforeAll } from 'vitest';
+import { server } from './mocks/server';
+
+beforeAll(() =&gt; server.listen());
+afterEach(() =&gt; { cleanup(); server.resetHandlers(); });
+afterAll(() =&gt; server.close());</code></pre>
+
+<h3>Playwright Kurulumu</h3>
+
+<pre><code>npm init playwright@latest</code></pre>
+
+<pre><code>// playwright.config.js
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [['html'], ['list']],
+
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+  ],
+
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});</code></pre>
+
+<h3>E2E Test Örnekleri</h3>
+
+<pre><code>// e2e/navigation.spec.js
+import { test, expect } from '@playwright/test';
+
+test.describe('Site Navigasyonu', () =&gt; {
+  test('ana sayfadan blog sayfasına gidilir', async ({ page }) =&gt; {
+    await page.goto('/');
+    await page.click('text=Blog');
+    await expect(page).toHaveURL('/blog');
+    await expect(page.locator('h1')).toContainText('Blog');
+  });
+
+  test('blog yazısına tıklayınca detay sayfası açılır', async ({ page }) =&gt; {
+    await page.goto('/blog');
+    const firstPost = page.locator('article a').first();
+    const postTitle = await firstPost.textContent();
+    await firstPost.click();
+    await expect(page.locator('h1')).toContainText(postTitle);
+  });
+});
+
+test.describe('Arama', () =&gt; {
+  test('arama sonuçları gösterilir', async ({ page }) =&gt; {
+    await page.goto('/blog');
+    await page.fill('[aria-label="Arama"]', 'React');
+    await page.press('[aria-label="Arama"]', 'Enter');
+    const results = page.locator('article');
+    await expect(results.first()).toBeVisible();
+  });
+});</code></pre>
+
+<pre><code>// e2e/form.spec.js
+import { test, expect } from '@playwright/test';
+
+test.describe('Iletisim Formu', () =&gt; {
+  test('form basariyla gönderilir', async ({ page }) =&gt; {
+    await page.goto('/iletisim');
+
+    await page.fill('input[name="name"]', 'Test Kullanici');
+    await page.fill('input[name="email"]', 'test@example.com');
+    await page.fill('textarea[name="message"]', 'Test mesaji icerigi');
+    await page.click('button[type="submit"]');
+
+    await expect(page.locator('.success-message')).toBeVisible();
+  });
+
+  test('eksik alanlarla hata gösterilir', async ({ page }) =&gt; {
+    await page.goto('/iletisim');
+    await page.click('button[type="submit"]');
+    await expect(page.locator('.error')).toBeVisible();
+  });
+});</code></pre>
+
+<h3>Server Component Test Stratejisi</h3>
+
+<p>Server Component'leri doğrudan test etmek henüz zorlayıcıdır. En iyi strateji, iş mantığını ayrı fonksiyonlara çıkarmak ve bunları birim testleriyle test etmektir:</p>
+
+<pre><code>// lib/posts.js - Test edilebilir iş mantığı
+export function filterPublishedPosts(posts) {
+  return posts.filter((post) =&gt; post.published);
+}
+
+export function sortByDate(posts) {
+  return [...posts].sort(
+    (a, b) =&gt; new Date(b.createdAt) - new Date(a.createdAt)
+  );
+}
+
+// lib/posts.test.js
+import { describe, it, expect } from 'vitest';
+import { filterPublishedPosts, sortByDate } from './posts';
+
+describe('filterPublishedPosts', () =&gt; {
+  it('sadece yayinlanmis yazilari doner', () =&gt; {
+    const posts = [
+      { id: 1, published: true },
+      { id: 2, published: false },
+      { id: 3, published: true },
+    ];
+    expect(filterPublishedPosts(posts)).toHaveLength(2);
+  });
+});
+
+describe('sortByDate', () =&gt; {
+  it('tarihe gore azalan siralar', () =&gt; {
+    const posts = [
+      { id: 1, createdAt: '2024-01-01' },
+      { id: 2, createdAt: '2024-03-01' },
+      { id: 3, createdAt: '2024-02-01' },
+    ];
+    const sorted = sortByDate(posts);
+    expect(sorted[0].id).toBe(2);
+    expect(sorted[2].id).toBe(1);
+  });
+});</code></pre>
+
+<h3>CI/CD Entegrasyonu</h3>
+
+<pre><code># .github/workflows/test.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test -- --coverage
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/</code></pre>
+
+<h3>Package.json Scripts</h3>
+
+<pre><code>{
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "vitest run && playwright test"
+  }
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> CI/CD pipeline'ınızda Vitest birim testlerini her commit'te, Playwright E2E testlerini ise PR merge veya deployment öncesinde çalıştırın. Bu, hızlı geri bildirim döngüsü sağlar ve E2E testlerinin yavaşlığını yönetilebilir kılar.
+</div>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Server Component'leri doğrudan test etmek henüz zordur. Bunun yerine business logic'i ayrı fonksiyonlara çıkararak birim testi yapın ve Server Component'lerin doğru çalıştığını E2E testlerle doğrulayın.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js uygulamalarında test stratejisi, Vitest ile hızlı birim/entegrasyon testleri ve Playwright ile kapsamlı E2E testleri kombinasyonuyla en iyi sonucu verir. MSW ile API mocking, React Testing Library ile kullanıcı odaklı bileşen testleri ve Playwright'ın multi-browser desteği ile uygulamanızın her katmanını güvence altına alabilirsiniz. Test yazmayı geliştirme sürecinizin ayrılmaz bir parçası haline getirerek, güvenilir ve sürdürülebilir uygulamalar oluşturun.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/testing" target="_blank" rel="noopener noreferrer">Next.js Docs - Testing</a></li>
+  <li><a href="https://vitest.dev/" target="_blank" rel="noopener noreferrer">Vitest Documentation</a></li>
+  <li><a href="https://playwright.dev/" target="_blank" rel="noopener noreferrer">Playwright Documentation</a></li>
+  <li><a href="https://testing-library.com/docs/react-testing-library/intro/" target="_blank" rel="noopener noreferrer">React Testing Library</a></li>
+  <li><a href="https://mswjs.io/" target="_blank" rel="noopener noreferrer">MSW - Mock Service Worker</a></li>
+</ul>

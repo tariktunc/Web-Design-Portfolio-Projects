@@ -1,0 +1,258 @@
+<h2>CSS Container Queries: Responsive'in Geleceği</h2>
+
+<p>CSS Container Queries, web geliştirme tarihinin en çok beklenen özelliklerinden biridir. Media query'ler viewport genişliğine bağlıyken, container query'ler bir bileşenin kendi container'ının boyutuna göre stil değiştirmesini sağlar. Bu, gerçek anlamda component bazlı responsive tasarım demektir ve tasarım sistemleri ile micro-frontend mimarilerinde devrim niteliğindedir.</p>
+
+<h3>1. Container Queries Temelleri</h3>
+
+<p>Container query kullanmak için önce bir containment context oluşturmanız gerekir. <code>container-type</code> özelliği ile bir elemanı sorgulanabilir container haline getirirsiniz. Ardından <code>@container</code> kuralı ile bu container'ın boyutuna göre stil tanımlarsınız.</p>
+
+<pre><code>/* Container tanımlama */
+.card-wrapper {
+  container-type: inline-size; /* Yatay boyut sorgulanabilir */
+  container-name: card;        /* İsteğe bağlı isim */
+}
+
+/* Kısa yazım */
+.card-wrapper {
+  container: card / inline-size;
+}
+
+/* Container query */
+.card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Container 400px'den genişse */
+@container card (min-width: 400px) {
+  .card {
+    grid-template-columns: 150px 1fr;
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Container 600px'den genişse */
+@container card (min-width: 600px) {
+  .card {
+    grid-template-columns: 200px 1fr auto;
+    padding: 2rem;
+  }
+
+  .card-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>container-type: inline-size</code> sadece yatay boyut sorgusunu etkinleştirir. <code>container-type: size</code> hem yatay hem dikey boyut sorgusunu etkinleştirir ancak daha fazla performans maliyeti vardır.
+</div>
+
+<h3>2. Gerçek Dünya Kullanım Senaryoları</h3>
+
+<p>Container query'lerin en büyük avantajı, bir component'in yerleştirildiği alana göre otomatik uyum sağlamasıdır. Aynı card component'i sidebar'da dar, ana içerikte geniş, modal'da orta boyutlu görünebilir — hiçbir ek class veya prop gerekmez.</p>
+
+<pre><code>/* Adaptive Product Card */
+.product-container {
+  container: product / inline-size;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  width: 100%;
+}
+
+.product-info {
+  padding: 1rem;
+}
+
+.product-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Orta genişlik — yatay düzen */
+@container product (min-width: 480px) {
+  .product-card {
+    flex-direction: row;
+  }
+
+  .product-image {
+    width: 200px;
+    aspect-ratio: 1;
+  }
+
+  .product-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+}
+
+/* Geniş — detaylı görünüm */
+@container product (min-width: 700px) {
+  .product-image {
+    width: 280px;
+  }
+
+  .product-info {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .product-price {
+    font-size: 1.5rem;
+  }
+
+  .product-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}</code></pre>
+
+<h3>3. Container Query Birimleri (cqw, cqh, cqi, cqb)</h3>
+
+<p>Container query'ler sadece breakpoint sorguları değil, aynı zamanda yeni CSS birimleri de sunar. <code>cqw</code> ve <code>cqh</code> (container query width/height) birimleri ile container boyutuna göre dinamik değerler oluşturabilirsiniz.</p>
+
+<pre><code>/* Container Query Birimleri */
+.hero-container {
+  container-type: inline-size;
+}
+
+.hero-title {
+  /* Container genişliğinin %5'i, min 1.5rem, max 3rem */
+  font-size: clamp(1.5rem, 5cqi, 3rem);
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 3cqi, 1.5rem);
+}
+
+.hero-padding {
+  padding: 3cqi; /* Container genişliğine orantılı padding */
+}
+
+/* Responsive icon boyutu */
+.icon-container {
+  container-type: inline-size;
+}
+
+.adaptive-icon {
+  width: clamp(24px, 8cqi, 48px);
+  height: clamp(24px, 8cqi, 48px);
+}
+
+/* Dashboard Widget */
+.widget-container {
+  container: widget / inline-size;
+}
+
+.widget-chart {
+  height: max(150px, 30cqi);
+}
+
+.widget-label {
+  font-size: clamp(0.75rem, 2.5cqi, 1rem);
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Container query birimleri: <code>cqi</code> (inline), <code>cqb</code> (block), <code>cqw</code> (width), <code>cqh</code> (height), <code>cqmin</code> (min), <code>cqmax</code> (max). Türkçe yazım yönü (LTR) için <code>cqi</code> ve <code>cqw</code> eşdeğerdir.
+</div>
+
+<h3>4. Container Style Queries</h3>
+
+<p>CSS'in gelecek özelliklerinden biri olan style query'ler, container'ın boyutuna değil, CSS custom property değerine göre stil sorgulaması yapmanıza olanak tanır. Bu özellik şu an sınırlı tarayıcı desteğine sahiptir ancak geleceği şekillendirecektir.</p>
+
+<pre><code>/* Container Style Query (Deneysel) */
+.theme-container {
+  container-name: theme;
+  --variant: default;
+}
+
+/* Variant'a göre stil */
+@container theme style(--variant: compact) {
+  .card {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .card-image {
+    display: none;
+  }
+}
+
+@container theme style(--variant: featured) {
+  .card {
+    border: 2px solid #3b82f6;
+    padding: 2rem;
+  }
+
+  .card-badge {
+    display: block;
+  }
+}
+
+/* Kullanım */
+.sidebar {
+  --variant: compact;
+}
+
+.main-content {
+  --variant: featured;
+}
+
+/* Media Query + Container Query Birlikte */
+.layout {
+  container: layout / inline-size;
+}
+
+@container layout (min-width: 800px) {
+  .content-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @container layout (min-width: 800px) {
+    .content-grid {
+      gap: 2rem; /* Dark mode'da geniş layout'ta daha fazla boşluk */
+    }
+  }
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Style query'ler henüz deneysel aşamadadır ve sadece Chrome 111+ sürümünde custom property sorguları desteklenmektedir. Prodüksiyon'da kullanmadan önce tarayıcı desteğini kontrol edin. Size query'ler ise tüm modern tarayıcılarda desteklenmektedir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>CSS Container Queries, responsive tasarımın paradigmasını viewport-bazlı yaklaşımdan component-bazlı yaklaşıma kaydırmaktadır. Artık bir component'in nerede kullanıldığına değil, ne kadar alana sahip olduğuna göre şekillenmesi mümkündür. Bu, tasarım sistemleri ve component kütüphaneleri için büyük bir kazanımdır. Container query birimleri (cqi, cqb) ile fluid değerler oluşturabilir, gelecekte style query'ler ile custom property'lere göre sorgu yapabilirsiniz. Projelerinizde container query'leri denemeye başlayın — bir kez kullandığınızda media query'lere geri dönmek istemeyeceksiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries" target="_blank">MDN: Container Queries</a></li>
+  <li><a href="https://web.dev/blog/cq-stable" target="_blank">web.dev: Container Queries Land in Stable Browsers</a></li>
+  <li><a href="https://css-tricks.com/css-container-queries/" target="_blank">CSS-Tricks: CSS Container Queries</a></li>
+  <li><a href="https://developer.chrome.com/docs/css-ui/container-queries" target="_blank">Chrome Developers: Container Queries</a></li>
+</ul>

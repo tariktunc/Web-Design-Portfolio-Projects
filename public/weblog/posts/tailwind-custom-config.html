@@ -1,0 +1,258 @@
+<h2>Tailwind CSS Özelleştirme: Config Dosyası Rehberi</h2>
+
+<p>Tailwind CSS'in varsayılan değerleri çoğu proje için yeterli olsa da, gerçek dünya projelerinde marka renkleri, özel fontlar, spacing değerleri ve breakpoint'ler gibi özelleştirmeler gerekir. Bu rehberde Tailwind CSS v4'ün CSS-first yapılandırma sistemi ile v3'ün tailwind.config.js yaklaşımını karşılaştıracak ve kapsamlı bir design system oluşturmayı adım adım göstereceğiz.</p>
+
+<h3>1. Tailwind v4: CSS-First Yapılandırma</h3>
+
+<p>Tailwind CSS v4, yapılandırmayı doğrudan CSS dosyasında <code>@theme</code> direktifi ile yapmayı önerir. Bu yaklaşım daha basit, daha hızlı ve CSS'in doğal yapısına daha uyumludur.</p>
+
+<pre><code>/* src/styles.css — Tailwind v4 yapılandırma */
+@import "tailwindcss";
+
+@theme {
+  /* Renkler */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Fontlar */
+  --font-family-heading: 'Cal Sans', 'Inter', system-ui, sans-serif;
+  --font-family-body: 'Inter', system-ui, sans-serif;
+  --font-family-mono: 'Fira Code', 'Cascadia Code', monospace;
+
+  /* Font boyutları */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+
+  /* Breakpoint'ler */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Border Radius */
+  --radius-DEFAULT: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* Z-Index Scale */
+  --z-dropdown: 50;
+  --z-sticky: 100;
+  --z-modal: 200;
+  --z-tooltip: 300;
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Tailwind v4'te <code>@theme</code> içinde tanımlanan değişkenler otomatik olarak utility class'lara dönüşür. Örneğin <code>--color-brand-500</code> tanımladığınızda <code>bg-brand-500</code>, <code>text-brand-500</code> class'ları otomatik olarak kullanılabilir hale gelir.
+</div>
+
+<h3>2. Tailwind v3: Config Dosyası Yaklaşımı</h3>
+
+<p>Tailwind v3 kullanıyorsanız, <code>tailwind.config.js</code> dosyası ile yapılandırma yaparsınız. Extend ile varsayılan değerleri koruyarak yeni değerler ekleyebilir veya tamamen override edebilirsiniz.</p>
+
+<pre><code>// tailwind.config.js — v3 yapılandırma
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/**/*.{html,js,jsx,ts,tsx}',
+    './components/**/*.{js,jsx,ts,tsx}',
+  ],
+  darkMode: 'class',
+  theme: {
+    // Override — varsayılanları değiştirir
+    screens: {
+      xs: '480px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+    },
+
+    // Extend — varsayılanlara ekler
+    extend: {
+      colors: {
+        brand: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          900: '#1e3a8a',
+        },
+      },
+      fontFamily: {
+        heading: ['Cal Sans', 'Inter', 'system-ui', 'sans-serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['Fira Code', 'Cascadia Code', 'monospace'],
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+        '128': '32rem',
+      },
+      borderRadius: {
+        '4xl': '2rem',
+      },
+      boxShadow: {
+        'card': '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+        'modal': '0 20px 25px -5px rgba(0,0,0,0.1)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'slide-up': 'slideUp 0.3s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+      },
+    },
+  },
+  plugins: [],
+};</code></pre>
+
+<h3>3. Plugin Sistemi ve Özel Utility'ler</h3>
+
+<p>Tailwind'in plugin sistemi ile kendi utility class'larınızı, component'lerinizi ve varyantlarınızı oluşturabilirsiniz. Bu, tekrarlayan pattern'leri kapsüllemek için idealdir.</p>
+
+<pre><code>// tailwind.config.js — Plugin örneği
+const plugin = require('tailwindcss/plugin');
+
+module.exports = {
+  // ...
+  plugins: [
+    // Özel utility'ler
+    plugin(function({ addUtilities, addComponents, theme }) {
+      // Text truncation utility'leri
+      addUtilities({
+        '.text-truncate': {
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        },
+        '.text-truncate-2': {
+          display: '-webkit-box',
+          '-webkit-line-clamp': '2',
+          '-webkit-box-orient': 'vertical',
+          overflow: 'hidden',
+        },
+        '.text-truncate-3': {
+          display: '-webkit-box',
+          '-webkit-line-clamp': '3',
+          '-webkit-box-orient': 'vertical',
+          overflow: 'hidden',
+        },
+      });
+
+      // Özel component'ler
+      addComponents({
+        '.btn-base': {
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: `${theme('spacing.2')} ${theme('spacing.4')}`,
+          borderRadius: theme('borderRadius.lg'),
+          fontWeight: theme('fontWeight.medium'),
+          fontSize: theme('fontSize.sm'),
+          transition: 'all 150ms ease',
+          cursor: 'pointer',
+          '&:disabled': {
+            opacity: '0.5',
+            cursor: 'not-allowed',
+          },
+        },
+      });
+    }),
+
+    // Resmi eklentiler
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/aspect-ratio'),
+  ],
+};</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>@tailwindcss/typography</code> eklentisi, <code>prose</code> class'ı ile markdown veya CMS'den gelen HTML içeriğini otomatik olarak güzel tipografi ile stillendirir. Blog ve dokümantasyon siteleri için vazgeçilmezdir.
+</div>
+
+<h3>4. Performans Optimizasyonu</h3>
+
+<p>Tailwind'in content konfigürasyonu, kullanılmayan class'ların production build'den çıkarılması için kritiktir. Doğru yapılandırma, CSS dosya boyutunu dramatik şekilde azaltır.</p>
+
+<pre><code>/* Tailwind v4 — Otomatik content detection */
+/* v4'te content konfigürasyonu genellikle gerekli değildir */
+/* Tailwind otomatik olarak proje dosyalarını tarar */
+
+/* Manuel content belirtme (gerekiyorsa) */
+@source "../src/**/*.{html,js,jsx,ts,tsx}";
+@source "../components/**/*.{js,jsx,ts,tsx}";
+
+/* Tailwind v3 — Content konfigürasyonu */
+/* module.exports = {
+  content: [
+    './src/**\/*.{html,js,jsx,ts,tsx,vue}',
+    './public/index.html',
+    // Dikkat: node_modules içini taramayın (performans)
+  ],
+} */
+
+/* Safelist — Dinamik class'ları koruma */
+/* Tailwind v4 */
+@source not "../src/legacy/**";
+
+/* v3 */
+/* module.exports = {
+  safelist: [
+    'bg-red-500',
+    'bg-green-500',
+    'bg-blue-500',
+    { pattern: /^bg-(red|green|blue)-(100|500|900)$/ },
+  ],
+} */</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Dinamik class isimleri oluşturmak (string concatenation) Tailwind'in purge mekanizmasını kırar. <code>`bg-${color}-500`</code> yerine tam class isimlerini kullanın: <code>color === 'red' ? 'bg-red-500' : 'bg-blue-500'</code>. Tailwind class isimlerini statik olarak bulmalıdır.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Tailwind CSS'in yapılandırma sistemi, projenize özel bir design system oluşturmanın en etkili yoludur. V4'ün CSS-first yaklaşımı ile doğrudan CSS dosyasında, v3'ün config dosyası ile JavaScript'te yapılandırma yapabilirsiniz. Renkler, fontlar, spacing, breakpoint'ler ve özel utility'ler ile markanıza uygun tutarlı bir tasarım dili oluşturun. Plugin sistemi ile tekrarlayan pattern'leri kapsülleyin ve content konfigürasyonu ile production build boyutunu optimize edin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://tailwindcss.com/docs/configuration" target="_blank">Tailwind CSS: Configuration</a></li>
+  <li><a href="https://tailwindcss.com/docs/theme" target="_blank">Tailwind CSS: Theme Configuration</a></li>
+  <li><a href="https://tailwindcss.com/docs/plugins" target="_blank">Tailwind CSS: Plugins</a></li>
+  <li><a href="https://tailwindcss.com/blog/tailwindcss-v4" target="_blank">Tailwind CSS v4 Announcement</a></li>
+</ul>

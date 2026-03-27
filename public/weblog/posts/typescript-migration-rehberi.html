@@ -1,0 +1,298 @@
+<h2>JavaScript'ten TypeScript'e Migration Rehberi</h2>
+
+<p>Mevcut bir JavaScript projesini TypeScript'e taşımak, kod kalitesini artıran ve hataları derleme zamanında yakalayan stratejik bir karardır. Ancak bu geçiş, doğru planlama ve kademeli uygulama gerektirir. Bu rehberde JavaScript projenizi TypeScript'e adım adım nasıl migrate edeceğinizi, yapılandırma ayarlarını, sık karşılaşılan sorunları ve en iyi pratikleri inceleyeceğiz.</p>
+
+<h3>Migration Stratejileri</h3>
+
+<p>TypeScript'e geçiş için üç temel strateji vardır:</p>
+
+<ol>
+  <li><strong>Kademeli geçiş (Önerilen):</strong> <code>allowJs: true</code> ile başlayın, dosya dosya dönüştürün</li>
+  <li><strong>Tam geçiş:</strong> Tüm dosyaları bir seferde dönüştürün (küçük projeler için)</li>
+  <li><strong>Yeni modül stratejisi:</strong> Yeni yazılan tüm kodlar TypeScript, eski kod zamanla dönüştürülür</li>
+</ol>
+
+<h3>Adım 1: TypeScript ve Bağımlılıkları Yükleme</h3>
+
+<pre><code># TypeScript ve gerekli araçları yükle
+npm install -D typescript @types/node
+
+# React projesi için
+npm install -D @types/react @types/react-dom
+
+# Kullandığınız kütüphaneler için tip tanımları
+npm install -D @types/express @types/lodash @types/jest
+
+# ts-node (Node.js projeleri için)
+npm install -D ts-node</code></pre>
+
+<h3>Adım 2: tsconfig.json Oluşturma</h3>
+
+<p>Migration için uygun başlangıç yapılandırması:</p>
+
+<pre><code>// tsconfig.json
+{
+  "compilerOptions": {
+    // Migration başlangıç ayarları (gevşek)
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    // JavaScript dosyalarına izin ver
+    "allowJs": true,
+    "checkJs": false,
+
+    // Başlangıçta strict kapalı
+    "strict": false,
+    "noImplicitAny": false,
+
+    // Module resolution
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Source map
+    "sourceMap": true,
+    "declaration": true,
+
+    // Path alias
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>allowJs: true</code> ayarı, TypeScript derleyicisinin <code>.js</code> dosyalarını da işlemesini sağlar. Bu sayede <code>.ts</code> ve <code>.js</code> dosyaları bir arada bulunabilir.
+</div>
+
+<h3>Adım 3: Dosya Uzantılarını Dönüştürme</h3>
+
+<p>Dosyaları kademeli olarak <code>.js</code>'den <code>.ts</code>'ye (veya <code>.jsx</code>'den <code>.tsx</code>'ye) değiştirin:</p>
+
+<pre><code># Toplu dosya uzantısı değiştirme (Linux/Mac)
+find src -name "*.js" -exec bash -c 'mv "$0" "${0%.js}.ts"' {} \;
+find src -name "*.jsx" -exec bash -c 'mv "$0" "${0%.jsx}.tsx"' {} \;
+
+# Veya kademeli olarak öncelik sırasına göre:
+# 1. Utility ve helper dosyaları
+# 2. Type tanım dosyaları
+# 3. Service ve API katmanı
+# 4. Bileşenler (React)
+# 5. Sayfa ve route dosyaları</code></pre>
+
+<h3>Adım 4: Yaygın Dönüşüm Kalıpları</h3>
+
+<h4>Fonksiyon Parametreleri</h4>
+
+<pre><code>// JavaScript
+function calculateTotal(items, taxRate) {
+  return items.reduce((sum, item) =&gt; sum + item.price * item.quantity, 0)
+    * (1 + taxRate);
+}
+
+// TypeScript
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+function calculateTotal(items: CartItem[], taxRate: number): number {
+  return items.reduce((sum, item) =&gt; sum + item.price * item.quantity, 0)
+    * (1 + taxRate);
+}</code></pre>
+
+<h4>Object Shapes ve Interface</h4>
+
+<pre><code>// JavaScript
+function createUser(name, email, role) {
+  return { id: Date.now().toString(), name, email, role, createdAt: new Date() };
+}
+
+// TypeScript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user' | 'editor';
+  createdAt: Date;
+}
+
+type CreateUserInput = Pick&lt;User, 'name' | 'email' | 'role'&gt;;
+
+function createUser({ name, email, role }: CreateUserInput): User {
+  return {
+    id: Date.now().toString(),
+    name,
+    email,
+    role,
+    createdAt: new Date(),
+  };
+}</code></pre>
+
+<h4>API Response Tipleri</h4>
+
+<pre><code>// JavaScript
+async function fetchPosts() {
+  const res = await fetch('/api/posts');
+  const data = await res.json();
+  return data;
+}
+
+// TypeScript
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  userId: number;
+}
+
+interface ApiResponse&lt;T&gt; {
+  data: T;
+  total: number;
+  page: number;
+}
+
+async function fetchPosts(): Promise&lt;ApiResponse&lt;Post[]&gt;&gt; {
+  const res = await fetch('/api/posts');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise&lt;ApiResponse&lt;Post[]&gt;&gt;;
+}</code></pre>
+
+<h3>Adım 5: Strict Mode'a Kademeli Geçiş</h3>
+
+<p>Migration tamamlandıktan sonra strict ayarları kademeli olarak etkinleştirin:</p>
+
+<pre><code>// tsconfig.json - Kademeli strict geçiş
+{
+  "compilerOptions": {
+    // Aşama 1: Temel kontroller
+    "noImplicitAny": true,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+
+    // Aşama 2: Null kontrolleri
+    // "strictNullChecks": true,
+
+    // Aşama 3: Tam strict
+    // "strict": true,
+
+    // Aşama 4: Ek kontroller
+    // "noUncheckedIndexedAccess": true,
+    // "exactOptionalPropertyTypes": true,
+  }
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>strictNullChecks: true</code> etkinleştirildiğinde en fazla hata alacağınız ayardır. Her değerin <code>null</code> veya <code>undefined</code> olabileceği yerlerde kontrol eklemeniz gerekir.
+</div>
+
+<h3>Geçici Çözümler ve Tip Bastırma</h3>
+
+<p>Migration sırasında hızlı ilerleme için geçici tip bastırma yöntemleri:</p>
+
+<pre><code>// @ts-ignore: Bir sonraki satırdaki hatayı bastırır
+// @ts-ignore
+const value = someUntypedFunction();
+
+// @ts-expect-error: Hata beklenir (hata yoksa uyarı verir, daha güvenli)
+// @ts-expect-error Migration sırasında geçici
+const result = legacyFunction(data);
+
+// any ile geçici tip atama (kaçınılmalı)
+const data: any = complexLegacyObject;
+
+// unknown ile daha güvenli geçici tip
+const response: unknown = await legacyApiCall();
+if (isValidResponse(response)) {
+  // artık tip güvenli
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>@ts-ignore</code> yerine <code>@ts-expect-error</code> kullanın. Eğer alttaki satırdaki hata düzeltilirse, <code>@ts-expect-error</code> size uyarı verir ve gereksiz bastırmaları temizlemenizi hatırlatır.
+</div>
+
+<h3>JSDoc ile Aşamalı Tipleme</h3>
+
+<p>Dosyayı <code>.ts</code>'ye dönüştürmeden JSDoc ile tip bilgisi ekleyebilirsiniz:</p>
+
+<pre><code>// utils.js (hala .js dosyası)
+// tsconfig'de checkJs: true ile
+
+/**
+ * @param {string} text
+ * @param {number} maxLength
+ * @returns {string}
+ */
+function truncate(text, maxLength) {
+  if (text.length &lt;= maxLength) return text;
+  return text.slice(0, maxLength) + '...';
+}
+
+/**
+ * @typedef {Object} PaginationOptions
+ * @property {number} page
+ * @property {number} limit
+ * @property {string} [sortBy]
+ * @property {'asc' | 'desc'} [order]
+ */
+
+/**
+ * @param {PaginationOptions} options
+ */
+function paginate(options) {
+  // ...
+}</code></pre>
+
+<h3>Araç ve Otomasyon</h3>
+
+<pre><code># ts-migrate: Airbnb'nin otomatik migration aracı
+npx ts-migrate-full src/
+
+# typescript-strict-plugin: Dosya bazlı strict kontrol
+npm install -D typescript-strict-plugin
+
+# tsconfig.json
+{
+  "compilerOptions": {
+    "plugins": [{ "name": "typescript-strict-plugin" }]
+  }
+}</code></pre>
+
+<h3>Migration Kontrol Listesi</h3>
+
+<ol>
+  <li>TypeScript ve tip tanımlarını yükle</li>
+  <li><code>tsconfig.json</code> oluştur (<code>allowJs: true</code>, <code>strict: false</code>)</li>
+  <li>Build scriptlerini güncelle</li>
+  <li>Paylaşılan tipleri ve interface'leri tanımla</li>
+  <li>Utility dosyalarından başlayarak kademeli dönüştür</li>
+  <li>Tüm <code>any</code> kullanımlarını azalt</li>
+  <li>Strict ayarları kademeli olarak etkinleştir</li>
+  <li><code>allowJs: false</code> yap (tüm dosyalar dönüştürüldüğünde)</li>
+  <li><code>strict: true</code> etkinleştir</li>
+  <li>CI/CD pipeline'a tip kontrolü ekle</li>
+</ol>
+
+<h3>Sonuç</h3>
+
+<p>JavaScript'ten TypeScript'e geçiş, kademeli ve planlı yapıldığında projeye minimum kesinti ile maksimum fayda sağlar. <code>allowJs</code> ile başlayın, öncelikli dosyaları dönüştürün ve strict ayarları aşamalı olarak etkinleştirin. Her adımda testlerinizi çalıştırarak regresyonları önleyin. Migration tamamlandığında tip güvenliği, daha iyi IDE desteği ve azaltılmış runtime hataları ile ödüllendirileceksiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/migrating-from-javascript.html" target="_blank" rel="noopener noreferrer">TypeScript - Migrating from JavaScript</a></li>
+  <li><a href="https://github.com/airbnb/ts-migrate" target="_blank" rel="noopener noreferrer">ts-migrate by Airbnb</a></li>
+  <li><a href="https://www.typescriptlang.org/tsconfig" target="_blank" rel="noopener noreferrer">TypeScript TSConfig Reference</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html" target="_blank" rel="noopener noreferrer">TypeScript JSDoc Reference</a></li>
+  <li><a href="https://github.com/nicolo-ribaudo/tc39-proposal-type-annotations" target="_blank" rel="noopener noreferrer">TC39 Type Annotations Proposal</a></li>
+</ul>

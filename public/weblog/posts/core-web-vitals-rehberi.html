@@ -1,0 +1,278 @@
+<h2>Core Web Vitals: LCP, INP, CLS Optimizasyon Rehberi</h2>
+
+<p>Core Web Vitals, Google'ın kullanıcı deneyimini ölçmek için belirlediği üç kritik metrikten oluşur: Largest Contentful Paint (LCP), Interaction to Next Paint (INP) ve Cumulative Layout Shift (CLS). Bu metrikler, 2021'den itibaren Google arama sıralama faktörleri arasına dahil edilmiş olup, hem SEO hem de kullanıcı memnuniyeti açısından büyük önem taşımaktadır. Bu rehberde her bir metriği derinlemesine inceleyecek ve pratik optimizasyon stratejileri sunacağız.</p>
+
+<h3>Largest Contentful Paint (LCP)</h3>
+
+<p>LCP, viewport içindeki en büyük içerik öğesinin render edilme süresini ölçer. Bu öğe genellikle bir hero image, büyük bir metin bloğu veya video poster'ı olabilir. Google'ın eşik değerlerine göre:</p>
+
+<ul>
+  <li><strong>İyi:</strong> 2.5 saniye veya altı</li>
+  <li><strong>İyileştirme gerekli:</strong> 2.5 - 4.0 saniye</li>
+  <li><strong>Kötü:</strong> 4.0 saniyenin üzeri</li>
+</ul>
+
+<p>LCP'yi etkileyen dört ana faktör vardır:</p>
+<ul>
+  <li>Yavaş sunucu yanıt süresi (TTFB)</li>
+  <li>Render-blocking kaynaklar (CSS, JS)</li>
+  <li>Yavaş kaynak yükleme süresi</li>
+  <li>Client-side rendering gecikmeleri</li>
+</ul>
+
+<h3>LCP Optimizasyon Stratejileri</h3>
+
+<p>LCP öğesinin hızlı yüklenmesi için kaynağı mümkün olduğunca erken keşfettirmeniz gerekir. Preload hint'i bu konuda en etkili araçtır:</p>
+
+<pre><code>&lt;!-- LCP öğesi olan hero image'i önceden yükle --&gt;
+&lt;link rel="preload" as="image" href="/images/hero-banner.webp"
+      fetchpriority="high"
+      type="image/webp"&gt;
+
+&lt;!-- Responsive preload ile farklı ekran boyutları için --&gt;
+&lt;link rel="preload" as="image"
+      href="/images/hero-mobile.webp"
+      media="(max-width: 768px)"
+      type="image/webp"&gt;
+&lt;link rel="preload" as="image"
+      href="/images/hero-desktop.webp"
+      media="(min-width: 769px)"
+      type="image/webp"&gt;
+
+&lt;!-- LCP öğesi olan hero image --&gt;
+&lt;img src="/images/hero-banner.webp"
+     alt="Hero Banner"
+     width="1200" height="600"
+     fetchpriority="high"
+     decoding="async"&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> LCP öğesi olan görsele asla <code>loading="lazy"</code> eklemeyin. Bu, LCP süresini ciddi şekilde kötüleştirir. Bunun yerine <code>fetchpriority="high"</code> kullanarak tarayıcıya bu kaynağın öncelikli olduğunu bildirin.
+</div>
+
+<h3>Sunucu Tarafı LCP İyileştirmesi</h3>
+
+<p>TTFB'yi düşürmek LCP için kritiktir. Sunucu tarafında yapabileceğiniz optimizasyonlar:</p>
+
+<pre><code>// Express.js ile cache ve sıkıştırma ayarları
+const express = require('express');
+const compression = require('compression');
+
+const app = express();
+
+// Brotli/Gzip sıkıştırma
+app.use(compression({
+  level: 6,
+  threshold: 1024,
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  }
+}));
+
+// Statik dosyalar için agresif cache
+app.use('/static', express.static('public', {
+  maxAge: '1y',
+  immutable: true
+}));
+
+// HTML için kısa cache + stale-while-revalidate
+app.use((req, res, next) => {
+  if (req.accepts('html')) {
+    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+  }
+  next();
+});</code></pre>
+
+<h3>Interaction to Next Paint (INP)</h3>
+
+<p>INP, First Input Delay (FID) metriğinin yerini alan ve kullanıcı etkileşimlerinin yanıt verebilirliğini ölçen metriktir. Tıklama, dokunma ve klavye girişleri gibi tüm etkileşimleri değerlendirir ve en kötü etkileşim süresini (outlier'lar hariç) raporlar.</p>
+
+<ul>
+  <li><strong>İyi:</strong> 200ms veya altı</li>
+  <li><strong>İyileştirme gerekli:</strong> 200ms - 500ms</li>
+  <li><strong>Kötü:</strong> 500ms'nin üzeri</li>
+</ul>
+
+<p>INP üç fazdan oluşur: input delay (olay işleyiciye kadar bekleme), processing time (olay işleyicinin çalışma süresi) ve presentation delay (tarayıcının güncellenmiş frame'i çizmesi).</p>
+
+<h3>INP Optimizasyon Teknikleri</h3>
+
+<p>Uzun süren görevleri parçalamak, INP iyileştirmesinin en etkili yoludur:</p>
+
+<pre><code>// Kötü: Ana thread'i bloke eden uzun görev
+function processLargeDataset(data) {
+  // Bu işlem 500ms+ sürebilir ve INP'yi kötüleştirir
+  data.forEach(item => {
+    heavyComputation(item);
+    updateDOM(item);
+  });
+}
+
+// İyi: Görevi parçalara ayırarak ana thread'i serbest bırak
+async function processLargeDatasetOptimized(data) {
+  const CHUNK_SIZE = 50;
+
+  for (let i = 0; i &lt; data.length; i += CHUNK_SIZE) {
+    const chunk = data.slice(i, i + CHUNK_SIZE);
+
+    chunk.forEach(item => {
+      heavyComputation(item);
+      updateDOM(item);
+    });
+
+    // Ana thread'e kontrol ver - kullanıcı etkileşimleri işlenebilsin
+    await yieldToMain();
+  }
+}
+
+function yieldToMain() {
+  return new Promise(resolve => {
+    // scheduler.yield() varsa kullan (daha verimli)
+    if ('scheduler' in window && 'yield' in scheduler) {
+      scheduler.yield().then(resolve);
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
+// Event handler'da kullanım
+document.getElementById('processBtn').addEventListener('click', async () => {
+  // Görsel feedback hemen ver
+  showLoadingSpinner();
+
+  // Ağır işlemi parçalayarak çalıştır
+  await processLargeDatasetOptimized(largeDataset);
+
+  hideLoadingSpinner();
+});</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>setTimeout(fn, 0)</code> kullanırken dikkatli olun. Bu yöntem görevin kuyruğun sonuna eklenmesini sağlar, ancak tarayıcı başka görevleri araya sokabilir. Kritik UI güncellemelerinde <code>requestAnimationFrame</code> tercih edin.
+</div>
+
+<h3>Cumulative Layout Shift (CLS)</h3>
+
+<p>CLS, sayfa yaşam döngüsü boyunca meydana gelen beklenmeyen layout kaymalarının toplamını ölçer. Kullanıcı bir butona tıklamak üzereyken içeriğin kayması, kötü bir deneyim yaratır.</p>
+
+<ul>
+  <li><strong>İyi:</strong> 0.1 veya altı</li>
+  <li><strong>İyileştirme gerekli:</strong> 0.1 - 0.25</li>
+  <li><strong>Kötü:</strong> 0.25'in üzeri</li>
+</ul>
+
+<h3>CLS Sorunlarını Giderme</h3>
+
+<p>CLS'nin en yaygın nedenleri ve çözümleri:</p>
+
+<pre><code>&lt;!-- Kötü: Boyutsuz görsel - yüklenince layout kayar --&gt;
+&lt;img src="/photo.jpg" alt="Fotoğraf"&gt;
+
+&lt;!-- İyi: width/height ile aspect ratio belirleme --&gt;
+&lt;img src="/photo.jpg" alt="Fotoğraf" width="800" height="600"&gt;
+
+&lt;!-- Daha iyi: CSS aspect-ratio ile responsive --&gt;
+&lt;style&gt;
+  .hero-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  /* Dinamik içerik için minimum yükseklik ayırma */
+  .ad-slot {
+    min-height: 250px;
+    background: #f0f0f0;
+  }
+
+  /* Font yüklenirken kayma önleme */
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Font swap ile FOUT kontrolü */
+  @font-face {
+    font-family: 'Inter';
+    src: url('/fonts/inter.woff2') format('woff2');
+    font-display: swap;
+    size-adjust: 100%;
+    ascent-override: 90%;
+    descent-override: 22%;
+    line-gap-override: 0%;
+  }
+&lt;/style&gt;
+
+&lt;!-- Reklam alanı için yer ayırma --&gt;
+&lt;div class="ad-slot"&gt;
+  &lt;!-- Reklam scripti buraya --&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> CSS <code>content-visibility: auto</code> özelliği, viewport dışındaki öğelerin render'ını erteleyerek performansı artırır. Ancak <code>contain-intrinsic-size</code> ile birlikte kullanılmazsa CLS sorunlarına neden olabilir.
+</div>
+
+<h3>Core Web Vitals Monitoring Stratejisi</h3>
+
+<p>Metrikleri sürekli izlemek için hem lab (Lighthouse, WebPageTest) hem de field (RUM) verilerini kullanın. Lab verileri kontrollü ortamda tekrarlanabilir sonuçlar sağlarken, field verileri gerçek kullanıcı deneyimini yansıtır.</p>
+
+<pre><code>// Kapsamlı Core Web Vitals izleme
+import { onLCP, onINP, onCLS } from 'web-vitals';
+
+function createReporter(metricName) {
+  return (metric) => {
+    const report = {
+      name: metricName,
+      value: Math.round(metric.value),
+      rating: metric.rating,
+      delta: Math.round(metric.delta),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      connectionType: navigator.connection?.effectiveType || 'unknown',
+      timestamp: Date.now()
+    };
+
+    // Batch gönderim ile ağ trafiğini azalt
+    queueMetric(report);
+  };
+}
+
+const metricsQueue = [];
+function queueMetric(metric) {
+  metricsQueue.push(metric);
+
+  if (metricsQueue.length >= 5) {
+    flushMetrics();
+  }
+}
+
+function flushMetrics() {
+  if (metricsQueue.length === 0) return;
+
+  const body = JSON.stringify(metricsQueue.splice(0));
+  navigator.sendBeacon('/api/vitals', body);
+}
+
+// Sayfa kapanırken kalan metrikleri gönder
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    flushMetrics();
+  }
+});
+
+onLCP(createReporter('LCP'));
+onINP(createReporter('INP'));
+onCLS(createReporter('CLS'));</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Core Web Vitals, web performansının kullanıcı odaklı üç temel boyutunu ölçer: yükleme hızı (LCP), etkileşim yanıtı (INP) ve görsel kararlılık (CLS). Bu metrikleri düzenli olarak izleyerek ve yukarıda açıklanan optimizasyon stratejilerini uygulayarak hem kullanıcı deneyimini hem de SEO performansınızı önemli ölçüde iyileştirebilirsiniz. Performans iyileştirmesi sürekli bir süreçtir; her deploy sonrası metrikleri kontrol etmeyi alışkanlık haline getirin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://web.dev/vitals/" target="_blank" rel="noopener noreferrer">web.dev - Core Web Vitals</a></li>
+  <li><a href="https://web.dev/articles/optimize-lcp" target="_blank" rel="noopener noreferrer">Optimize Largest Contentful Paint</a></li>
+  <li><a href="https://web.dev/articles/optimize-inp" target="_blank" rel="noopener noreferrer">Optimize Interaction to Next Paint</a></li>
+  <li><a href="https://web.dev/articles/optimize-cls" target="_blank" rel="noopener noreferrer">Optimize Cumulative Layout Shift</a></li>
+</ul>

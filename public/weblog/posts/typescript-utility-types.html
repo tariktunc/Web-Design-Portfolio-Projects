@@ -1,0 +1,239 @@
+<h2>TypeScript Utility Types: Partial, Pick, Omit ve Daha Fazlası</h2>
+
+<p>TypeScript, mevcut tiplerden yeni tipler türetmenizi sağlayan güçlü yerleşik utility type'lar sunar. Bu araçlar, kod tekrarını azaltır ve tip sisteminin gücünden tam olarak yararlanmanızı sağlar. Bu yazıda en çok kullanılan utility type'ları detaylı örneklerle inceleyeceğiz.</p>
+
+<h3>Partial&lt;T&gt;</h3>
+
+<p>Bir tipin tüm özelliklerini opsiyonel yapar. Güncelleme işlemlerinde çok kullanılır:</p>
+
+<pre><code>interface Kullanici {
+  id: number;
+  isim: string;
+  email: string;
+  yas: number;
+  adres: string;
+}
+
+// Tüm alanlar opsiyonel olur
+type KullaniciGuncelleme = Partial&lt;Kullanici&gt;;
+
+function kullaniciGuncelle(id: number, guncellemeler: Partial&lt;Kullanici&gt;): void {
+  // Sadece gönderilen alanlar güncellenir
+  console.log(`Kullanıcı ${id} güncelleniyor:`, guncellemeler);
+}
+
+kullaniciGuncelle(1, { isim: "Tarik Tunç" });
+kullaniciGuncelle(1, { email: "yeni@email.com", yas: 29 });</code></pre>
+
+<h3>Required&lt;T&gt;</h3>
+
+<p>Partial'ın tersi: tüm opsiyonel özellikleri zorunlu yapar:</p>
+
+<pre><code>interface Ayarlar {
+  tema?: "light" | "dark";
+  dil?: string;
+  bildirimler?: boolean;
+  fontSize?: number;
+}
+
+// Tüm alanlar zorunlu
+type ZorunluAyarlar = Required&lt;Ayarlar&gt;;
+
+const varsayilanAyarlar: ZorunluAyarlar = {
+  tema: "light",
+  dil: "tr",
+  bildirimler: true,
+  fontSize: 16
+};</code></pre>
+
+<h3>Pick&lt;T, K&gt; ve Omit&lt;T, K&gt;</h3>
+
+<pre><code>interface Urun {
+  id: number;
+  ad: string;
+  fiyat: number;
+  aciklama: string;
+  stok: number;
+  kategori: string;
+  resimUrl: string;
+}
+
+// Sadece belirli alanları seç
+type UrunKart = Pick&lt;Urun, "id" | "ad" | "fiyat" | "resimUrl"&gt;;
+
+// Belirli alanları çıkar
+type UrunOlustur = Omit&lt;Urun, "id"&gt;;
+
+// Kombine kullanım
+type UrunGuncelle = Partial&lt;Omit&lt;Urun, "id"&gt;&gt; & { id: number };
+
+function urunListele(): UrunKart[] {
+  // Sadece kart için gerekli verileri döndür
+  return [
+    { id: 1, ad: "Laptop", fiyat: 25000, resimUrl: "/img/laptop.jpg" }
+  ];
+}
+
+function urunOlustur(urun: UrunOlustur): Urun {
+  return { ...urun, id: Date.now() };
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Pick ve Omit'i birlikte kullanarak karmaşık tip dönüşümleri yapabilirsiniz. Örneğin, <code>Partial&lt;Omit&lt;T, "id"&gt;&gt; & Pick&lt;T, "id"&gt;</code> kalıbı, id zorunlu diğer alanlar opsiyonel olan bir güncelleme tipi oluşturur.
+</div>
+
+<h3>Record&lt;K, T&gt;</h3>
+
+<p>Anahtar-değer çiftlerinden oluşan bir nesne tipi oluşturur:</p>
+
+<pre><code>// String anahtarlı record
+type SayfaDurumlari = Record&lt;string, boolean&gt;;
+const sayfalar: SayfaDurumlari = {
+  anasayfa: true,
+  hakkinda: false,
+  iletisim: true
+};
+
+// Union anahtar ile record
+type HttpDurum = 200 | 301 | 404 | 500;
+type DurumMesajlari = Record&lt;HttpDurum, string&gt;;
+
+const mesajlar: DurumMesajlari = {
+  200: "Başarılı",
+  301: "Yönlendirme",
+  404: "Bulunamadı",
+  500: "Sunucu Hatası"
+};
+
+// Enum ile record
+enum Rol {
+  Admin = "admin",
+  Editor = "editor",
+  Okuyucu = "okuyucu"
+}
+
+type RolYetkileri = Record&lt;Rol, string[]&gt;;
+
+const yetkiler: RolYetkileri = {
+  [Rol.Admin]: ["okuma", "yazma", "silme", "yonetim"],
+  [Rol.Editor]: ["okuma", "yazma"],
+  [Rol.Okuyucu]: ["okuma"]
+};</code></pre>
+
+<h3>Exclude&lt;T, U&gt; ve Extract&lt;T, U&gt;</h3>
+
+<pre><code>type Primitifler = string | number | boolean | null | undefined;
+
+// null ve undefined'ı çıkar
+type GecerliPrimitifler = Exclude&lt;Primitifler, null | undefined&gt;;
+// string | number | boolean
+
+// Sadece string ve number'ı çıkar
+type MetinVeSayi = Extract&lt;Primitifler, string | number&gt;;
+// string | number
+
+// Pratik kullanım: Event tipleri
+type MouseOlaylari = "click" | "dblclick" | "mousedown" | "mouseup" | "mousemove";
+type KlavyeOlaylari = "keydown" | "keyup" | "keypress";
+type TumOlaylar = MouseOlaylari | KlavyeOlaylari;
+
+type SadeceMouseOlaylari = Extract&lt;TumOlaylar, MouseOlaylari&gt;;</code></pre>
+
+<h3>ReturnType&lt;T&gt; ve Parameters&lt;T&gt;</h3>
+
+<pre><code>function kullaniciOlustur(isim: string, yas: number, email: string) {
+  return {
+    id: Math.random(),
+    isim,
+    yas,
+    email,
+    kayitTarihi: new Date()
+  };
+}
+
+// Fonksiyon dönüş tipini al
+type Kullanici = ReturnType&lt;typeof kullaniciOlustur&gt;;
+// { id: number; isim: string; yas: number; email: string; kayitTarihi: Date }
+
+// Fonksiyon parametre tiplerini al
+type KullaniciParams = Parameters&lt;typeof kullaniciOlustur&gt;;
+// [string, number, string]
+
+// Async fonksiyon için
+async function veriGetir(): Promise&lt;{ id: number; data: string[] }&gt; {
+  return { id: 1, data: ["a", "b"] };
+}
+
+type VeriTipi = Awaited&lt;ReturnType&lt;typeof veriGetir&gt;&gt;;
+// { id: number; data: string[] }</code></pre>
+
+<h3>NonNullable&lt;T&gt; ve Readonly&lt;T&gt;</h3>
+
+<pre><code>// NonNullable - null ve undefined'ı kaldır
+type BelkiString = string | null | undefined;
+type KesınString = NonNullable&lt;BelkiString&gt;; // string
+
+// Readonly - tüm özellikleri salt okunur yap
+interface Ayarlar {
+  tema: string;
+  dil: string;
+  bildirimler: boolean;
+}
+
+const sabitAyarlar: Readonly&lt;Ayarlar&gt; = {
+  tema: "dark",
+  dil: "tr",
+  bildirimler: true
+};
+
+// sabitAyarlar.tema = "light"; // HATA! readonly özellik değiştirilemez
+
+// Deep Readonly (yerleşik değil, özel implementasyon)
+type DeepReadonly&lt;T&gt; = {
+  readonly [K in keyof T]: T[K] extends object ? DeepReadonly&lt;T[K]&gt; : T[K];
+};</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>Readonly&lt;T&gt;</code> sadece birinci seviye özellikleri korur. İç içe nesneler hâlâ değiştirilebilir. Derin readonly için özel bir utility type oluşturmanız veya <code>as const</code> assertion kullanmanız gerekir.
+</div>
+
+<h3>Utility Type'ları Birleştirme</h3>
+
+<pre><code>// Gerçek dünya senaryosu: Form yönetimi
+interface FormVerisi {
+  isim: string;
+  email: string;
+  sifre: string;
+  telefon: string;
+  adres: string;
+  sehir: string;
+}
+
+// Kayıt formu - tüm alanlar zorunlu
+type KayitFormu = Required&lt;FormVerisi&gt;;
+
+// Profil güncelleme - id zorunlu, geri kalanı opsiyonel
+type ProfilGuncelleme = Pick&lt;FormVerisi, "isim" | "email"&gt; &
+  Partial&lt;Omit&lt;FormVerisi, "isim" | "email" | "sifre"&gt;&gt;;
+
+// Şifre hariç readonly profil
+type ProfilGoruntule = Readonly&lt;Omit&lt;FormVerisi, "sifre"&gt;&gt;;
+
+// Doğrulama hataları
+type FormHatalari = Partial&lt;Record&lt;keyof FormVerisi, string&gt;&gt;;</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Utility type'lar birlikte kullanıldığında son derece güçlüdür. Pratikte en sık kullanılan kombinasyon <code>Partial&lt;Omit&lt;T, "id"&gt;&gt;</code> kalıbıdır; bu, güncelleme işlemlerinde id hariç tüm alanları opsiyonel yapar.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript utility type'ları, mevcut tiplerden yeni tipler türetmenin en verimli yoludur. Partial, Pick, Omit, Record ve diğer utility type'ları ustalıkla kullanmak, tip tekrarını azaltır ve kodunuzun bakımını kolaylaştırır. Bu type'ları kombinleyerek karmaşık iş mantığını tip seviyesinde ifade edebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/utility-types.html" target="_blank" rel="noopener noreferrer">TypeScript Utility Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/mapped-types.html" target="_blank" rel="noopener noreferrer">Mapped Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/conditional-types.html" target="_blank" rel="noopener noreferrer">Conditional Types</a></li>
+</ul>

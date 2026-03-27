@@ -1,0 +1,308 @@
+<h2>Next.js Static Export: Statik Site Oluşturma</h2>
+
+<p>Next.js, dinamik sunucu taraflı render'ın yanı sıra tamamen <strong>statik HTML dosyaları</strong> olarak export edilebilir. Bu, sunucu gerektirmeden herhangi bir statik hosting servisinde (GitHub Pages, Netlify, S3, Cloudflare Pages) barındırılabilen hızlı ve güvenli siteler oluşturmanızı sağlar. Bu yazıda Next.js Static Export yapılandırmasını, sınırlamalarını ve deployment stratejilerini adım adım inceleyeceğiz.</p>
+
+<h3>Static Export Nedir?</h3>
+
+<p>Static Export, Next.js uygulamanızı tamamen statik HTML, CSS ve JavaScript dosyalarına dönüştürür. Build sırasında tüm sayfalar pre-render edilir ve <code>out</code> klasörüne çıktı olarak verilir. Sunucu tarafında çalışan hiçbir kod yoktur.</p>
+
+<h3>Yapılandırma</h3>
+
+<pre><code>// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'export',
+
+  // Statik export'ta image optimization sunucu gerektirir
+  images: {
+    unoptimized: true,
+  },
+
+  // Opsiyonel: Trailing slash ekle
+  trailingSlash: true,
+
+  // Opsiyonel: Base path
+  basePath: '/my-app',
+
+  // Opsiyonel: Asset prefix (CDN kullanıyorsanız)
+  assetPrefix: 'https://cdn.example.com',
+};
+
+module.exports = nextConfig;</code></pre>
+
+<h3>Build ve Export</h3>
+
+<pre><code># Build komutu - out/ klasörüne static dosyalar oluşturur
+next build
+
+# Lokal test
+npx serve out
+
+# Klasör yapısı
+out/
+├── index.html
+├── about.html
+├── blog/
+│   ├── index.html
+│   ├── react-rehberi.html
+│   └── nextjs-rehberi.html
+├── _next/
+│   └── static/
+├── favicon.ico
+└── robots.txt</code></pre>
+
+<h3>Dinamik Route'lar ile Static Export</h3>
+
+<p>Dinamik route'lar (<code>[slug]</code>) için <code>generateStaticParams</code> fonksiyonu zorunludur:</p>
+
+<pre><code>// app/blog/[slug]/page.js
+import { getAllPosts, getPostBySlug } from '@/lib/posts';
+
+// Build sırasında hangi sayfaların oluşturulacağını belirle
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((post) =&gt; ({
+    slug: post.slug,
+  }));
+}
+
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+  return {
+    title: post.title,
+    description: post.excerpt,
+  };
+}
+
+export default async function BlogPost({ params }) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+
+  return (
+    &lt;article&gt;
+      &lt;h1&gt;{post.title}&lt;/h1&gt;
+      &lt;time&gt;{post.date}&lt;/time&gt;
+      &lt;div dangerouslySetInnerHTML={{ __html: post.content }} /&gt;
+    &lt;/article&gt;
+  );
+}</code></pre>
+
+<h3>Markdown/MDX ile Blog</h3>
+
+<pre><code>// lib/posts.js
+import fs from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
+import { remark } from 'remark';
+import html from 'remark-html';
+
+const postsDirectory = path.join(process.cwd(), 'content/posts');
+
+export function getAllPosts() {
+  const fileNames = fs.readdirSync(postsDirectory);
+
+  return fileNames
+    .filter((name) =&gt; name.endsWith('.md'))
+    .map((fileName) =&gt; {
+      const slug = fileName.replace(/\.md$/, '');
+      const fullPath = path.join(postsDirectory, fileName);
+      const fileContents = fs.readFileSync(fullPath, 'utf8');
+      const { data, content } = matter(fileContents);
+
+      return {
+        slug,
+        title: data.title,
+        date: data.date,
+        excerpt: data.excerpt || '',
+        content,
+      };
+    })
+    .sort((a, b) =&gt; new Date(b.date) - new Date(a.date));
+}
+
+export async function getPostBySlug(slug) {
+  const fullPath = path.join(postsDirectory, `${slug}.md`);
+  const fileContents = fs.readFileSync(fullPath, 'utf8');
+  const { data, content } = matter(fileContents);
+  const processedContent = await remark().use(html).process(content);
+
+  return {
+    slug,
+    title: data.title,
+    date: data.date,
+    content: processedContent.toString(),
+  };
+}</code></pre>
+
+<h3>Desteklenmeyen Özellikler</h3>
+
+<p>Static Export modunda aşağıdaki özellikler kullanılamaz:</p>
+
+<table>
+  <tr>
+    <th>Özellik</th>
+    <th>Durum</th>
+    <th>Alternatif</th>
+  </tr>
+  <tr>
+    <td>Server Components (dinamik)</td>
+    <td>Sınırlı</td>
+    <td>Build-time data fetching</td>
+  </tr>
+  <tr>
+    <td>Route Handlers (dinamik)</td>
+    <td>Kullanılamaz</td>
+    <td>Harici API servisi</td>
+  </tr>
+  <tr>
+    <td>Server Actions</td>
+    <td>Kullanılamaz</td>
+    <td>Client-side API çağrıları</td>
+  </tr>
+  <tr>
+    <td>Middleware</td>
+    <td>Kullanılamaz</td>
+    <td>CDN edge rules</td>
+  </tr>
+  <tr>
+    <td>ISR / Revalidation</td>
+    <td>Kullanılamaz</td>
+    <td>Rebuild tetikleme</td>
+  </tr>
+  <tr>
+    <td>Image Optimization</td>
+    <td>Sunucu yok</td>
+    <td>unoptimized: true veya harici loader</td>
+  </tr>
+  <tr>
+    <td>Draft Mode</td>
+    <td>Kullanılamaz</td>
+    <td>Ayrı preview ortamı</td>
+  </tr>
+</table>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>cookies()</code>, <code>headers()</code>, <code>searchParams</code> (dinamik) ve <code>redirect()</code> (server-side) gibi dinamik fonksiyonlar static export'ta kullanılamaz. Bu fonksiyonları kullanan sayfalar build sırasında hata verir.
+</div>
+
+<h3>GitHub Pages Deployment</h3>
+
+<pre><code># .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment</code></pre>
+
+<pre><code>// next.config.js - GitHub Pages için
+const nextConfig = {
+  output: 'export',
+  basePath: '/repo-name',
+  images: { unoptimized: true },
+};</code></pre>
+
+<h3>Cloudflare Pages Deployment</h3>
+
+<pre><code># Cloudflare Pages yapılandırması
+# Build command: next build
+# Output directory: out
+# Node.js version: 20
+
+# veya wrangler CLI ile
+npx wrangler pages deploy out --project-name=my-site</code></pre>
+
+<h3>Custom Image Loader</h3>
+
+<pre><code>// lib/image-loader.js
+export default function customLoader({ src, width, quality }) {
+  // Cloudinary örneği
+  return `https://res.cloudinary.com/demo/image/upload/w_${width},q_${quality || 75}/${src}`;
+}
+
+// next.config.js
+const nextConfig = {
+  output: 'export',
+  images: {
+    loader: 'custom',
+    loaderFile: './lib/image-loader.js',
+  },
+};</code></pre>
+
+<h3>Client-Side Data Fetching</h3>
+
+<p>Static export'ta dinamik veri için client-side fetching kullanılır:</p>
+
+<pre><code>'use client';
+
+import { useState, useEffect } from 'react';
+
+export function DynamicComments({ postId }) {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =&gt; {
+    fetch(`https://api.example.com/posts/${postId}/comments`)
+      .then((res) =&gt; res.json())
+      .then((data) =&gt; {
+        setComments(data);
+        setLoading(false);
+      });
+  }, [postId]);
+
+  if (loading) return &lt;p&gt;Yorumlar yükleniyor...&lt;/p&gt;;
+
+  return (
+    &lt;ul&gt;
+      {comments.map((comment) =&gt; (
+        &lt;li key={comment.id}&gt;{comment.text}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Static Export, blog, dokümantasyon, portfolio ve landing page gibi içerik ağırlıklı siteler için idealdir. Kullanıcı etkileşimi gerektiren dinamik uygulamalar (e-ticaret, dashboard) için sunucu taraflı render daha uygun olabilir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js Static Export, sunucu gerektirmeyen, hızlı ve güvenli statik siteler oluşturmanın güçlü bir yoludur. <code>output: 'export'</code> yapılandırması ile tüm sayfalarınız build sırasında pre-render edilir. generateStaticParams ile dinamik route'ları, Markdown/MDX ile blog içeriklerini ve client-side fetching ile dinamik verileri yönetebilirsiniz. GitHub Pages, Cloudflare Pages, Netlify gibi ücretsiz hosting servislerinde barındırarak maliyet etkin çözümler üretebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/deploying/static-exports" target="_blank" rel="noopener noreferrer">Next.js Docs - Static Exports</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params" target="_blank" rel="noopener noreferrer">Next.js Docs - generateStaticParams</a></li>
+  <li><a href="https://pages.github.com/" target="_blank" rel="noopener noreferrer">GitHub Pages</a></li>
+  <li><a href="https://pages.cloudflare.com/" target="_blank" rel="noopener noreferrer">Cloudflare Pages</a></li>
+</ul>

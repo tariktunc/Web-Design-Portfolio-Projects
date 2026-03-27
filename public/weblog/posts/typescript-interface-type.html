@@ -1,0 +1,280 @@
+<h2>TypeScript Interface vs Type: Farklar ve Kullanım Alanları</h2>
+
+<p>TypeScript'te tip tanımlamanın iki temel yolu vardır: <strong>interface</strong> ve <strong>type alias</strong>. Her ikisi de benzer işlevleri yerine getirebilir, ancak aralarında önemli farklar bulunur. Bu yazıda her iki yaklaşımın güçlü yönlerini, sınırlamalarını ve hangi durumlarda hangisinin tercih edilmesi gerektiğini detaylı örneklerle ele alacağız.</p>
+
+<h3>Interface Temelleri</h3>
+
+<p>Interface, bir nesnenin şeklini (shape) tanımlamak için kullanılır:</p>
+
+<pre><code>// Temel interface tanımı
+interface Kullanici {
+  id: number;
+  isim: string;
+  email: string;
+  yas?: number;          // Opsiyonel
+  readonly kayitTarihi: Date; // Readonly
+}
+
+// Interface ile fonksiyon tipi
+interface Hesaplama {
+  (a: number, b: number): number;
+}
+
+const topla: Hesaplama = (a, b) => a + b;
+const carp: Hesaplama = (a, b) => a * b;
+
+// Interface ile index signature
+interface SozlukTipi {
+  [anahtar: string]: string;
+}
+
+const turkceIngilizce: SozlukTipi = {
+  merhaba: "hello",
+  dunya: "world"
+};</code></pre>
+
+<h3>Type Alias Temelleri</h3>
+
+<p>Type alias, herhangi bir tipi adlandırmak için kullanılır. Interface'den daha esnek bir yapıya sahiptir:</p>
+
+<pre><code>// Temel type tanımı
+type Kullanici = {
+  id: number;
+  isim: string;
+  email: string;
+  yas?: number;
+  readonly kayitTarihi: Date;
+};
+
+// Primitif tiplere alias
+type ID = string | number;
+type Email = string;
+
+// Tuple tipi (interface ile yapılamaz)
+type Koordinat = [number, number];
+type RGBRenk = [number, number, number];
+
+// Union tipi (interface ile yapılamaz)
+type Durum = "aktif" | "pasif" | "beklemede";
+type Sonuc = Basarili | Hata;
+
+// Mapped type (interface ile yapılamaz)
+type ReadonlyKullanici = {
+  readonly [K in keyof Kullanici]: Kullanici[K];
+};</code></pre>
+
+<h3>Temel Farklar</h3>
+
+<h4>1. Declaration Merging</h4>
+
+<p>Interface'ler birleştirilebilir (declaration merging), type alias'lar birleştirilemez:</p>
+
+<pre><code>// Interface - Declaration Merging
+interface Hayvan {
+  isim: string;
+}
+
+interface Hayvan {
+  yas: number;
+}
+
+// Her iki tanım birleşir
+const kedi: Hayvan = {
+  isim: "Tekir",
+  yas: 3
+};
+
+// Type - Duplicate hata verir
+type Bitki = {
+  isim: string;
+};
+
+// type Bitki = { yas: number; }; // HATA! Duplicate identifier 'Bitki'</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Declaration merging, özellikle kütüphane geliştirme ve tip genişletme senaryolarında çok faydalıdır. Örneğin, Express.js'in Request tipine yeni alanlar eklemek istediğinizde interface kullanmanız gerekir.
+</div>
+
+<h4>2. Extends vs Intersection</h4>
+
+<pre><code>// Interface - extends ile genişletme
+interface Canli {
+  yasam: boolean;
+}
+
+interface Hayvan extends Canli {
+  isim: string;
+  tur: string;
+}
+
+interface Kedi extends Hayvan {
+  miyavla(): void;
+}
+
+// Type - intersection ile birleştirme
+type Canli = {
+  yasam: boolean;
+};
+
+type Hayvan = Canli & {
+  isim: string;
+  tur: string;
+};
+
+type Kedi = Hayvan & {
+  miyavla(): void;
+};
+
+// Interface, type'ı extend edebilir ve tersi de geçerli
+type TemelOzellikler = {
+  id: number;
+  olusturmaTarihi: Date;
+};
+
+interface Kullanici extends TemelOzellikler {
+  isim: string;
+  email: string;
+}</code></pre>
+
+<h4>3. Union ve Intersection</h4>
+
+<pre><code>// Sadece type ile yapılabilecek işlemler
+
+// Union types
+type StringVeyaSayi = string | number;
+type ApiCevap = BasariliCevap | HataCevap;
+
+// Conditional types
+type NonNullable&lt;T&gt; = T extends null | undefined ? never : T;
+
+// Template literal types
+type EventAdi = `on${string}`;
+
+// Mapped types
+type Opsiyonel&lt;T&gt; = {
+  [K in keyof T]?: T[K];
+};
+
+// Tuple types
+type Cift = [string, number];
+type UcluVeri = [id: number, isim: string, aktif: boolean];</code></pre>
+
+<h3>Performans Farkı</h3>
+
+<p>TypeScript derleyicisi, interface'leri dahili olarak daha verimli işler:</p>
+
+<pre><code>// Interface - daha hızlı tip kontrolü
+interface KullaniciA {
+  id: number;
+  isim: string;
+}
+
+interface AdminA extends KullaniciA {
+  yetki: string[];
+}
+
+// Type intersection - biraz daha yavaş
+type KullaniciB = {
+  id: number;
+  isim: string;
+};
+
+type AdminB = KullaniciB & {
+  yetki: string[];
+};</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Büyük projelerde nesne tiplerini tanımlarken interface tercih etmek, derleyici performansını iyileştirebilir. TypeScript ekibi de nesne tipleri için interface kullanılmasını önerir.
+</div>
+
+<h3>Ne Zaman Hangisini Kullanmalı?</h3>
+
+<table>
+  <tr>
+    <th>Senaryo</th>
+    <th>Tercih</th>
+    <th>Neden</th>
+  </tr>
+  <tr>
+    <td>Nesne şekli tanımlama</td>
+    <td>interface</td>
+    <td>Daha iyi performans ve extends desteği</td>
+  </tr>
+  <tr>
+    <td>Union/intersection tipler</td>
+    <td>type</td>
+    <td>Interface ile yapılamaz</td>
+  </tr>
+  <tr>
+    <td>Kütüphane API'si</td>
+    <td>interface</td>
+    <td>Declaration merging ile genişletilebilir</td>
+  </tr>
+  <tr>
+    <td>Tuple ve mapped tipler</td>
+    <td>type</td>
+    <td>Interface ile yapılamaz</td>
+  </tr>
+  <tr>
+    <td>Primitif tip alias'ları</td>
+    <td>type</td>
+    <td>Interface sadece nesne tipleri için</td>
+  </tr>
+  <tr>
+    <td>React component props</td>
+    <td>interface veya type</td>
+    <td>Takım tercihi / tutarlılık</td>
+  </tr>
+</table>
+
+<h3>Gerçek Dünya Örneği</h3>
+
+<pre><code>// E-ticaret uygulaması tip tanımları
+
+// Interface: nesne şekilleri
+interface Urun {
+  id: number;
+  ad: string;
+  fiyat: number;
+  stok: number;
+  kategori: Kategori;
+}
+
+interface Kategori {
+  id: number;
+  ad: string;
+  ustKategori?: Kategori;
+}
+
+// Type: union ve utility tipler
+type SiparisDurumu = "beklemede" | "hazirlaniyor" | "kargoda" | "teslim_edildi" | "iptal";
+type OdemeTipi = "kredi_karti" | "havale" | "kapida_odeme";
+
+type SiparisOzet = Pick&lt;Siparis, "id" | "toplamTutar" | "durum"&gt;;
+type UrunGuncelleme = Partial&lt;Omit&lt;Urun, "id"&gt;&gt;;
+
+// Her ikisini birlikte kullanma
+interface Siparis {
+  id: number;
+  urunler: Urun[];
+  toplamTutar: number;
+  durum: SiparisDurumu;
+  odemeTipi: OdemeTipi;
+  musteri: Kullanici;
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Takım içinde tutarlılık, interface veya type seçiminden daha önemlidir. Projenizde bir konvansiyon belirleyin ve buna sadık kalın. ESLint'in <code>@typescript-eslint/consistent-type-definitions</code> kuralı ile bunu zorunlu hale getirebilirsiniz.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Interface ve type alias, TypeScript'in tip sisteminin iki temel yapı taşıdır. Interface nesne şekillerini tanımlamak için optimize edilmişken, type alias daha geniş bir kullanım alanına sahiptir. Pratikte ikisini birlikte kullanmak en etkili yaklaşımdır: nesne tipleri için interface, union tipler ve utility tipler için type tercih edin. En önemlisi, projenizde tutarlı bir konvansiyon belirleyin ve takımınızla paylaşın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/objects.html" target="_blank" rel="noopener noreferrer">TypeScript Handbook: Object Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/types-from-types.html" target="_blank" rel="noopener noreferrer">TypeScript: Creating Types from Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/declaration-merging.html" target="_blank" rel="noopener noreferrer">TypeScript Declaration Merging</a></li>
+</ul>

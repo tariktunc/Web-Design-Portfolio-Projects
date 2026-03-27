@@ -1,0 +1,262 @@
+<h2>React Concurrent Features: useTransition ve useDeferredValue</h2>
+
+<p>React 18 ile gelen Concurrent Features, kullanıcı arayüzünün her zaman duyarlı kalmasını sağlayan devrim niteliğinde özelliklerdir. useTransition ve useDeferredValue hook'ları, ağır render işlemlerini arka plana atarak kullanıcı etkileşiminin kesintisiz devam etmesini mümkün kılar. Bu rehberde, bu iki hook'un çalışma mantığını, farklarını ve gerçek dünya kullanım senaryolarını adım adım inceleyeceğiz.</p>
+
+<h3>Concurrent Rendering Nedir?</h3>
+
+<p>Geleneksel React rendering'de (senkron mod), bir render işlemi başladığında tamamlanana kadar kesintiye uğratılamaz. Bu, büyük listelerin filtrelenmesi veya ağır hesaplamalar sırasında arayüzün "donmasına" yol açar. Concurrent rendering ile React, render işlemlerini önceliklendirerek acil güncellemeleri (input yazma, tıklama) düşük öncelikli güncellemelerden (liste filtreleme, ağır hesaplama) önce işler.</p>
+
+<h3>useTransition Hook</h3>
+
+<p>useTransition, bir state güncellemesini "düşük öncelikli" olarak işaretlemenizi sağlar. Bu sayede kullanıcı arayüzü meşgul olsa bile, acil güncellemeler (input değişiklikleri gibi) hemen işlenir.</p>
+
+<pre><code>import { useState, useTransition, useMemo } from 'react';
+
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  rating: number;
+}
+
+// 10.000 ürünlük büyük bir listeyi filtreleyen component
+function ProductSearch({ products }: { products: Product[] }) {
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('all');
+  const [sortBy, setSortBy] = useState&lt;'price' | 'rating'&gt;('price');
+  const [isPending, startTransition] = useTransition();
+
+  // Bu state'ler transition içinde güncellenir (düşük öncelikli)
+  const [deferredQuery, setDeferredQuery] = useState('');
+  const [deferredCategory, setDeferredCategory] = useState('all');
+  const [deferredSortBy, setDeferredSortBy] = useState&lt;'price' | 'rating'&gt;('price');
+
+  const handleQueryChange = (e: React.ChangeEvent&lt;HTMLInputElement&gt;) => {
+    // Input güncellemesi acil — hemen görünür
+    setQuery(e.target.value);
+
+    // Filtreleme düşük öncelikli — arka planda işlenir
+    startTransition(() => {
+      setDeferredQuery(e.target.value);
+    });
+  };
+
+  const handleCategoryChange = (newCategory: string) => {
+    setCategory(newCategory);
+    startTransition(() => {
+      setDeferredCategory(newCategory);
+    });
+  };
+
+  const filteredProducts = useMemo(() => {
+    let result = products;
+
+    if (deferredQuery) {
+      result = result.filter((p) =>
+        p.name.toLowerCase().includes(deferredQuery.toLowerCase())
+      );
+    }
+
+    if (deferredCategory !== 'all') {
+      result = result.filter((p) => p.category === deferredCategory);
+    }
+
+    result.sort((a, b) =>
+      deferredSortBy === 'price' ? a.price - b.price : b.rating - a.rating
+    );
+
+    return result;
+  }, [products, deferredQuery, deferredCategory, deferredSortBy]);
+
+  return (
+    &lt;div&gt;
+      &lt;input
+        type="text"
+        value={query}
+        onChange={handleQueryChange}
+        placeholder="Ürün ara..."
+        className="border rounded px-3 py-2 w-full"
+      /&gt;
+
+      {isPending && (
+        &lt;div className="text-blue-500 text-sm mt-1"&gt;Sonuçlar güncelleniyor...&lt;/div&gt;
+      )}
+
+      &lt;div style={{ opacity: isPending ? 0.7 : 1, transition: 'opacity 0.2s' }}&gt;
+        &lt;p&gt;{filteredProducts.length} ürün bulundu&lt;/p&gt;
+        {filteredProducts.slice(0, 50).map((product) => (
+          &lt;div key={product.id} className="border-b py-2"&gt;
+            &lt;h3&gt;{product.name}&lt;/h3&gt;
+            &lt;span&gt;{product.price} TL — ⭐ {product.rating}&lt;/span&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> useTransition'dan dönen <code>isPending</code> boolean değerini kullanarak, arka planda işlem devam ederken kullanıcıya görsel geri bildirim verebilirsiniz. Örneğin listeyi soluklaştırma veya küçük bir spinner gösterme gibi.
+</div>
+
+<h3>useDeferredValue Hook</h3>
+
+<p>useDeferredValue, bir değerin "ertelenmiş" bir kopyasını oluşturur. Acil güncellemeler işlenirken, ertelenmiş değer eski halinde kalır ve React uygun olduğunda güncellenir. useTransition'dan farkı, state güncellemesini kontrol edemediğiniz durumlarda (props olarak gelen değerler gibi) kullanılmasıdır.</p>
+
+<pre><code>import { useState, useDeferredValue, useMemo } from 'react';
+
+interface SearchResultsProps {
+  query: string;
+  items: string[];
+}
+
+function SearchResults({ query, items }: SearchResultsProps) {
+  // query prop'u dışarıdan geliyor — useTransition kullanamayız
+  // useDeferredValue ile ertelenmiş bir kopya oluşturuyoruz
+  const deferredQuery = useDeferredValue(query);
+  const isStale = query !== deferredQuery;
+
+  const filteredItems = useMemo(() => {
+    if (!deferredQuery) return items;
+
+    // Ağır filtreleme simülasyonu
+    return items.filter((item) => {
+      // Her item için karmaşık eşleştirme
+      const words = deferredQuery.toLowerCase().split(' ');
+      return words.every((word) => item.toLowerCase().includes(word));
+    });
+  }, [items, deferredQuery]);
+
+  return (
+    &lt;div style={{ opacity: isStale ? 0.6 : 1, transition: 'opacity 0.15s' }}&gt;
+      &lt;p className="text-sm text-gray-500"&gt;
+        {filteredItems.length} sonuç {isStale && '(güncelleniyor...)'}
+      &lt;/p&gt;
+      &lt;ul&gt;
+        {filteredItems.map((item, index) => (
+          &lt;li key={index} className="py-1 border-b"&gt;{item}&lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}
+
+// Ana component
+function SearchPage() {
+  const [query, setQuery] = useState('');
+  const allItems = useMemo(() =>
+    Array.from({ length: 10000 }, (_, i) => `Ürün ${i + 1} - Kategori ${i % 10}`),
+    []
+  );
+
+  return (
+    &lt;div&gt;
+      &lt;input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Ara..."
+      /&gt;
+      &lt;SearchResults query={query} items={allItems} /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>useTransition vs useDeferredValue: Ne Zaman Hangisi?</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Özellik</th>
+      <th>useTransition</th>
+      <th>useDeferredValue</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Kullanım</td>
+      <td>State güncellemesini siz kontrol ediyorsanız</td>
+      <td>Props olarak gelen değerler için</td>
+    </tr>
+    <tr>
+      <td>isPending</td>
+      <td>Var</td>
+      <td>Manuel karşılaştırma gerekir</td>
+    </tr>
+    <tr>
+      <td>Kontrol Seviyesi</td>
+      <td>Yüksek — hangi güncellemenin erteleneceğini seçersiniz</td>
+      <td>Düşük — sadece değeri erteler</td>
+    </tr>
+    <tr>
+      <td>Yaygın Senaryo</td>
+      <td>Tab değiştirme, filtreleme, navigasyon</td>
+      <td>Arama sonuçları, büyük listeler</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Gerçek Dünya Senaryosu: Tab Geçişleri</h3>
+
+<pre><code>import { useState, useTransition } from 'react';
+
+type Tab = 'posts' | 'comments' | 'photos';
+
+function TabContainer() {
+  const [activeTab, setActiveTab] = useState&lt;Tab&gt;('posts');
+  const [isPending, startTransition] = useTransition();
+
+  const handleTabChange = (tab: Tab) => {
+    startTransition(() => {
+      setActiveTab(tab);
+    });
+  };
+
+  const tabs: Tab[] = ['posts', 'comments', 'photos'];
+
+  return (
+    &lt;div&gt;
+      &lt;nav className="flex gap-2 mb-4"&gt;
+        {tabs.map((tab) => (
+          &lt;button
+            key={tab}
+            onClick={() => handleTabChange(tab)}
+            className={`px-4 py-2 rounded ${
+              activeTab === tab ? 'bg-blue-600 text-white' : 'bg-gray-100'
+            }`}
+          &gt;
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          &lt;/button&gt;
+        ))}
+      &lt;/nav&gt;
+
+      &lt;div style={{ opacity: isPending ? 0.6 : 1 }}&gt;
+        {activeTab === 'posts' && &lt;PostsTab /&gt;}
+        {activeTab === 'comments' && &lt;CommentsTab /&gt;}
+        {activeTab === 'photos' && &lt;PhotosTab /&gt;}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> useTransition ve useDeferredValue her durumda kullanılmamalıdır. Sadece gerçekten performans sorunu yaşadığınız ve kullanıcı arayüzünün donduğu durumlarda kullanın. Gereksiz kullanım kodunuzu karmaşıklaştırır ve debug etmeyi zorlaştırır.
+</div>
+
+<div class="info">
+  <strong>Bilgi:</strong> Concurrent Features, React'in StrictMode'da componentleri iki kez render etmesinin bir nedenidir. Bu, concurrent rendering ile uyumlu olmayan yan etkileri tespit etmenize yardımcı olur.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React Concurrent Features, kullanıcı deneyimini bir üst seviyeye taşıyan güçlü araçlardır. useTransition ile state güncellemelerini önceliklendirerek, useDeferredValue ile ağır hesaplamaları erteleyerek uygulamanızın her zaman duyarlı kalmasını sağlayabilirsiniz. Ancak bu araçları bilinçli kullanmak önemlidir — önce performans sorununu tespit edin, sonra çözüm olarak Concurrent Features'ı değerlendirin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/reference/react/useTransition" target="_blank">React Docs: useTransition</a></li>
+  <li><a href="https://react.dev/reference/react/useDeferredValue" target="_blank">React Docs: useDeferredValue</a></li>
+  <li><a href="https://react.dev/blog/2022/03/29/react-v18" target="_blank">React 18 Announcement</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Glossary/Main_thread" target="_blank">MDN: Main Thread</a></li>
+</ul>

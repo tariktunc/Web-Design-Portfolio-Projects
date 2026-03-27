@@ -1,0 +1,291 @@
+<h2>Next.js Parallel ve Intercepting Routes</h2>
+
+<p>Next.js App Router, geleneksel routing'in ötesine geçen iki güçlü özellik sunar: <strong>Parallel Routes</strong> ve <strong>Intercepting Routes</strong>. Parallel Routes ile aynı layout içinde birden fazla sayfayı eşzamanlı olarak render edebilir, Intercepting Routes ile bir route'u mevcut layout içinde yakalayabilirsiniz. Bu yazıda her iki özelliği pratik örneklerle detaylıca inceleyeceğiz.</p>
+
+<h3>Parallel Routes Nedir?</h3>
+
+<p>Parallel Routes, aynı layout içinde birden fazla sayfayı (slot) eşzamanlı olarak göstermenizi sağlar. Her slot bağımsız olarak yüklenir, hata yönetimi yapılır ve navigate edilebilir. Slot'lar <code>@</code> prefix'i ile klasör adı olarak tanımlanır.</p>
+
+<pre><code>// Klasör yapısı
+app/
+├── layout.js
+├── page.js
+├── @dashboard/
+│   ├── page.js
+│   ├── loading.js
+│   └── error.js
+├── @notifications/
+│   ├── page.js
+│   ├── loading.js
+│   └── error.js
+└── @analytics/
+    ├── page.js
+    └── loading.js</code></pre>
+
+<pre><code>// app/layout.js
+export default function Layout({ children, dashboard, notifications, analytics }) {
+  return (
+    &lt;div className="app-layout"&gt;
+      &lt;header&gt;
+        &lt;h1&gt;Yönetim Paneli&lt;/h1&gt;
+      &lt;/header&gt;
+
+      &lt;div className="grid grid-cols-3 gap-4"&gt;
+        {/* Her slot bağımsız loading/error state'ine sahip */}
+        &lt;div className="col-span-2"&gt;{dashboard}&lt;/div&gt;
+        &lt;aside&gt;
+          {notifications}
+          {analytics}
+        &lt;/aside&gt;
+      &lt;/div&gt;
+
+      {/* children = page.js içeriği */}
+      &lt;main&gt;{children}&lt;/main&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Conditional Routing ile Parallel Routes</h3>
+
+<p>Parallel Routes ile kullanıcı rolüne veya durumuna göre farklı içerikler gösterebilirsiniz:</p>
+
+<pre><code>// app/layout.js
+import { getUser } from '@/lib/auth';
+
+export default async function Layout({ children, admin, user }) {
+  const currentUser = await getUser();
+
+  return (
+    &lt;div&gt;
+      {currentUser.role === 'admin' ? admin : user}
+      {children}
+    &lt;/div&gt;
+  );
+}
+
+// app/@admin/page.js
+export default function AdminDashboard() {
+  return &lt;h2&gt;Admin Paneli&lt;/h2&gt;;
+}
+
+// app/@user/page.js
+export default function UserDashboard() {
+  return &lt;h2&gt;Kullanıcı Paneli&lt;/h2&gt;;
+}</code></pre>
+
+<h3>default.js Dosyası</h3>
+
+<p>Parallel Routes'ta bir slot'un eşleşen route'u olmadığında gösterilecek varsayılan içeriği <code>default.js</code> ile tanımlarsınız. Bu dosya olmadan, eşleşmeyen slot'lar 404 döner.</p>
+
+<pre><code>// app/@notifications/default.js
+export default function DefaultNotifications() {
+  return &lt;p&gt;Bildirim yok.&lt;/p&gt;;
+}
+
+// app/@analytics/default.js
+export default function DefaultAnalytics() {
+  return null; // Hiçbir şey gösterme
+}</code></pre>
+
+<h3>Intercepting Routes Nedir?</h3>
+
+<p>Intercepting Routes, bir route'a navigasyon yapıldığında, hedef route'u mevcut layout içinde yakalayarak (intercept ederek) göstermenizi sağlar. En yaygın kullanım örneği: bir listedeki öğeye tıklayınca modal açılması, URL'in güncellenmesi ve tam sayfanın da çalışır olmasıdır.</p>
+
+<p>Intercepting Routes, klasör adında özel convention'lar kullanır:</p>
+
+<ul>
+  <li><code>(.)</code> — Aynı seviyedeki route'u yakala</li>
+  <li><code>(..)</code> — Bir üst seviyedeki route'u yakala</li>
+  <li><code>(..)(..)</code> — İki üst seviyedeki route'u yakala</li>
+  <li><code>(...)</code> — Root'tan itibaren yakala</li>
+</ul>
+
+<h3>Modal Pattern: Photo Gallery Örneği</h3>
+
+<pre><code>// Klasör yapısı
+app/
+├── layout.js
+├── @modal/
+│   ├── default.js
+│   └── (.)photos/
+│       └── [id]/
+│           └── page.js    ← Intercepted route (modal olarak açılır)
+├── photos/
+│   └── [id]/
+│       └── page.js        ← Tam sayfa (doğrudan erişimde)
+└── page.js                ← Ana sayfa (galeri listesi)</code></pre>
+
+<pre><code>// app/page.js — Galeri listesi
+import Link from 'next/link';
+
+export default function Gallery() {
+  const photos = [
+    { id: 1, src: '/photo1.jpg', title: 'Doğa' },
+    { id: 2, src: '/photo2.jpg', title: 'Şehir' },
+    { id: 3, src: '/photo3.jpg', title: 'Portre' },
+  ];
+
+  return (
+    &lt;div className="gallery-grid"&gt;
+      {photos.map((photo) =&gt; (
+        &lt;Link key={photo.id} href={`/photos/${photo.id}`}&gt;
+          &lt;img src={photo.src} alt={photo.title} /&gt;
+        &lt;/Link&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<pre><code>// app/@modal/(.)photos/[id]/page.js — Modal olarak intercept
+import { PhotoModal } from '@/components/PhotoModal';
+
+export default async function InterceptedPhoto({ params }) {
+  const { id } = await params;
+  const photo = await getPhoto(id);
+
+  return &lt;PhotoModal photo={photo} /&gt;;
+}
+
+// app/photos/[id]/page.js — Tam sayfa görünümü
+export default async function PhotoPage({ params }) {
+  const { id } = await params;
+  const photo = await getPhoto(id);
+
+  return (
+    &lt;div className="photo-full"&gt;
+      &lt;img src={photo.src} alt={photo.title} /&gt;
+      &lt;h1&gt;{photo.title}&lt;/h1&gt;
+      &lt;p&gt;{photo.description}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<pre><code>// app/layout.js
+export default function RootLayout({ children, modal }) {
+  return (
+    &lt;html&gt;
+      &lt;body&gt;
+        {children}
+        {modal}
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}
+
+// app/@modal/default.js
+export default function Default() {
+  return null; // Modal kapalıyken hiçbir şey gösterme
+}</code></pre>
+
+<h3>Modal Bileşeni</h3>
+
+<pre><code>'use client';
+
+import { useRouter } from 'next/navigation';
+
+export function PhotoModal({ photo }) {
+  const router = useRouter();
+
+  return (
+    &lt;div className="modal-overlay" onClick={() =&gt; router.back()}&gt;
+      &lt;div className="modal-content" onClick={(e) =&gt; e.stopPropagation()}&gt;
+        &lt;button className="close-btn" onClick={() =&gt; router.back()}&gt;
+          &amp;times;
+        &lt;/button&gt;
+        &lt;img src={photo.src} alt={photo.title} /&gt;
+        &lt;h2&gt;{photo.title}&lt;/h2&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Intercepting Routes ile: Galeri sayfasından bir fotoğrafa tıklandığında modal açılır ve URL <code>/photos/1</code> olur. Sayfayı yenileyince veya URL'i doğrudan ziyaret edince tam sayfa görünümü gösterilir. Bu, Instagram'ın fotoğraf modal davranışına benzer.
+</div>
+
+<h3>E-ticaret Ürün Detay Örneği</h3>
+
+<pre><code>// Klasör yapısı
+app/
+├── products/
+│   ├── page.js                    ← Ürün listesi
+│   └── [slug]/
+│       └── page.js                ← Ürün tam sayfası
+├── @quickview/
+│   ├── default.js
+│   └── (..)products/
+│       └── [slug]/
+│           └── page.js            ← Quick view modal
+└── layout.js</code></pre>
+
+<pre><code>// app/@quickview/(..)products/[slug]/page.js
+export default async function QuickView({ params }) {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+
+  return (
+    &lt;div className="quickview-modal"&gt;
+      &lt;div className="quickview-content"&gt;
+        &lt;img src={product.image} alt={product.name} /&gt;
+        &lt;h2&gt;{product.name}&lt;/h2&gt;
+        &lt;p className="price"&gt;{product.price} TL&lt;/p&gt;
+        &lt;p&gt;{product.shortDescription}&lt;/p&gt;
+        &lt;a href={`/products/${slug}`}&gt;Detaylı İncele&lt;/a&gt;
+        &lt;button&gt;Sepete Ekle&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Parallel Routes ile Tab Layout</h3>
+
+<pre><code>// Klasör yapısı
+app/settings/
+├── layout.js
+├── @tabs/
+│   ├── profile/
+│   │   └── page.js
+│   ├── security/
+│   │   └── page.js
+│   └── notifications/
+│       └── page.js
+└── page.js</code></pre>
+
+<pre><code>// app/settings/layout.js
+import Link from 'next/link';
+
+export default function SettingsLayout({ children, tabs }) {
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Ayarlar&lt;/h1&gt;
+      &lt;nav className="tabs"&gt;
+        &lt;Link href="/settings/profile"&gt;Profil&lt;/Link&gt;
+        &lt;Link href="/settings/security"&gt;Güvenlik&lt;/Link&gt;
+        &lt;Link href="/settings/notifications"&gt;Bildirimler&lt;/Link&gt;
+      &lt;/nav&gt;
+      &lt;div className="tab-content"&gt;{tabs}&lt;/div&gt;
+      {children}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Intercepting Routes, soft navigation (client-side) sırasında çalışır. Hard navigation (sayfa yenileme, doğrudan URL ziyareti) sırasında intercept edilmez ve orijinal route gösterilir. Bu davranış tasarım gereğidir.
+</div>
+
+<div class="tip">
+  <strong>İpucu:</strong> Parallel ve Intercepting Routes'u birlikte kullanarak Instagram tarzı modal deneyimleri, dashboard layout'ları, tab sistemleri ve conditional routing oluşturabilirsiniz. <code>default.js</code> dosyasını eklemeyi unutmayın, aksi halde eşleşmeyen route'larda 404 alırsınız.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js Parallel Routes, tek bir layout içinde birden fazla bağımsız sayfa bölümünü eşzamanlı yönetmenizi sağlar. Her slot kendi loading, error ve default state'ine sahiptir. Intercepting Routes ise modal, quickview ve overlay pattern'lerini URL-first yaklaşımıyla uygulamanıza olanak tanır. Bu iki özellik birlikte kullanıldığında, karmaşık UI pattern'lerini temiz ve sürdürülebilir bir şekilde oluşturabilirsiniz. Özellikle e-ticaret, sosyal medya ve dashboard uygulamalarında büyük fayda sağlar.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/routing/parallel-routes" target="_blank" rel="noopener noreferrer">Next.js Docs — Parallel Routes</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/routing/intercepting-routes" target="_blank" rel="noopener noreferrer">Next.js Docs — Intercepting Routes</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/routing/route-groups" target="_blank" rel="noopener noreferrer">Next.js Docs — Route Groups</a></li>
+  <li><a href="https://www.youtube.com/watch?v=2sYMGBkD5Jg" target="_blank" rel="noopener noreferrer">Next.js — Parallel and Intercepting Routes (Video)</a></li>
+</ul>

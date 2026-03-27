@@ -1,0 +1,309 @@
+<h2>Next.js Docker ile Deployment Rehberi</h2>
+
+<p>Docker, uygulamalarınızı tutarlı ve tekrarlanabilir ortamlarda çalıştırmanızı sağlayan konteynerizasyon teknolojisidir. Next.js projelerinizi Docker ile deploy etmek, geliştirme ve production ortamları arasındaki farklılıkları ortadan kaldırır. Bu rehberde Next.js uygulamanız için optimize edilmiş Docker image oluşturmayı, multi-stage build kullanmayı ve production'a hazır deployment stratejilerini adım adım inceleyeceğiz.</p>
+
+<h3>Neden Docker ile Next.js?</h3>
+
+<ul>
+  <li><strong>Tutarlı ortam:</strong> Geliştirici makineleri, CI/CD ve production aynı ortamda çalışır</li>
+  <li><strong>Kolay ölçeklendirme:</strong> Kubernetes, Docker Swarm gibi orchestration araçlarıyla yatay ölçekleme</li>
+  <li><strong>İzolasyon:</strong> Her uygulama kendi bağımlılıklarıyla izole çalışır</li>
+  <li><strong>Tekrarlanabilir build:</strong> Aynı Dockerfile her zaman aynı sonucu üretir</li>
+  <li><strong>Hızlı deployment:</strong> Image bir kez build edilir, her yere deploy edilir</li>
+</ul>
+
+<h3>Temel Dockerfile</h3>
+
+<p>Basit bir Next.js Dockerfile ile başlayalım:</p>
+
+<pre><code># Dockerfile
+FROM node:20-alpine AS base
+
+WORKDIR /app
+
+# Bağımlılıkları kopyala ve yükle
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Uygulama kodunu kopyala
+COPY . .
+
+# Build
+RUN npm run build
+
+# Production
+EXPOSE 3000
+ENV NODE_ENV=production
+
+CMD ["npm", "start"]</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Bu temel Dockerfile çalışır ancak image boyutu büyük olur. Production için aşağıdaki multi-stage build yaklaşımını kullanın.
+</div>
+
+<h3>Multi-Stage Build ile Optimize Edilmiş Dockerfile</h3>
+
+<p>Next.js'in resmi olarak önerdiği multi-stage build yaklaşımı, image boyutunu önemli ölçüde küçültür:</p>
+
+<pre><code># Dockerfile
+FROM node:20-alpine AS base
+
+# 1. Bağımlılık aşaması
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
+
+# 2. Build aşaması
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Next.js telemetriyi devre dışı bırak
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build
+
+# 3. Production aşaması
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Güvenlik: root olmayan kullanıcı oluştur
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Public dosyalarını kopyala
+COPY --from=builder /app/public ./public
+
+# Standalone output kopyala
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]</code></pre>
+
+<h4>next.config.js Ayarları</h4>
+
+<p>Multi-stage build için Next.js'in <code>standalone</code> output modunu etkinleştirin:</p>
+
+<pre><code>// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+};
+
+module.exports = nextConfig;</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>output: 'standalone'</code> ayarı, Next.js'in yalnızca production için gerekli dosyaları içeren minimal bir klasör oluşturmasını sağlar. Bu sayede <code>node_modules</code>'un tamamını kopyalamanıza gerek kalmaz.
+</div>
+
+<h3>.dockerignore Dosyası</h3>
+
+<p>Gereksiz dosyaların Docker context'ine dahil edilmesini önleyin:</p>
+
+<pre><code># .dockerignore
+node_modules
+.next
+.git
+.gitignore
+README.md
+docker-compose*.yml
+Dockerfile
+.env*.local
+.vscode
+.husky
+coverage
+__tests__</code></pre>
+
+<h3>Docker Compose ile Geliştirme Ortamı</h3>
+
+<p>Geliştirme ortamında hot-reload ile çalışmak için Docker Compose kullanabilirsiniz:</p>
+
+<pre><code># docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@db:5432/mydb
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:</code></pre>
+
+<pre><code># Dockerfile.dev
+FROM node:20-alpine
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+CMD ["npm", "run", "dev"]</code></pre>
+
+<h3>Production Docker Compose</h3>
+
+<pre><code># docker-compose.prod.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    ports:
+      - '3000:3000'
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+    restart: unless-stopped</code></pre>
+
+<h3>Health Check Endpoint</h3>
+
+<p>Docker'ın uygulamanızın sağlığını kontrol edebilmesi için bir API endpoint oluşturun:</p>
+
+<pre><code>// app/api/health/route.ts
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  try {
+    // Veritabanı bağlantısı kontrolü eklenebilir
+    return NextResponse.json(
+      {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { status: 'unhealthy', error: String(error) },
+      { status: 503 }
+    );
+  }
+}</code></pre>
+
+<h3>CI/CD Pipeline ile Docker Build</h3>
+
+<p>GitHub Actions ile otomatik Docker build ve push:</p>
+
+<pre><code># .github/workflows/docker.yml
+name: Docker Build &amp; Push
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max</code></pre>
+
+<h3>Image Boyutu Optimizasyonu</h3>
+
+<p>Docker image boyutunu küçültmek için şu stratejileri uygulayın:</p>
+
+<ol>
+  <li><strong>Alpine base image kullanın:</strong> <code>node:20-alpine</code> (~50MB) vs <code>node:20</code> (~350MB)</li>
+  <li><strong>Multi-stage build:</strong> Build bağımlılıklarını final image'a dahil etmeyin</li>
+  <li><strong>Standalone output:</strong> Next.js'in minimal output modunu kullanın</li>
+  <li><strong>.dockerignore:</strong> Gereksiz dosyaları build context'inden çıkarın</li>
+  <li><strong>Layer caching:</strong> Sık değişen dosyaları Dockerfile'ın sonuna koyun</li>
+</ol>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>docker images</code> komutuyla image boyutlarını karşılaştırın. İyi optimize edilmiş bir Next.js standalone image genellikle 150-200MB civarında olmalıdır.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Docker ile Next.js deployment, uygulamanızı tutarlı, güvenli ve ölçeklenebilir şekilde çalıştırmanın en etkili yollarından biridir. Multi-stage build ile image boyutunu minimize edin, standalone output modunu etkinleştirin ve non-root kullanıcıyla çalıştırarak güvenliği artırın. Docker Compose ile hem geliştirme hem de production ortamlarınızı kolayca yönetebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/deploying#docker-image" target="_blank" rel="noopener noreferrer">Next.js Docs - Docker Deployment</a></li>
+  <li><a href="https://github.com/vercel/next.js/tree/canary/examples/with-docker" target="_blank" rel="noopener noreferrer">Next.js Docker Example</a></li>
+  <li><a href="https://docs.docker.com/build/building/multi-stage/" target="_blank" rel="noopener noreferrer">Docker Multi-Stage Builds</a></li>
+  <li><a href="https://docs.docker.com/compose/" target="_blank" rel="noopener noreferrer">Docker Compose Documentation</a></li>
+  <li><a href="https://snyk.io/blog/10-best-practices-to-containerize-nodejs-web-applications-with-docker/" target="_blank" rel="noopener noreferrer">Snyk - Node.js Docker Best Practices</a></li>
+</ul>

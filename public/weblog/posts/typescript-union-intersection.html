@@ -1,0 +1,240 @@
+<h2>TypeScript Union ve Intersection Types</h2>
+
+<p>Union ve intersection type'lar, TypeScript'in tip sisteminin en güçlü yapı taşlarındandır. Mevcut tipleri birleştirerek yeni ve daha ifade gücü yüksek tipler oluşturmanızı sağlarlar. Bu yazıda her iki kavramı detaylı örneklerle inceleyeceğiz.</p>
+
+<h3>Union Types (Birleşim Tipleri)</h3>
+
+<p>Union type, bir değerin birden fazla tipten biri olabileceğini ifade eder. Pipe (<code>|</code>) operatörü ile tanımlanır:</p>
+
+<pre><code>// Basit union type
+type StringVeyaSayi = string | number;
+
+function formatla(deger: StringVeyaSayi): string {
+  if (typeof deger === "string") {
+    return deger.toUpperCase();
+  }
+  return deger.toFixed(2);
+}
+
+formatla("merhaba"); // "MERHABA"
+formatla(3.14159);   // "3.14"
+
+// Literal union type
+type Yon = "kuzey" | "guney" | "dogu" | "bati";
+type Zar = 1 | 2 | 3 | 4 | 5 | 6;
+type Durum = "aktif" | "pasif" | "askida";
+
+// Fonksiyonda union parametre
+function mesajGoster(mesaj: string | string[]): void {
+  if (Array.isArray(mesaj)) {
+    mesaj.forEach(m => console.log(m));
+  } else {
+    console.log(mesaj);
+  }
+}</code></pre>
+
+<h3>Discriminated Unions</h3>
+
+<p>Discriminated union, her tipin ortak bir "ayırt edici" (discriminant) özelliğe sahip olduğu union pattern'idir:</p>
+
+<pre><code>// Şekil hesaplama örneği
+interface Daire {
+  tur: "daire";
+  yaricap: number;
+}
+
+interface Dikdortgen {
+  tur: "dikdortgen";
+  genislik: number;
+  yukseklik: number;
+}
+
+interface Ucgen {
+  tur: "ucgen";
+  taban: number;
+  yukseklik: number;
+}
+
+type Sekil = Daire | Dikdortgen | Ucgen;
+
+function alanHesapla(sekil: Sekil): number {
+  switch (sekil.tur) {
+    case "daire":
+      return Math.PI * sekil.yaricap ** 2;
+    case "dikdortgen":
+      return sekil.genislik * sekil.yukseklik;
+    case "ucgen":
+      return (sekil.taban * sekil.yukseklik) / 2;
+  }
+}
+
+// Exhaustive check pattern
+function alanHesaplaGuvenli(sekil: Sekil): number {
+  switch (sekil.tur) {
+    case "daire":
+      return Math.PI * sekil.yaricap ** 2;
+    case "dikdortgen":
+      return sekil.genislik * sekil.yukseklik;
+    case "ucgen":
+      return (sekil.taban * sekil.yukseklik) / 2;
+    default:
+      const _exhaustiveCheck: never = sekil;
+      return _exhaustiveCheck;
+  }
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Discriminated union'larda <code>never</code> tipini kullanarak exhaustive check yapabilirsiniz. Yeni bir tip eklendiğinde switch/case'e eklenmezse TypeScript derleme hatası verir. Bu, tip güvenliğini en üst düzeyde tutar.
+</div>
+
+<h3>Intersection Types (Kesişim Tipleri)</h3>
+
+<p>Intersection type, birden fazla tipi birleştirerek tüm özellikleri içeren yeni bir tip oluşturur. Ampersand (<code>&</code>) operatörü ile tanımlanır:</p>
+
+<pre><code>// Temel intersection
+interface Kisi {
+  isim: string;
+  yas: number;
+}
+
+interface Calisan {
+  sirket: string;
+  pozisyon: string;
+  maas: number;
+}
+
+type CalisanKisi = Kisi & Calisan;
+
+const gelistirici: CalisanKisi = {
+  isim: "Tarik Tunç",
+  yas: 28,
+  sirket: "Tech Corp",
+  pozisyon: "Senior Developer",
+  maas: 50000
+};
+
+// Mixin pattern
+interface Timestamped {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface SoftDeletable {
+  deletedAt: Date | null;
+  silindi: boolean;
+}
+
+interface Versionable {
+  version: number;
+  lastModifiedBy: string;
+}
+
+type BaseEntity = Timestamped & SoftDeletable & Versionable;
+
+interface Makale extends BaseEntity {
+  id: number;
+  baslik: string;
+  icerik: string;
+  yazar: string;
+}</code></pre>
+
+<h3>Union ve Intersection Birlikte</h3>
+
+<pre><code>// API yanıt tipleri
+interface BasariliYanit&lt;T&gt; {
+  basarili: true;
+  data: T;
+  mesaj: string;
+}
+
+interface HataYanit {
+  basarili: false;
+  hataKodu: number;
+  mesaj: string;
+}
+
+type ApiYanit&lt;T&gt; = BasariliYanit&lt;T&gt; | HataYanit;
+
+// Intersection ile genişletilmiş union
+type PaginatedYanit&lt;T&gt; = ApiYanit&lt;T&gt; & {
+  sayfa: number;
+  toplamSayfa: number;
+  toplamKayit: number;
+};
+
+async function kullanicilariGetir(): Promise&lt;ApiYanit&lt;Kullanici[]&gt;&gt; {
+  try {
+    const response = await fetch("/api/kullanicilar");
+    const data = await response.json();
+    return { basarili: true, data, mesaj: "Başarılı" };
+  } catch (error) {
+    return { basarili: false, hataKodu: 500, mesaj: "Sunucu hatası" };
+  }
+}
+
+// Kullanım
+const sonuc = await kullanicilariGetir();
+if (sonuc.basarili) {
+  console.log(sonuc.data); // Kullanici[] - TypeScript bunu bilir!
+} else {
+  console.error(sonuc.hataKodu); // number - TypeScript bunu bilir!
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Intersection type'larda çakışan özellikler <code>never</code> tipine dönüşür. Örneğin, <code>{ x: string } & { x: number }</code> ifadesinde <code>x</code> özelliği <code>never</code> olur çünkü bir değer hem string hem number olamaz.
+</div>
+
+<h3>İleri Seviye Kullanım Senaryoları</h3>
+
+<pre><code>// Conditional rendering tipleri
+type ButtonProps =
+  | { variant: "link"; href: string; onClick?: never }
+  | { variant: "button"; onClick: () => void; href?: never }
+  | { variant: "submit"; formId: string; onClick?: never; href?: never };
+
+function Button(props: ButtonProps) {
+  switch (props.variant) {
+    case "link":
+      return `&lt;a href="${props.href}"&gt;Link&lt;/a&gt;`;
+    case "button":
+      return `&lt;button onclick="${props.onClick}"&gt;Button&lt;/button&gt;`;
+    case "submit":
+      return `&lt;button type="submit" form="${props.formId}"&gt;Submit&lt;/button&gt;`;
+  }
+}
+
+// State machine pattern
+type OdemeDurumu =
+  | { durum: "bekleniyor" }
+  | { durum: "isleniyor"; islemId: string }
+  | { durum: "basarili"; islemId: string; tarih: Date }
+  | { durum: "basarisiz"; islemId: string; hata: string };
+
+function odemeDurumMesaji(odeme: OdemeDurumu): string {
+  switch (odeme.durum) {
+    case "bekleniyor":
+      return "Ödeme bekleniyor...";
+    case "isleniyor":
+      return `İşlem ${odeme.islemId} işleniyor...`;
+    case "basarili":
+      return `İşlem ${odeme.islemId} başarıyla tamamlandı.`;
+    case "basarisiz":
+      return `İşlem ${odeme.islemId} başarısız: ${odeme.hata}`;
+  }
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Discriminated union'lar, state machine pattern'ini tip seviyesinde modellemek için mükemmeldir. Her durum için farklı özelliklere sahip nesneler tanımlayarak, geçersiz durumları derleme zamanında yakalarsınız.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Union ve intersection type'lar, TypeScript'in tip sisteminin temel yapı taşlarıdır. Union type'lar "A veya B" mantığını, intersection type'lar ise "A ve B" mantığını temsil eder. Discriminated union pattern'i ile tip güvenli state yönetimi yapabilir, intersection ile mixin'ler oluşturabilirsiniz. Bu iki kavramı ustalaştığınızda TypeScript tip sistemi ile karmaşık iş mantığını güvenle modelleyebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types" target="_blank" rel="noopener noreferrer">TypeScript Union Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/objects.html#intersection-types" target="_blank" rel="noopener noreferrer">Intersection Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions" target="_blank" rel="noopener noreferrer">Discriminated Unions</a></li>
+</ul>

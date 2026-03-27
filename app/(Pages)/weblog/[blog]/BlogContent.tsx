@@ -19,6 +19,8 @@ import {
 import type { BlogPost } from "@/app/lib/projects";
 
 export default function BlogContent({ post }: { post: BlogPost }) {
+  const hasRichContent = !!post.content;
+
   return (
     <Box>
       {/* ── Banner Image ── */}
@@ -33,9 +35,9 @@ export default function BlogContent({ post }: { post: BlogPost }) {
         />
       </HeroReveal>
 
-      {/* ── Meta row: category + date ── */}
+      {/* ── Meta row: category + date + reading time ── */}
       <SlideIn direction="left" delay={0.3}>
-        <Flex gap="3" align="center" mb="4">
+        <Flex gap="3" align="center" mb="4" wrap="wrap">
           <motion.span
             className="shimmer-badge inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-green border border-green/20"
             initial={{ scale: 0 }}
@@ -47,8 +49,29 @@ export default function BlogContent({ post }: { post: BlogPost }) {
           <Text size="2" style={{ color: "var(--slate)" }}>
             {post.date}
           </Text>
+          {post.readingTime && (
+            <Text size="2" style={{ color: "var(--slate)" }}>
+              · {post.readingTime}
+            </Text>
+          )}
         </Flex>
       </SlideIn>
+
+      {/* ── Tags ── */}
+      {post.tags && post.tags.length > 0 && (
+        <SlideIn direction="left" delay={0.35}>
+          <Flex gap="2" mb="4" wrap="wrap">
+            {post.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center rounded-md px-2 py-0.5 text-xs border border-navy-lighter text-slate-custom"
+              >
+                #{tag}
+              </span>
+            ))}
+          </Flex>
+        </SlideIn>
+      )}
 
       {/* ── Title ── */}
       <motion.div
@@ -87,7 +110,7 @@ export default function BlogContent({ post }: { post: BlogPost }) {
               weight="medium"
               style={{ color: "var(--lightest-slate)" }}
             >
-              Tarik Tunç
+              {post.author || "Tarik Tunç"}
             </Text>
             <Text size="2" style={{ color: "var(--slate)" }}>
               Full Stack Developer
@@ -96,35 +119,48 @@ export default function BlogContent({ post }: { post: BlogPost }) {
         </Flex>
       </SlideIn>
 
-      {/* ── Full Summary ── */}
-      <MotionSection delay={0.3}>
-        <Section size="1">
-          <Text
-            as="p"
-            size="4"
-            style={{ color: "var(--slate-light)", lineHeight: 1.8 }}
-          >
-            {post.fullSummary}
-          </Text>
-        </Section>
-      </MotionSection>
+      {/* ── Content ── */}
+      {hasRichContent ? (
+        <MotionSection delay={0.3}>
+          <article
+            className="blog-content"
+            dangerouslySetInnerHTML={{ __html: post.content! }}
+          />
+        </MotionSection>
+      ) : (
+        <>
+          <MotionSection delay={0.3}>
+            <Section size="1">
+              <Text
+                as="p"
+                size="4"
+                style={{ color: "var(--slate-light)", lineHeight: 1.8 }}
+              >
+                {post.fullSummary}
+              </Text>
+            </Section>
+          </MotionSection>
 
-      {/* ── Read on Medium CTA ── */}
-      <MotionSection delay={0.4}>
-        <Flex justify="center" my="8">
-          <HoverScale>
-            <Link
-              href={post.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-green px-6 py-3 text-sm font-semibold text-green hover:bg-green/10 hover:shadow-[0_0_20px_rgba(100,255,218,0.15)] transition-all duration-300"
-              aria-label="Read full article on Medium (opens in new tab)"
-            >
-              Read full article on Medium <span aria-hidden="true">&#8599;</span>
-            </Link>
-          </HoverScale>
-        </Flex>
-      </MotionSection>
+          {/* ── Read on Medium CTA ── */}
+          {post.link && (
+            <MotionSection delay={0.4}>
+              <Flex justify="center" my="8">
+                <HoverScale>
+                  <Link
+                    href={post.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg border border-green px-6 py-3 text-sm font-semibold text-green hover:bg-green/10 hover:shadow-[0_0_20px_rgba(100,255,218,0.15)] transition-all duration-300"
+                    aria-label="Tam makaleyi Medium'da oku (yeni sekmede açılır)"
+                  >
+                    Tam makaleyi Medium&apos;da oku <span aria-hidden="true">&#8599;</span>
+                  </Link>
+                </HoverScale>
+              </Flex>
+            </MotionSection>
+          )}
+        </>
+      )}
 
       {/* ── Back link ── */}
       <motion.div
@@ -132,12 +168,13 @@ export default function BlogContent({ post }: { post: BlogPost }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: 0.2 }}
+        className="mt-12"
       >
         <Link
           href="/weblog"
           className="inline-flex items-center gap-2 text-sm text-green hover:text-green/80 transition-colors duration-300"
         >
-          &larr; Back to Weblog
+          &larr; Tüm Yazılara Dön
         </Link>
       </motion.div>
     </Box>

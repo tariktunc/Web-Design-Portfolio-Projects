@@ -1,0 +1,330 @@
+<h2>Next.js Authentication: NextAuth.js ve Clerk</h2>
+
+<p>Kimlik doğrulama (authentication), web uygulamalarının en kritik bileşenlerinden biridir. Next.js ekosisteminde en popüler iki çözüm <strong>NextAuth.js (Auth.js)</strong> ve <strong>Clerk</strong>'tir. Bu yazıda her iki kütüphaneyi detaylı olarak inceleyecek, kurulumdan production'a kadar adım adım rehber sunacağız.</p>
+
+<h3>NextAuth.js (Auth.js) Nedir?</h3>
+
+<p>NextAuth.js, Next.js için açık kaynaklı bir authentication kütüphanesidir. OAuth, email/password, magic link ve daha birçok yöntemi destekler. v5 ile birlikte <strong>Auth.js</strong> adını almış ve framework-agnostik hale gelmiştir.</p>
+
+<h4>Kurulum</h4>
+
+<pre><code>npm install next-auth@beta</code></pre>
+
+<pre><code># .env.local
+AUTH_SECRET=your-secret-key-here
+AUTH_GITHUB_ID=github-client-id
+AUTH_GITHUB_SECRET=github-client-secret
+AUTH_GOOGLE_ID=google-client-id
+AUTH_GOOGLE_SECRET=google-client-secret</code></pre>
+
+<h4>Temel Yapılandırma</h4>
+
+<pre><code>// auth.js (proje kökünde)
+import NextAuth from 'next-auth';
+import GitHub from 'next-auth/providers/github';
+import Google from 'next-auth/providers/google';
+import Credentials from 'next-auth/providers/credentials';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GitHub,
+    Google,
+    Credentials({
+      name: 'E-posta ve Şifre',
+      credentials: {
+        email: { label: 'E-posta', type: 'email' },
+        password: { label: 'Şifre', type: 'password' },
+      },
+      async authorize(credentials) {
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user || !user.password) return null;
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        return isValid ? user : null;
+      },
+    }),
+  ],
+  callbacks: {
+    async session({ session, token }) {
+      if (token.sub) {
+        session.user.id = token.sub;
+        session.user.role = token.role;
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
+    },
+  },
+  pages: {
+    signIn: '/login',
+    error: '/auth/error',
+  },
+});</code></pre>
+
+<h4>Route Handler</h4>
+
+<pre><code>// app/api/auth/[...nextauth]/route.js
+import { handlers } from '@/auth';
+export const { GET, POST } = handlers;</code></pre>
+
+<h4>Middleware ile Koruma</h4>
+
+<pre><code>// middleware.js
+import { auth } from '@/auth';
+
+export default auth((req) =&gt; {
+  const isLoggedIn = !!req.auth;
+  const isOnDashboard = req.nextUrl.pathname.startsWith('/dashboard');
+  const isOnLogin = req.nextUrl.pathname === '/login';
+
+  if (isOnDashboard && !isLoggedIn) {
+    return Response.redirect(new URL('/login', req.url));
+  }
+
+  if (isOnLogin && isLoggedIn) {
+    return Response.redirect(new URL('/dashboard', req.url));
+  }
+});
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/login'],
+};</code></pre>
+
+<h4>Server Component'lerde Kullanım</h4>
+
+<pre><code>// app/dashboard/page.js
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+
+export default async function DashboardPage() {
+  const session = await auth();
+
+  if (!session) {
+    redirect('/login');
+  }
+
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Hoş geldin, {session.user.name}!&lt;/h1&gt;
+      &lt;p&gt;E-posta: {session.user.email}&lt;/p&gt;
+      &lt;img src={session.user.image} alt="Avatar" /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h4>Login Sayfası</h4>
+
+<pre><code>// app/login/page.js
+import { signIn } from '@/auth';
+
+export default function LoginPage() {
+  return (
+    &lt;div className="login-container"&gt;
+      &lt;h1&gt;Giriş Yap&lt;/h1&gt;
+
+      {/* OAuth butonları */}
+      &lt;form action={async () =&gt; { 'use server'; await signIn('github'); }}&gt;
+        &lt;button type="submit"&gt;GitHub ile Giriş&lt;/button&gt;
+      &lt;/form&gt;
+
+      &lt;form action={async () =&gt; { 'use server'; await signIn('google'); }}&gt;
+        &lt;button type="submit"&gt;Google ile Giriş&lt;/button&gt;
+      &lt;/form&gt;
+
+      &lt;hr /&gt;
+
+      {/* Credentials formu */}
+      &lt;form action={async (formData) =&gt; {
+        'use server';
+        await signIn('credentials', formData);
+      }}&gt;
+        &lt;input name="email" type="email" placeholder="E-posta" required /&gt;
+        &lt;input name="password" type="password" placeholder="Şifre" required /&gt;
+        &lt;button type="submit"&gt;Giriş Yap&lt;/button&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Clerk Nedir?</h3>
+
+<p>Clerk, tam yönetilen (fully managed) bir authentication ve kullanıcı yönetimi platformudur. Hazır UI bileşenleri, kullanıcı profil yönetimi, organizasyon desteği ve webhook'lar sunar.</p>
+
+<h4>Kurulum</h4>
+
+<pre><code>npm install @clerk/nextjs</code></pre>
+
+<pre><code># .env.local
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up</code></pre>
+
+<h4>Provider Kurulumu</h4>
+
+<pre><code>// app/layout.js
+import { ClerkProvider } from '@clerk/nextjs';
+import { trTR } from '@clerk/localizations';
+
+export default function RootLayout({ children }) {
+  return (
+    &lt;ClerkProvider localization={trTR}&gt;
+      &lt;html lang="tr"&gt;
+        &lt;body&gt;{children}&lt;/body&gt;
+      &lt;/html&gt;
+    &lt;/ClerkProvider&gt;
+  );
+}</code></pre>
+
+<h4>Middleware</h4>
+
+<pre><code>// middleware.js
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/settings(.*)',
+  '/api/private(.*)',
+]);
+
+export default clerkMiddleware(async (auth, req) =&gt; {
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
+});
+
+export const config = {
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+};</code></pre>
+
+<h4>Hazır UI Bileşenleri</h4>
+
+<pre><code>import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs';
+
+function Header() {
+  return (
+    &lt;header&gt;
+      &lt;nav&gt;
+        &lt;SignedOut&gt;
+          &lt;SignInButton mode="modal" /&gt;
+          &lt;SignUpButton mode="modal" /&gt;
+        &lt;/SignedOut&gt;
+
+        &lt;SignedIn&gt;
+          &lt;UserButton
+            appearance={{
+              elements: { avatarBox: 'w-10 h-10' },
+            }}
+            afterSignOutUrl="/"
+          /&gt;
+        &lt;/SignedIn&gt;
+      &lt;/nav&gt;
+    &lt;/header&gt;
+  );
+}</code></pre>
+
+<h4>Server Component'lerde Clerk</h4>
+
+<pre><code>import { currentUser, auth } from '@clerk/nextjs/server';
+
+export default async function ProfilePage() {
+  const user = await currentUser();
+  const { userId, orgId } = await auth();
+
+  if (!user) return &lt;p&gt;Giriş yapmanız gerekiyor.&lt;/p&gt;;
+
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;{user.firstName} {user.lastName}&lt;/h1&gt;
+      &lt;p&gt;{user.emailAddresses[0].emailAddress}&lt;/p&gt;
+      &lt;img src={user.imageUrl} alt="Profil" /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Karşılaştırma</h3>
+
+<table>
+  <tr>
+    <th>Özellik</th>
+    <th>NextAuth.js</th>
+    <th>Clerk</th>
+  </tr>
+  <tr>
+    <td>Fiyat</td>
+    <td>Ücretsiz (açık kaynak)</td>
+    <td>Freemium (10K MAU ücretsiz)</td>
+  </tr>
+  <tr>
+    <td>Barındırma</td>
+    <td>Self-hosted</td>
+    <td>Managed service</td>
+  </tr>
+  <tr>
+    <td>UI Bileşenleri</td>
+    <td>Kendiniz yazarsınız</td>
+    <td>Hazır bileşenler</td>
+  </tr>
+  <tr>
+    <td>Kullanıcı Yönetimi</td>
+    <td>Kendiniz yaparsınız</td>
+    <td>Dashboard var</td>
+  </tr>
+  <tr>
+    <td>Veritabanı</td>
+    <td>Kendi veritabanınız</td>
+    <td>Clerk yönetir</td>
+  </tr>
+  <tr>
+    <td>Özelleştirme</td>
+    <td>Tam kontrol</td>
+    <td>Tema ile sınırlı</td>
+  </tr>
+  <tr>
+    <td>Organizasyon</td>
+    <td>Manuel</td>
+    <td>Yerleşik destek</td>
+  </tr>
+</table>
+
+<div class="tip">
+  <strong>İpucu:</strong> Tam kontrol istiyorsanız ve veritabanınızı kendiniz yönetmek istiyorsanız NextAuth.js'i tercih edin. Hızlı kurulum, hazır UI bileşenleri ve yönetim paneli istiyorsanız Clerk daha uygun olabilir. Her ikisi de Next.js App Router ile tam uyumludur.
+</div>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Credentials provider (email/şifre) kullanıyorsanız, şifreleri mutlaka bcrypt ile hash'leyin. CSRF korumasını aktif bırakın. Session token'larını HttpOnly cookie'lerde saklayın. Rate limiting uygulayın.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js'te authentication için NextAuth.js ve Clerk iki güçlü seçenektir. NextAuth.js, açık kaynak ve self-hosted yapısıyla tam kontrol sunarken, Clerk managed bir servis olarak hızlı kurulum ve hazır bileşenler sağlar. Her iki çözüm de middleware tabanlı route koruması, Server Component desteği ve modern Next.js App Router uyumluluğu sunar. Projenizin ihtiyaçlarına, bütçenize ve kontrol gereksiniminize göre doğru çözümü seçebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://authjs.dev/" target="_blank" rel="noopener noreferrer">Auth.js (NextAuth.js) Docs</a></li>
+  <li><a href="https://clerk.com/docs/quickstarts/nextjs" target="_blank" rel="noopener noreferrer">Clerk — Next.js Quickstart</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/authentication" target="_blank" rel="noopener noreferrer">Next.js Docs — Authentication</a></li>
+  <li><a href="https://next-auth.js.org/configuration/providers/credentials" target="_blank" rel="noopener noreferrer">NextAuth.js — Credentials Provider</a></li>
+</ul>

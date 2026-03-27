@@ -1,0 +1,315 @@
+<h2>GitHub Actions ile CI/CD Pipeline Oluşturma</h2>
+
+<p>Sürekli entegrasyon (CI) ve sürekli dağıtım (CD), modern yazılım geliştirme süreçlerinin temel taşlarıdır. <strong>GitHub Actions</strong>, GitHub repository'lerinize doğrudan entegre edilmiş güçlü bir otomasyon platformudur. Kod push ettiğinizde testlerin çalışması, build'in oluşturulması ve uygulamanızın otomatik deploy edilmesi gibi işlemleri workflow dosyaları ile tanımlayabilirsiniz. Bu rehberde GitHub Actions'ın temellerinden production-ready pipeline oluşturmaya kadar her şeyi adım adım inceleyeceğiz.</p>
+
+<h3>GitHub Actions Temel Kavramları</h3>
+
+<p>GitHub Actions ekosistemini anlamak için birkaç temel kavramı bilmeniz gerekir:</p>
+
+<ul>
+  <li><strong>Workflow:</strong> Otomatik çalışan süreçlerin tanımlandığı YAML dosyası (<code>.github/workflows/</code> altında)</li>
+  <li><strong>Event (Trigger):</strong> Workflow'u tetikleyen olay (push, pull_request, schedule vb.)</li>
+  <li><strong>Job:</strong> Workflow içindeki bağımsız çalışma birimleri</li>
+  <li><strong>Step:</strong> Job içindeki her bir adım</li>
+  <li><strong>Action:</strong> Yeniden kullanılabilir, paylaşılabilir görev birimleri</li>
+  <li><strong>Runner:</strong> Workflow'ların çalıştığı sanal makine</li>
+</ul>
+
+<h3>İlk Workflow Dosyanızı Oluşturma</h3>
+
+<p>Basit bir CI pipeline'ı ile başlayalım. Repository'nizde <code>.github/workflows/ci.yml</code> dosyası oluşturun:</p>
+
+<pre><code># .github/workflows/ci.yml
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build project
+        run: npm run build</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>npm ci</code> komutu, <code>npm install</code>'a göre CI ortamlarında daha güvenilirdir. <code>package-lock.json</code> dosyasını birebir takip eder ve <code>node_modules</code> klasörünü sıfırdan oluşturur.
+</div>
+
+<h3>Environment Secrets ve Variables</h3>
+
+<p>API anahtarları, veritabanı bağlantı bilgileri gibi hassas verileri GitHub Secrets ile güvenli şekilde saklayabilirsiniz:</p>
+
+<pre><code># Secrets kullanımı
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Deploying with secure credentials..."
+          npm run deploy
+
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Secret'ları asla workflow log'larında yazdırmayın. GitHub otomatik olarak secret değerlerini maskeler, ancak <code>base64</code> encode veya parçalı yazdırma gibi dolaylı yollarla sızabilirler. Secret'ları her zaman environment variable olarak kullanın.
+</div>
+
+<h3>Production-Ready CI/CD Pipeline</h3>
+
+<p>Gerçek bir projede kullanabileceğiniz kapsamlı bir pipeline oluşturalım:</p>
+
+<pre><code># .github/workflows/production.yml
+name: Production Pipeline
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm run test:coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    name: Build
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: .next/
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: .next/
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'</code></pre>
+
+<h3>Caching ile Pipeline Hızlandırma</h3>
+
+<p>CI pipeline'larında en çok zaman alan adım genellikle bağımlılıkların yüklenmesidir. Caching stratejileri ile bu süreyi dramatik şekilde azaltabilirsiniz:</p>
+
+<pre><code>steps:
+  - uses: actions/checkout@v4
+
+  - uses: actions/setup-node@v4
+    with:
+      node-version: 20
+      cache: 'npm'
+
+  # Cypress binary cache
+  - name: Cache Cypress binary
+    uses: actions/cache@v4
+    with:
+      path: ~/.cache/Cypress
+      key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      restore-keys: |
+        cypress-${{ runner.os }}-
+
+  # Next.js build cache
+  - name: Cache Next.js build
+    uses: actions/cache@v4
+    with:
+      path: .next/cache
+      key: nextjs-${{ runner.os }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+      restore-keys: |
+        nextjs-${{ runner.os }}-</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>actions/setup-node@v4</code> action'ının <code>cache</code> parametresi, npm/yarn/pnpm cache'ini otomatik olarak yönetir. Ek bir cache adımı eklemenize gerek kalmaz. Ancak Cypress gibi büyük binary'ler için ayrı cache tanımlamak faydalıdır.
+</div>
+
+<h3>Reusable Workflows ve Composite Actions</h3>
+
+<p>Tekrar eden workflow adımlarını yeniden kullanılabilir hale getirmek için composite action veya reusable workflow tanımlayabilirsiniz:</p>
+
+<pre><code># .github/workflows/reusable-test.yml
+name: Reusable Test Workflow
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: '20'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
+
+# Ana workflow'da kullanımı:
+# .github/workflows/main.yml
+# jobs:
+#   call-tests:
+#     uses: ./.github/workflows/reusable-test.yml
+#     with:
+#       node-version: '20'</code></pre>
+
+<h3>Conditional Jobs ve Matrix Strategy</h3>
+
+<p>Farklı koşullara göre farklı job'lar çalıştırabilir veya matrix strategy ile paralel test süreçleri oluşturabilirsiniz:</p>
+
+<pre><code>jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'src/frontend/**'
+            backend:
+              - 'src/backend/**'
+
+  test-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run test:frontend
+
+  test-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run test:backend</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>dorny/paths-filter</code> action'ı ile değişen dosyalara göre sadece ilgili job'ları çalıştırabilirsiniz. Bu, monorepo projelerinde CI süresini önemli ölçüde kısaltır.
+</div>
+
+<h3>Scheduled Workflows ve Cron Jobs</h3>
+
+<p>Belirli zamanlarda otomatik çalışan workflow'lar tanımlayabilirsiniz:</p>
+
+<pre><code>on:
+  schedule:
+    # Her gün gece 02:00'de (UTC) dependency audit çalıştır
+    - cron: '0 2 * * *'
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm audit --audit-level=high
+      - name: Check for outdated packages
+        run: npm outdated || true</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>GitHub Actions, CI/CD pipeline'larınızı doğrudan repository'niz içinde tanımlamanızı ve yönetmenizi sağlayan güçlü bir platformdur. YAML tabanlı konfigürasyonu, zengin marketplace action'ları ve GitHub ile doğal entegrasyonu sayesinde hızlıca production-ready pipeline'lar oluşturabilirsiniz. Küçük başlayın, temel CI ile test ve lint adımlarını otomatikleştirin, ardından CD, caching ve conditional job'lar ekleyerek pipeline'ınızı olgunlaştırın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://docs.github.com/en/actions" target="_blank" rel="noopener noreferrer">GitHub Actions Resmi Dokümantasyonu</a></li>
+  <li><a href="https://github.com/marketplace?type=actions" target="_blank" rel="noopener noreferrer">GitHub Actions Marketplace</a></li>
+  <li><a href="https://docs.github.com/en/actions/using-workflows/reusing-workflows" target="_blank" rel="noopener noreferrer">Reusable Workflows Rehberi</a></li>
+  <li><a href="https://github.com/sdras/awesome-actions" target="_blank" rel="noopener noreferrer">Awesome GitHub Actions</a></li>
+</ul>

@@ -1,0 +1,334 @@
+<h2>2026'da Her Web Geliştiricinin Bilmesi Gereken Araçlar</h2>
+
+<p>Web geliştirme ekosistemi sürekli evrilmektedir ve 2026 yılı itibarıyla araç seti önemli ölçüde olgunlaşmıştır. AI destekli kod editörleri, modern build araçları, gelişmiş test framework'leri ve bulut tabanlı geliştirme ortamları, geliştirici verimliliğini yeni seviyelere taşımıştır. Bu rehberde 2026'da her web geliştiricinin bilmesi gereken araçları kategorilere ayırarak detaylı olarak inceleyeceğiz.</p>
+
+<h3>1. Kod Editörleri ve AI Asistanlar</h3>
+
+<h4>VS Code + AI Entegrasyonları</h4>
+<p>VS Code, 2026'da hala en popüler editör konumundadır. AI uzantıları ile birlikte güçlü bir geliştirme ortamı sunar.</p>
+
+<pre><code>// Önerilen VS Code uzantıları (2026)
+{
+  "recommendations": [
+    // AI Asistanlar
+    "github.copilot",              // GitHub Copilot — AI kod tamamlama
+    "anthropic.claude-code",       // Claude Code — AI geliştirme asistanı
+
+    // Kod Kalitesi
+    "dbaeumer.vscode-eslint",      // ESLint
+    "esbenp.prettier-vscode",      // Prettier
+    "bradlc.vscode-tailwindcss",   // Tailwind CSS IntelliSense
+
+    // Geliştirme
+    "ms-vscode.vscode-typescript-next",  // TypeScript
+    "formulahendry.auto-rename-tag",     // HTML tag rename
+    "christian-kohler.path-intellisense", // Path autocomplete
+
+    // Git
+    "eamodio.gitlens",             // GitLens
+    "mhutchie.git-graph",         // Git Graph
+
+    // Test
+    "Orta.vscode-jest",           // Jest entegrasyonu
+    "ms-playwright.playwright",    // Playwright Test
+  ]
+}</code></pre>
+
+<h4>AI Kod Asistanları</h4>
+
+<pre><code># 2026'da öne çıkan AI araçları
+
+# GitHub Copilot — Inline kod önerileri, chat, workspace agent
+# Claude Code — Terminal tabanlı AI geliştirme asistanı
+# Cursor — AI-first kod editörü
+# Windsurf — AI entegrasyonlu editör
+
+# Claude Code kullanım örneği
+claude "Bu Express API'ye rate limiting ekle"
+claude "Bu React componentini test et"
+claude "Bu SQL sorgusunu optimize et"</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> AI asistanları kod yazmak için kullanın ama üretilen kodu mutlaka gözden geçirin. AI, güvenlik açıkları veya performans sorunları içeren kod üretebilir.
+</div>
+
+<h3>2. Build ve Bundling Araçları</h3>
+
+<h4>Vite</h4>
+<p>Vite, 2026'da frontend projeler için standart build aracı haline gelmiştir. ESM tabanlı dev server'ı ve Rollup tabanlı production build'i ile öne çıkar.</p>
+
+<pre><code># Vite ile proje oluşturma
+npm create vite@latest my-app -- --template react-ts
+
+# Vite yapılandırması
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { compression } from 'vite-plugin-compression2';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    compression({ algorithm: 'brotliCompress' }),
+  ],
+  build: {
+    target: 'es2022',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
+  },
+});</code></pre>
+
+<h4>Turbopack ve Turborepo</h4>
+
+<pre><code># Turborepo — Monorepo yönetimi
+npx create-turbo@latest
+
+# turbo.json yapılandırması
+{
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "lint": {}
+  }
+}</code></pre>
+
+<h4>Biome — ESLint + Prettier Alternatifi</h4>
+
+<pre><code># Biome — tek araçta lint + format (Rust tabanlı, çok hızlı)
+npm install --save-dev @biomejs/biome
+
+# biome.json
+{
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "error"
+      }
+    }
+  }
+}
+
+# Kullanım
+npx biome check --apply .
+npx biome format --write .</code></pre>
+
+<h3>3. Framework'ler ve Meta-Framework'ler</h3>
+
+<table>
+<tr><th>Araç</th><th>Kullanım Alanı</th><th>Öne Çıkan Özellik</th></tr>
+<tr><td>Next.js 15+</td><td>React full-stack</td><td>Server Components, Turbopack</td></tr>
+<tr><td>Nuxt 4</td><td>Vue.js full-stack</td><td>Nitro engine, auto-imports</td></tr>
+<tr><td>Astro 5</td><td>İçerik siteleri</td><td>Zero JS default, island arch.</td></tr>
+<tr><td>SvelteKit 2</td><td>Svelte full-stack</td><td>Minimal JS, derleme zamanı</td></tr>
+<tr><td>Remix</td><td>React full-stack</td><td>Web standards, progressive enh.</td></tr>
+</table>
+
+<h3>4. Test Araçları</h3>
+
+<pre><code># Vitest — Vite tabanlı, Jest uyumlu test runner
+npm install --save-dev vitest @testing-library/react
+
+# vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+    },
+  },
+});</code></pre>
+
+<pre><code># Playwright — End-to-end test
+npm install --save-dev @playwright/test
+
+# playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  use: {
+    baseURL: 'http://localhost:3000',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    { name: 'chromium', use: { browserName: 'chromium' } },
+    { name: 'firefox', use: { browserName: 'firefox' } },
+    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+  ],
+});</code></pre>
+
+<h3>5. Veritabanı ve ORM Araçları</h3>
+
+<pre><code># Prisma — Type-safe ORM
+npm install prisma @prisma/client
+npx prisma init
+
+# Drizzle ORM — Hafif, performanslı alternatif
+npm install drizzle-orm
+npm install --save-dev drizzle-kit
+
+# drizzle.config.ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  schema: './src/db/schema.ts',
+  out: './drizzle',
+  driver: 'pg',
+  dbCredentials: {
+    connectionString: process.env.DATABASE_URL!,
+  },
+});</code></pre>
+
+<h3>6. Deployment ve DevOps</h3>
+
+<pre><code># Vercel — Next.js deployment
+vercel deploy --prod
+
+# Docker — Container tabanlı deployment
+docker build -t my-app .
+docker compose up -d
+
+# GitHub Actions — CI/CD
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build</code></pre>
+
+<h4>Deployment Platformları Karşılaştırma</h4>
+
+<table>
+<tr><th>Platform</th><th>En İyi Kullanım</th><th>Ücretsiz Plan</th></tr>
+<tr><td>Vercel</td><td>Next.js, frontend</td><td>Hobi projeleri</td></tr>
+<tr><td>Netlify</td><td>JAMstack, statik siteler</td><td>100GB bant genişliği</td></tr>
+<tr><td>Railway</td><td>Full-stack, backend</td><td>Kredi bazlı</td></tr>
+<tr><td>Fly.io</td><td>Docker, edge deploy</td><td>3 shared VM</td></tr>
+<tr><td>Cloudflare Pages</td><td>Statik + edge functions</td><td>Sınırsız bant genişliği</td></tr>
+</table>
+
+<h3>7. Performans ve Monitoring</h3>
+
+<pre><code># Lighthouse CI — Performans izleme
+npm install -g @lhci/cli
+lhci autorun
+
+# Sentry — Hata izleme
+npm install @sentry/nextjs
+
+# web-vitals — Gerçek kullanıcı metrikleri
+npm install web-vitals
+
+import { onLCP, onINP, onCLS } from 'web-vitals';
+onLCP(console.log);
+onINP(console.log);
+onCLS(console.log);</code></pre>
+
+<h3>8. Tasarım ve UI Araçları</h3>
+
+<pre><code># shadcn/ui — Kopyala-yapıştır bileşen kütüphanesi
+npx shadcn@latest init
+npx shadcn@latest add button card dialog
+
+# Tailwind CSS v4 — CSS-first yapılandırma
+npm install tailwindcss@latest
+
+# Storybook — Bileşen geliştirme ve dokümantasyon
+npx storybook@latest init</code></pre>
+
+<h3>9. Paket Yöneticileri</h3>
+
+<pre><code># pnpm — Hızlı ve disk dostu paket yöneticisi
+npm install -g pnpm
+pnpm install
+pnpm add react
+
+# Bun — JavaScript runtime + paket yöneticisi + bundler
+bun install
+bun run dev
+bun test
+
+# Node.js corepack ile paket yöneticisi
+corepack enable
+corepack prepare pnpm@latest --activate</code></pre>
+
+<div class="info">
+<strong>Bilgi:</strong> 2026 itibarıyla pnpm, npm'e göre 2-3 kat daha hızlı kurulum süresi ve %50+ daha az disk kullanımı sunmaktadır. Monorepo projeler için workspace desteği de güçlüdür.
+</div>
+
+<h3>10. Geliştirici Verimlilik Araçları</h3>
+
+<pre><code># Terminal araçları
+# Warp / Alacritty — Modern terminal emülatörleri
+# Starship — Cross-shell prompt
+# fzf — Fuzzy finder
+# lazygit — Terminal git arayüzü
+
+# API geliştirme
+# Bruno — Açık kaynak API istemcisi (Postman alternatifi)
+# Hoppscotch — Web tabanlı API test aracı
+
+# Veritabanı
+# TablePlus — GUI veritabanı yöneticisi
+# Prisma Studio — Prisma ORM görsel arayüzü
+npx prisma studio
+
+# Dokümentasyon
+# Mintlify — API dokümantasyonu
+# Docusaurus — Teknik dokümantasyon sitesi</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> Her yeni aracı hemen benimsemek yerine, mevcut araçlarınızı iyi öğrenin. Araç yorgunluğu (tool fatigue) üretkenliği düşürür. İhtiyaçlarınıza göre kademeli geçiş yapın.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>2026'da web geliştirme araç seti, AI asistanlar, Rust tabanlı build araçları (Vite, Biome, Turbopack) ve modern meta-framework'ler (Next.js, Astro, SvelteKit) etrafında şekillenmektedir. AI kod asistanları verimliliği artırırken, Vitest ve Playwright test yazımını kolaylaştırmaktadır. Drizzle ORM ve Prisma veritabanı işlemlerini type-safe hale getirirken, Vercel ve Cloudflare Pages deployment sürecini basitleştirmektedir. Önemli olan tüm araçları bilmek değil, projenizin ihtiyaçlarına en uygun araç setini seçmek ve derinlemesine öğrenmektir.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://vitejs.dev/" target="_blank">Vite Resmi Sitesi</a></li>
+<li><a href="https://biomejs.dev/" target="_blank">Biome — Linter ve Formatter</a></li>
+<li><a href="https://vitest.dev/" target="_blank">Vitest — Test Framework</a></li>
+<li><a href="https://playwright.dev/" target="_blank">Playwright — E2E Testing</a></li>
+<li><a href="https://turbo.build/" target="_blank">Turborepo Resmi Sitesi</a></li>
+<li><a href="https://orm.drizzle.team/" target="_blank">Drizzle ORM</a></li>
+<li><a href="https://ui.shadcn.com/" target="_blank">shadcn/ui</a></li>
+</ul>

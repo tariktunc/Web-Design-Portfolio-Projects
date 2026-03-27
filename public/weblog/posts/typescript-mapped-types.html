@@ -1,0 +1,214 @@
+<h2>TypeScript Mapped Types: Dinamik Tip Dönüşümleri</h2>
+
+<p>Mapped type'lar, mevcut tiplerin özelliklerini döngüleyerek yeni tipler oluşturmanızı sağlar. TypeScript'in en güçlü tip sistemi özelliklerinden biridir ve Partial, Required, Readonly gibi utility type'ların temelini oluşturur. Bu yazıda mapped type'ları sıfırdan ileri seviyeye kadar inceleyeceğiz.</p>
+
+<h3>Mapped Type Temelleri</h3>
+
+<pre><code>// Temel mapped type syntax
+type MappedType&lt;T&gt; = {
+  [K in keyof T]: T[K];
+};
+
+// Tüm özellikleri opsiyonel yapma (Partial'ın implementasyonu)
+type Opsiyonel&lt;T&gt; = {
+  [K in keyof T]?: T[K];
+};
+
+// Tüm özellikleri readonly yapma
+type SaltOkunur&lt;T&gt; = {
+  readonly [K in keyof T]: T[K];
+};
+
+// Tüm özellikleri zorunlu yapma
+type Zorunlu&lt;T&gt; = {
+  [K in keyof T]-?: T[K];  // -? opsiyonelliği kaldırır
+};
+
+// Readonly'yi kaldırma
+type Yazilabilir&lt;T&gt; = {
+  -readonly [K in keyof T]: T[K];
+};
+
+// Kullanım
+interface Kullanici {
+  readonly id: number;
+  isim: string;
+  email?: string;
+}
+
+type OpsiyonelKullanici = Opsiyonel&lt;Kullanici&gt;;
+type ZorunluKullanici = Zorunlu&lt;Kullanici&gt;;
+type YazilabilirKullanici = Yazilabilir&lt;Kullanici&gt;;</code></pre>
+
+<h3>Key Remapping (as ile)</h3>
+
+<p>TypeScript 4.1 ile gelen key remapping, anahtar adlarını dönüştürmenizi sağlar:</p>
+
+<pre><code>// Getter tipi oluşturma
+type Getters&lt;T&gt; = {
+  [K in keyof T as `get${Capitalize&lt;string & K&gt;}`]: () => T[K];
+};
+
+interface Kisi {
+  isim: string;
+  yas: number;
+}
+
+type KisiGetters = Getters&lt;Kisi&gt;;
+// { getIsim: () => string; getYas: () => number; }
+
+// Belirli tipleri filtreleme
+type SadeceFonksiyonlar&lt;T&gt; = {
+  [K in keyof T as T[K] extends Function ? K : never]: T[K];
+};
+
+interface Karisik {
+  isim: string;
+  yas: number;
+  selamla(): void;
+  hesapla(x: number): number;
+}
+
+type SadeceMetotlar = SadeceFonksiyonlar&lt;Karisik&gt;;
+// { selamla: () => void; hesapla: (x: number) => number; }
+
+// Event handler tipleri
+type EventHandlers&lt;T&gt; = {
+  [K in keyof T as `on${Capitalize&lt;string & K&gt;}Change`]: (
+    yeniDeger: T[K],
+    eskiDeger: T[K]
+  ) => void;
+};
+
+type KullaniciEventHandlers = EventHandlers&lt;Kullanici&gt;;
+// {
+//   onIdChange: (yeniDeger: number, eskiDeger: number) => void;
+//   onIsimChange: (yeniDeger: string, eskiDeger: string) => void;
+//   onEmailChange: ...
+// }</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Key remapping'de <code>never</code> döndürmek, o anahtarı sonuç tipinden tamamen çıkarır. Bu, filtreleme işlemleri için çok kullanışlıdır.
+</div>
+
+<h3>Mapped Type ile Utility Type İmplementasyonları</h3>
+
+<pre><code>// Pick implementasyonu
+type MyPick&lt;T, K extends keyof T&gt; = {
+  [P in K]: T[P];
+};
+
+// Omit implementasyonu
+type MyOmit&lt;T, K extends keyof T&gt; = {
+  [P in keyof T as P extends K ? never : P]: T[P];
+};
+
+// Record implementasyonu
+type MyRecord&lt;K extends keyof any, T&gt; = {
+  [P in K]: T;
+};
+
+// Readonly deep implementasyonu
+type DeepReadonly&lt;T&gt; = {
+  readonly [K in keyof T]: T[K] extends object
+    ? T[K] extends Function
+      ? T[K]
+      : DeepReadonly&lt;T[K]&gt;
+    : T[K];
+};
+
+// Partial deep implementasyonu
+type DeepPartial&lt;T&gt; = {
+  [K in keyof T]?: T[K] extends object
+    ? T[K] extends Function
+      ? T[K]
+      : DeepPartial&lt;T[K]&gt;
+    : T[K];
+};
+
+// Kullanım
+interface Ayarlar {
+  genel: {
+    tema: string;
+    dil: string;
+    bildirimler: {
+      email: boolean;
+      push: boolean;
+    };
+  };
+  profil: {
+    isim: string;
+    avatar: string;
+  };
+}
+
+type KismiAyarlar = DeepPartial&lt;Ayarlar&gt;;
+// Tüm iç içe özellikler de opsiyonel olur</code></pre>
+
+<h3>Pratik Mapped Type Örnekleri</h3>
+
+<pre><code>// Form doğrulama tipleri
+type FormHatalari&lt;T&gt; = {
+  [K in keyof T]?: string[];
+};
+
+type FormDokunuldu&lt;T&gt; = {
+  [K in keyof T]: boolean;
+};
+
+interface KayitFormu {
+  isim: string;
+  email: string;
+  sifre: string;
+}
+
+const hatalar: FormHatalari&lt;KayitFormu&gt; = {
+  email: ["Geçerli bir email adresi girin"],
+  sifre: ["En az 8 karakter olmalı", "Büyük harf içermeli"]
+};
+
+const dokunuldu: FormDokunuldu&lt;KayitFormu&gt; = {
+  isim: true,
+  email: true,
+  sifre: false
+};
+
+// API endpoint tipleri
+type CrudEndpoints&lt;T extends Record&lt;string, any&gt;&gt; = {
+  [K in keyof T as `${string & K}Getir`]: (id: number) => Promise&lt;T[K]&gt;;
+} & {
+  [K in keyof T as `${string & K}Listele`]: () => Promise&lt;T[K][]&gt;;
+} & {
+  [K in keyof T as `${string & K}Olustur`]: (veri: Omit&lt;T[K], "id"&gt;) => Promise&lt;T[K]&gt;;
+} & {
+  [K in keyof T as `${string & K}Sil`]: (id: number) => Promise&lt;boolean&gt;;
+};
+
+interface Modeller {
+  kullanici: { id: number; isim: string };
+  urun: { id: number; ad: string; fiyat: number };
+}
+
+type Api = CrudEndpoints&lt;Modeller&gt;;
+// kullaniciGetir, kullaniciListele, kullaniciOlustur, kullaniciSil
+// urunGetir, urunListele, urunOlustur, urunSil</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Aşırı karmaşık mapped type'lar, TypeScript derleyicisinin performansını olumsuz etkileyebilir ve hata mesajlarını okunaksız hale getirebilir. Karmaşık tipleri küçük, anlamlı parçalara bölerek hem okunabilirliği hem de performansı artırın.
+</div>
+
+<div class="info">
+  <strong>Bilgi:</strong> Mapped type'lar, TypeScript'in "tip seviyesinde programlama" yapmanızı sağlayan araçlarıdır. Conditional type'lar ve template literal type'lar ile birleştirildiğinde, çok karmaşık tip dönüşümleri ifade edebilirsiniz.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Mapped type'lar, TypeScript tip sisteminin en güçlü araçlarından biridir. Mevcut tiplerin özelliklerini dönüştürme, filtreleme ve yeniden adlandırma yeteneği ile kod tekrarını minimize edebilir ve tip güvenliğini artırabilirsiniz. Utility type'ların iç yapısını anlamak, kendi özel mapped type'larınızı oluşturmanızda size rehberlik edecektir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/mapped-types.html" target="_blank" rel="noopener noreferrer">TypeScript Handbook: Mapped Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html" target="_blank" rel="noopener noreferrer">Template Literal Types</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/utility-types.html" target="_blank" rel="noopener noreferrer">Utility Types</a></li>
+</ul>

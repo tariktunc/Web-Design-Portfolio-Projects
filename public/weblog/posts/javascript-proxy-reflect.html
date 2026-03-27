@@ -1,0 +1,233 @@
+<h2>JavaScript Proxy ve Reflect API</h2>
+
+<p>Proxy, JavaScript nesnelerinin temel işlemlerini (özellik okuma, yazma, silme, fonksiyon çağrısı vb.) yakalayıp özelleştirebilen bir meta-programlama aracıdır. Reflect API ise bu temel işlemlerin standart karşılıklarını sunar. Birlikte kullanıldıklarında doğrulama, loglama, önbellekleme, reactive programming ve sanal nesneler gibi güçlü pattern'ler oluşturulabilir.</p>
+
+<h3>1. Proxy Temelleri</h3>
+
+<p>Proxy, bir hedef nesne (target) ve bir işleyici nesne (handler) alır. Handler'daki trap fonksiyonları, hedef nesne üzerindeki işlemleri yakalar.</p>
+
+<pre><code>// Temel Proxy oluşturma
+const kullanici = { ad: "Tarık", yas: 30, email: "tarik@example.com" };
+
+const proxy = new Proxy(kullanici, {
+  // Özellik okuma trap'i
+  get(hedef, ozellik, alici) {
+    console.log(`Okunuyor: ${String(ozellik)}`);
+    return Reflect.get(hedef, ozellik, alici);
+  },
+
+  // Özellik yazma trap'i
+  set(hedef, ozellik, deger, alici) {
+    console.log(`Yazılıyor: ${String(ozellik)} = ${deger}`);
+    return Reflect.set(hedef, ozellik, deger, alici);
+  },
+
+  // Özellik silme trap'i
+  deleteProperty(hedef, ozellik) {
+    console.log(`Siliniyor: ${String(ozellik)}`);
+    return Reflect.deleteProperty(hedef, ozellik);
+  },
+
+  // in operatörü trap'i
+  has(hedef, ozellik) {
+    console.log(`Kontrol ediliyor: ${String(ozellik)}`);
+    return Reflect.has(hedef, ozellik);
+  }
+});
+
+proxy.ad;              // "Okunuyor: ad" → "Tarık"
+proxy.yas = 31;        // "Yazılıyor: yas = 31"
+"email" in proxy;      // "Kontrol ediliyor: email" → true
+delete proxy.email;    // "Siliniyor: email"</code></pre>
+
+<h3>2. Doğrulama Proxy'si</h3>
+
+<p>Proxy ile nesne özelliklerine yazma işlemlerini doğrulayabilir, tür güvenliği ve iş kurallarını zorunlu kılabilirsiniz.</p>
+
+<pre><code>// Schema tabanlı doğrulama
+function dogrulamaliNesne(hedef, sema) {
+  return new Proxy(hedef, {
+    set(obj, prop, deger) {
+      const kural = sema[prop];
+
+      if (!kural) {
+        throw new Error(`Bilinmeyen özellik: ${String(prop)}`);
+      }
+
+      // Tür kontrolü
+      if (kural.tip && typeof deger !== kural.tip) {
+        throw new TypeError(
+          `${String(prop)} tipi ${kural.tip} olmalı, ${typeof deger} verildi`
+        );
+      }
+
+      // Minimum/maximum kontrolü
+      if (kural.min !== undefined && deger &lt; kural.min) {
+        throw new RangeError(`${String(prop)} minimum ${kural.min} olmalı`);
+      }
+      if (kural.max !== undefined && deger > kural.max) {
+        throw new RangeError(`${String(prop)} maksimum ${kural.max} olmalı`);
+      }
+
+      // Pattern kontrolü
+      if (kural.pattern && !kural.pattern.test(deger)) {
+        throw new Error(`${String(prop)} geçersiz format`);
+      }
+
+      // Özel doğrulama
+      if (kural.dogrula && !kural.dogrula(deger)) {
+        throw new Error(`${String(prop)} doğrulama başarısız`);
+      }
+
+      return Reflect.set(obj, prop, deger);
+    }
+  });
+}
+
+// Kullanım
+const kullanici = dogrulamaliNesne({}, {
+  ad: { tip: "string", dogrula: (v) => v.length >= 2 },
+  yas: { tip: "number", min: 0, max: 150 },
+  email: { tip: "string", pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ }
+});
+
+kullanici.ad = "Tarık";              // ✅
+kullanici.yas = 30;                   // ✅
+kullanici.email = "tarik@example.com"; // ✅
+
+// kullanici.yas = -5;    // ❌ RangeError
+// kullanici.yas = "otuz"; // ❌ TypeError
+// kullanici.email = "geçersiz"; // ❌ Error</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Proxy trap'lerinde orijinal işlemi gerçekleştirmek için <code>Reflect</code> API'sini kullanın. Bu, varsayılan davranışı korurken ek mantık eklemenizi sağlar ve <code>this</code> bağlamını doğru şekilde aktarır.
+</div>
+
+<h3>3. Reactive Proxy (Vue.js Tarzı)</h3>
+
+<p>Vue 3'ün reactivity sistemi Proxy üzerine kuruludur. Basit bir reactive sistem implementasyonu ile bu mekanizmayı anlayabilirsiniz.</p>
+
+<pre><code>// Basit reactivity sistemi
+const bagimlilikler = new WeakMap();
+let aktifEtki = null;
+
+function reactive(nesne) {
+  return new Proxy(nesne, {
+    get(hedef, ozellik) {
+      // Bağımlılık toplama (dependency tracking)
+      if (aktifEtki) {
+        if (!bagimlilikler.has(hedef)) {
+          bagimlilikler.set(hedef, new Map());
+        }
+        const ozellikBagimliliklari = bagimliliklar.get(hedef);
+        if (!ozellikBagimliliklari.has(ozellik)) {
+          ozellikBagimliliklari.set(ozellik, new Set());
+        }
+        ozellikBagimliliklari.get(ozellik).add(aktifEtki);
+      }
+
+      const deger = Reflect.get(hedef, ozellik);
+      // İç içe nesneleri de reactive yap
+      return typeof deger === "object" && deger !== null
+        ? reactive(deger)
+        : deger;
+    },
+
+    set(hedef, ozellik, deger) {
+      const eskiDeger = hedef[ozellik];
+      const sonuc = Reflect.set(hedef, ozellik, deger);
+
+      // Değişiklik varsa etkileri tetikle
+      if (eskiDeger !== deger) {
+        const etkiler = bagimlilikler.get(hedef)?.get(ozellik);
+        etkiler?.forEach(etki => etki());
+      }
+
+      return sonuc;
+    }
+  });
+}
+
+function effect(fn) {
+  aktifEtki = fn;
+  fn(); // İlk çalıştırma — bağımlılıkları toplar
+  aktifEtki = null;
+}
+
+// Kullanım
+const durum = reactive({ sayac: 0, mesaj: "Merhaba" });
+
+effect(() => {
+  console.log(`Sayaç: ${durum.sayac}`);
+});
+
+durum.sayac++; // Otomatik: "Sayaç: 1"
+durum.sayac++; // Otomatik: "Sayaç: 2"</code></pre>
+
+<h3>4. Diğer Proxy Kullanım Alanları</h3>
+
+<pre><code>// 1. Negatif index desteği (Python tarzı)
+function negatifIndex(dizi) {
+  return new Proxy(dizi, {
+    get(hedef, prop) {
+      const index = Number(prop);
+      if (!isNaN(index) && index &lt; 0) {
+        return hedef[hedef.length + index];
+      }
+      return Reflect.get(hedef, prop);
+    }
+  });
+}
+
+const arr = negatifIndex([1, 2, 3, 4, 5]);
+console.log(arr[-1]); // 5
+console.log(arr[-2]); // 4
+
+// 2. Otomatik önbellekleme
+function onbellekliNesne(hesaplayici, ttl = 5000) {
+  const onbellek = new Map();
+
+  return new Proxy({}, {
+    get(_, prop) {
+      const simdi = Date.now();
+      const kayit = onbellek.get(prop);
+
+      if (kayit && simdi - kayit.zaman &lt; ttl) {
+        return kayit.deger;
+      }
+
+      const deger = hesaplayici(prop);
+      onbellek.set(prop, { deger, zaman: simdi });
+      return deger;
+    }
+  });
+}
+
+// 3. Revocable proxy (iptal edilebilir)
+const { proxy: gecici, revoke } = Proxy.revocable(
+  { gizli: "veri" },
+  { get: (h, p) => Reflect.get(h, p) }
+);
+
+console.log(gecici.gizli); // "veri"
+revoke(); // Proxy'yi iptal et
+// gecici.gizli; // TypeError: Cannot perform 'get' on a proxy that has been revoked</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> Proxy performans maliyeti taşır — her özellik erişimi trap fonksiyonunu tetikler. Performans kritik kod yollarında (tight loop'lar, render döngüleri) Proxy kullanmaktan kaçının. Proxy ile sarılan nesneler <code>===</code> karşılaştırmasında orijinal nesneden farklıdır.
+</div>
+
+<div class="info">
+<strong>Bilgi:</strong> Reflect API, Object üzerindeki işlemlerin fonksiyonel karşılıklarını sunar. <code>Reflect.get()</code>, <code>Reflect.set()</code>, <code>Reflect.has()</code> gibi metotlar boolean dönüş değeri ile başarı durumunu bildirir ve <code>this</code> bağlamını doğru aktarır.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Proxy ve Reflect API, JavaScript'te meta-programlama için benzersiz araçlardır. Doğrulama, reaktif programlama, önbellekleme, erişim kontrolü ve sanal nesneler gibi birçok ileri düzey pattern bu araçlarla mümkün hale gelir. Proxy'nin güçlü yanlarını performans maliyetleri ile dengeleyerek projelerinizde doğru yerlerde kullanın.</p>
+
+<h4>Kaynaklar</h4>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy" target="_blank" rel="noopener noreferrer">MDN — Proxy</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect" target="_blank" rel="noopener noreferrer">MDN — Reflect</a></li>
+  <li><a href="https://javascript.info/proxy" target="_blank" rel="noopener noreferrer">JavaScript.info — Proxy and Reflect</a></li>
+</ul>

@@ -1,0 +1,329 @@
+<h2>Node.js Test: Mocha, Jest ve Supertest</h2>
+
+<p>Test yazmak, güvenilir ve sürdürülebilir yazılım geliştirmenin temel taşıdır. Node.js ekosisteminde Mocha, Jest ve Supertest en popüler test araçları arasındadır. Bu rehberde bu üç aracı derinlemesine inceleyecek, birim testlerinden API testlerine kadar pratik örneklerle Node.js test yazımını ele alacağız.</p>
+
+<h3>1. Test Türleri ve Piramidi</h3>
+
+<p>Etkili bir test stratejisi oluşturmak için test türlerini anlamak gerekir:</p>
+
+<ul>
+<li><strong>Unit Test (Birim Testi):</strong> Tek bir fonksiyonu izole olarak test eder</li>
+<li><strong>Integration Test:</strong> Birden fazla birimin birlikte çalışmasını test eder</li>
+<li><strong>E2E Test:</strong> Uygulamanın tamamını kullanıcı perspektifinden test eder</li>
+</ul>
+
+<h3>2. Jest ile Test Yazmak</h3>
+
+<p>Jest, Facebook tarafından geliştirilen, sıfır yapılandırma ile çalışabilen güçlü bir test framework'üdür.</p>
+
+<pre><code># Kurulum
+npm install --save-dev jest
+# TypeScript için
+npm install --save-dev @types/jest ts-jest</code></pre>
+
+<pre><code>// package.json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  }
+}</code></pre>
+
+<h4>Temel Test Yapısı</h4>
+
+<pre><code>// math.js
+function add(a, b) {
+  return a + b;
+}
+
+function multiply(a, b) {
+  return a * b;
+}
+
+function divide(a, b) {
+  if (b === 0) throw new Error('Sıfıra bölme hatası');
+  return a / b;
+}
+
+module.exports = { add, multiply, divide };
+
+// math.test.js
+const { add, multiply, divide } = require('./math');
+
+describe('Math fonksiyonları', () => {
+  describe('add', () => {
+    test('iki pozitif sayıyı doğru toplar', () => {
+      expect(add(2, 3)).toBe(5);
+    });
+
+    test('negatif sayılarla çalışır', () => {
+      expect(add(-1, -2)).toBe(-3);
+    });
+  });
+
+  describe('divide', () => {
+    test('doğru bölme yapar', () => {
+      expect(divide(10, 2)).toBe(5);
+    });
+
+    test('sıfıra bölmede hata fırlatır', () => {
+      expect(() => divide(10, 0)).toThrow('Sıfıra bölme hatası');
+    });
+  });
+});</code></pre>
+
+<h4>Jest Mock ve Spy</h4>
+
+<pre><code>// userService.js
+const db = require('./database');
+
+async function getUserById(id) {
+  const user = await db.findUser(id);
+  if (!user) throw new Error('Kullanıcı bulunamadı');
+  return { ...user, fullName: `${user.firstName} ${user.lastName}` };
+}
+
+module.exports = { getUserById };
+
+// userService.test.js
+const { getUserById } = require('./userService');
+const db = require('./database');
+
+// database modülünü mock'la
+jest.mock('./database');
+
+describe('UserService', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('kullanıcıyı bulur ve fullName ekler', async () => {
+    db.findUser.mockResolvedValue({
+      id: 1,
+      firstName: 'Tarık',
+      lastName: 'Tunç',
+    });
+
+    const user = await getUserById(1);
+
+    expect(db.findUser).toHaveBeenCalledWith(1);
+    expect(user.fullName).toBe('Tarık Tunç');
+  });
+
+  test('kullanıcı bulunamazsa hata fırlatır', async () => {
+    db.findUser.mockResolvedValue(null);
+
+    await expect(getUserById(999)).rejects.toThrow('Kullanıcı bulunamadı');
+  });
+});</code></pre>
+
+<h3>3. Mocha ile Test Yazmak</h3>
+
+<p>Mocha, esnek yapısı ve geniş plugin desteğiyle bilinen bir test framework'üdür. Jest'ten farklı olarak assertion kütüphanesini kendiniz seçersiniz.</p>
+
+<pre><code># Kurulum
+npm install --save-dev mocha chai sinon</code></pre>
+
+<pre><code>// test/math.test.js
+const { expect } = require('chai');
+const { add, multiply, divide } = require('../math');
+
+describe('Math fonksiyonları', function() {
+  describe('add()', function() {
+    it('iki sayıyı doğru toplar', function() {
+      expect(add(2, 3)).to.equal(5);
+    });
+
+    it('ondalıklı sayılarla çalışır', function() {
+      expect(add(0.1, 0.2)).to.be.closeTo(0.3, 0.001);
+    });
+  });
+
+  describe('divide()', function() {
+    it('sıfıra bölmede hata fırlatır', function() {
+      expect(() => divide(10, 0)).to.throw('Sıfıra bölme hatası');
+    });
+  });
+});</code></pre>
+
+<h4>Mocha ile Async Test</h4>
+
+<pre><code>const { expect } = require('chai');
+const sinon = require('sinon');
+const { getUserById } = require('../userService');
+const db = require('../database');
+
+describe('UserService', function() {
+  let findUserStub;
+
+  beforeEach(function() {
+    findUserStub = sinon.stub(db, 'findUser');
+  });
+
+  afterEach(function() {
+    sinon.restore();
+  });
+
+  it('kullanıcıyı başarıyla getirir', async function() {
+    findUserStub.resolves({ id: 1, firstName: 'Tarık', lastName: 'Tunç' });
+
+    const user = await getUserById(1);
+    expect(user.fullName).to.equal('Tarık Tunç');
+    expect(findUserStub.calledOnceWith(1)).to.be.true;
+  });
+});</code></pre>
+
+<h3>4. Supertest ile API Testi</h3>
+
+<p>Supertest, Express uygulamalarının HTTP endpoint'lerini test etmek için kullanılır. Gerçek bir sunucu başlatmadan istekler gönderir.</p>
+
+<pre><code># Kurulum
+npm install --save-dev supertest</code></pre>
+
+<pre><code>// app.js
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+const users = [
+  { id: 1, name: 'Tarık', email: 'tarik@example.com' },
+];
+
+app.get('/api/users', (req, res) => {
+  res.json(users);
+});
+
+app.get('/api/users/:id', (req, res) => {
+  const user = users.find(u => u.id === parseInt(req.params.id));
+  if (!user) return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+  res.json(user);
+});
+
+app.post('/api/users', (req, res) => {
+  const { name, email } = req.body;
+  if (!name || !email) {
+    return res.status(400).json({ error: 'İsim ve email zorunludur' });
+  }
+  const newUser = { id: users.length + 1, name, email };
+  users.push(newUser);
+  res.status(201).json(newUser);
+});
+
+module.exports = app;</code></pre>
+
+<pre><code>// test/api.test.js (Jest + Supertest)
+const request = require('supertest');
+const app = require('../app');
+
+describe('Users API', () => {
+  describe('GET /api/users', () => {
+    test('tüm kullanıcıları döndürür', async () => {
+      const res = await request(app).get('/api/users');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toBeInstanceOf(Array);
+      expect(res.body.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('GET /api/users/:id', () => {
+    test('var olan kullanıcıyı döndürür', async () => {
+      const res = await request(app).get('/api/users/1');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('name');
+    });
+
+    test('olmayan kullanıcı için 404 döndürür', async () => {
+      const res = await request(app).get('/api/users/999');
+
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Kullanıcı bulunamadı');
+    });
+  });
+
+  describe('POST /api/users', () => {
+    test('yeni kullanıcı oluşturur', async () => {
+      const res = await request(app)
+        .post('/api/users')
+        .send({ name: 'Ali', email: 'ali@example.com' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.name).toBe('Ali');
+    });
+
+    test('eksik alanlarla 400 döndürür', async () => {
+      const res = await request(app)
+        .post('/api/users')
+        .send({ name: 'Ali' });
+
+      expect(res.status).toBe(400);
+    });
+  });
+});</code></pre>
+
+<h3>5. Test Coverage (Kapsam)</h3>
+
+<p>Test kapsamı, kodunuzun ne kadarının testlerle kapsandığını gösterir.</p>
+
+<pre><code>// Jest ile coverage
+npx jest --coverage
+
+// Çıktı örneği:
+// ----------|---------|----------|---------|---------|
+// File      | % Stmts | % Branch | % Funcs | % Lines |
+// ----------|---------|----------|---------|---------|
+// math.js   |   100   |   100    |   100   |   100   |
+// userSvc.js|    85   |    75    |   100   |    85   |
+// ----------|---------|----------|---------|---------|</code></pre>
+
+<pre><code>// jest.config.js — Coverage yapılandırması
+module.exports = {
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/**/*.test.js',
+    '!src/index.js',
+  ],
+};</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> %100 coverage hedeflemek yerine kritik iş mantığını kapsayan anlamlı testler yazmaya odaklanın. %80 civarı coverage çoğu proje için iyi bir hedeftir.
+</div>
+
+<h3>6. Jest vs Mocha Karşılaştırma</h3>
+
+<table>
+<tr><th>Özellik</th><th>Jest</th><th>Mocha</th></tr>
+<tr><td>Yapılandırma</td><td>Sıfır yapılandırma</td><td>Manuel kurulum</td></tr>
+<tr><td>Assertion</td><td>Dahili (expect)</td><td>Harici (Chai vb.)</td></tr>
+<tr><td>Mocking</td><td>Dahili</td><td>Harici (Sinon vb.)</td></tr>
+<tr><td>Coverage</td><td>Dahili</td><td>Harici (Istanbul)</td></tr>
+<tr><td>Hız</td><td>Paralel çalışır</td><td>Sıralı (varsayılan)</td></tr>
+<tr><td>Snapshot Test</td><td>Var</td><td>Yok (eklenti ile)</td></tr>
+</table>
+
+<div class="warning">
+<strong>Uyarı:</strong> Testlerinizi birbirinden bağımsız tutun. Her test kendi verisini oluşturmalı ve temizlemelidir. <code>beforeEach</code> ve <code>afterEach</code> bloklarını bu amaçla kullanın.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Node.js projelerinde test yazmak için Jest ve Mocha güçlü seçeneklerdir. Jest, dahili mocking, assertion ve coverage desteği ile hızlı başlangıç sağlar. Mocha ise esnekliği ve geniş plugin ekosiztemi ile öne çıkar. Supertest, her iki framework ile de API testleri yazmak için mükemmel bir tamamlayıcıdır. Hangi aracı seçerseniz seçin, düzenli test yazmayı alışkanlık haline getirmek projenizin kalitesini ve güvenilirliğini büyük ölçüde artıracaktır.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://jestjs.io/docs/getting-started" target="_blank">Jest Resmi Dokümantasyonu</a></li>
+<li><a href="https://mochajs.org/" target="_blank">Mocha Resmi Dokümantasyonu</a></li>
+<li><a href="https://github.com/ladjs/supertest" target="_blank">Supertest GitHub</a></li>
+<li><a href="https://sinonjs.org/" target="_blank">Sinon.js — Mocking Kütüphanesi</a></li>
+<li><a href="https://www.chaijs.com/" target="_blank">Chai — Assertion Kütüphanesi</a></li>
+</ul>

@@ -1,0 +1,329 @@
+<h2>Sass/SCSS Modern Kullanım Rehberi</h2>
+
+<p>Sass (Syntactically Awesome Style Sheets), CSS'in gücünü değişkenler, mixins, nesting, fonksiyonlar ve modüler mimari ile katlayarak artıran bir CSS ön işlemcisidir. Modern web projelerinde tasarım sistemi tutarlılığını korumak ve stil kodunu sürdürülebilir tutmak için Sass/SCSS vazgeçilmez bir araçtır. Bu rehberde <code>@use</code>/<code>@forward</code> sistemi, design tokens, mixins, fonksiyonlar ve CSS Modules ile entegrasyonu ele alacağız.</p>
+
+<h3>1. Nesting: Okunabilir Selector Hiyerarşisi</h3>
+
+<p>Sass nesting, CSS selector'larını ilişkilerine göre iç içe yazmanızı sağlar. Modern Sass'ta <code>&amp;</code> referansı ile BEM metodolojisi mükemmel uyum içinde çalışır.</p>
+
+<pre><code>// BEM ile SCSS nesting
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+  &amp;__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &amp;__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-gray-900);
+  }
+
+  &amp;__body {
+    color: var(--color-gray-600);
+    line-height: 1.6;
+  }
+
+  &amp;__footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-gray-200);
+  }
+
+  // Modifier
+  &amp;--featured {
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.2);
+  }
+
+  // Durum
+  &amp;:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+  }
+
+  // Ebeveyn bağlamı
+  .dark-theme &amp; {
+    background: var(--color-gray-800);
+    color: white;
+  }
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Nesting derinliğini 3 seviyeden fazla yapmaktan kaçının. Derin nesting, CSS özgüllüğünü (specificity) artırır ve bakımı zorlaştırır. <code>.block__element--modifier</code> yapısı genellikle yeterlidir.
+</div>
+
+<h3>2. @use ve @forward: Modern Modül Sistemi</h3>
+
+<p>Eski <code>@import</code> sisteminin yerini alan <code>@use</code> ve <code>@forward</code>, ad alanları (namespaces) ve kapsülleme ile çok daha güvenli bir modül sistemi sunar.</p>
+
+<pre><code>// _tokens.scss — Design token'ları
+$color-primary:     #3b82f6;
+$color-primary-600: #2563eb;
+$color-gray-900:    #111827;
+$color-gray-600:    #4b5563;
+$color-gray-200:    #e5e7eb;
+
+$spacing-base: 0.25rem; // 4px
+
+@function spacing($n) {
+  @return $spacing-base * $n;
+}
+
+$font-size-base: 1rem;
+$line-height:    1.5;
+$border-radius:  8px;
+
+// _mixins.scss — Paylaşılan mixinler
+@use 'sass:math';
+
+@mixin flex-center($gap: 0) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @if $gap &gt; 0 { gap: $gap; }
+}
+
+@mixin responsive($breakpoint) {
+  $breakpoints: (
+    'sm': 640px,
+    'md': 768px,
+    'lg': 1024px,
+    'xl': 1280px,
+  );
+  $value: map.get($breakpoints, $breakpoint);
+  @media (min-width: #{$value}) { @content; }
+}
+
+@mixin truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $lines;
+    overflow: hidden;
+  }
+}
+
+// _index.scss — Dışa aktarım merkezi (@forward)
+@forward 'tokens';
+@forward 'mixins';
+@forward 'functions';
+
+// Bileşen dosyasında kullanım
+@use '../styles' as s; // tüm exports 's.' namespace'i ile
+
+.hero {
+  padding: s.spacing(16) s.spacing(8);
+  background: s.$color-primary;
+
+  @include s.responsive('lg') {
+    padding: s.spacing(24) s.spacing(16);
+  }
+
+  &amp;__title {
+    @include s.truncate(2);
+    font-size: 2rem;
+  }
+}</code></pre>
+
+<h3>3. Mixins ve Fonksiyonlar: Yeniden Kullanılabilir Stiller</h3>
+
+<p>Mixins stil bloklarını, fonksiyonlar ise değerleri yeniden kullanmanızı sağlar. İkisi birlikte güçlü bir araç seti oluşturur.</p>
+
+<pre><code>// Buton varyantları için mixin
+@mixin button-variant($bg, $color: white, $hover-bg: null) {
+  $hover: if($hover-bg, $hover-bg, darken($bg, 10%));
+
+  background-color: $bg;
+  color: $color;
+  border: 2px solid transparent;
+
+  &amp;:hover {
+    background-color: $hover;
+  }
+  &amp;:focus-visible {
+    outline: 3px solid rgba($bg, 0.4);
+    outline-offset: 2px;
+  }
+  &amp;:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+
+  &amp;--primary   { @include button-variant(#3b82f6); }
+  &amp;--secondary { @include button-variant(#6b7280); }
+  &amp;--danger    { @include button-variant(#ef4444); }
+  &amp;--ghost {
+    @include button-variant(transparent, #374151);
+    border-color: #d1d5db;
+    &amp;:hover { background-color: #f3f4f6; }
+  }
+}
+
+// Fonksiyon örnekleri
+@use 'sass:math';
+@use 'sass:color';
+
+@function rem($px) {
+  @return math.div($px, 16) * 1rem;
+}
+
+@function readable-color($bg) {
+  @if color.lightness($bg) &gt; 50% {
+    @return #111827;
+  } @else {
+    @return white;
+  }
+}
+
+@function clamp-fluid($min, $max, $min-vw: 320px, $max-vw: 1280px) {
+  $slope: math.div($max - $min, $max-vw - $min-vw);
+  $intercept: $min - $slope * $min-vw;
+  @return clamp(#{$min}, #{$intercept} + #{$slope * 100}vw, #{$max});
+}
+
+// Kullanım
+h1 { font-size: clamp-fluid(rem(24), rem(48)); }
+</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>@function</code> değer döndürür ve CSS özellik değerlerinde kullanılır. <code>@mixin</code> ise CSS kural blokları döndürür ve <code>@include</code> ile dahil edilir. Bu farkı anlamak hangi yapıyı kullanacağınıza karar vermenizi kolaylaştırır.
+</div>
+
+<h3>4. Design Tokens ile Tema Yönetimi</h3>
+
+<p>Design tokens, renk, tipografi ve boşluk gibi tasarım kararlarını merkezi bir yerde yönetmenizi sağlar. Sass değişkenlerini CSS custom properties'e dönüştürmek, hem Sass hem de JavaScript'ten erişim imkânı verir.</p>
+
+<pre><code>// _themes.scss
+$themes: (
+  'light': (
+    'bg-primary':   #ffffff,
+    'bg-secondary': #f9fafb,
+    'text-primary': #111827,
+    'text-secondary': #6b7280,
+    'border':       #e5e7eb,
+    'accent':       #3b82f6,
+  ),
+  'dark': (
+    'bg-primary':   #111827,
+    'bg-secondary': #1f2937,
+    'text-primary': #f9fafb,
+    'text-secondary': #9ca3af,
+    'border':       #374151,
+    'accent':       #60a5fa,
+  ),
+);
+
+// CSS Custom Properties üret
+@mixin generate-theme($theme-map) {
+  @each $name, $value in $theme-map {
+    --color-#{$name}: #{$value};
+  }
+}
+
+:root {
+  @include generate-theme(map.get($themes, 'light'));
+}
+
+[data-theme='dark'] {
+  @include generate-theme(map.get($themes, 'dark'));
+}
+
+// Boyut sistemi
+$spacing-scale: (0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24);
+:root {
+  @each $step in $spacing-scale {
+    --space-#{$step}: #{$step * 0.25rem};
+  }
+}</code></pre>
+
+<h3>5. CSS Modules ile Entegrasyon</h3>
+
+<p>React ve Next.js projelerinde SCSS dosyalarını CSS Modules olarak kullanmak, class isimlerinin otomatik olarak scope edilmesini sağlar.</p>
+
+<pre><code>// Button.module.scss
+@use '../styles/tokens' as t;
+@use '../styles/mixins' as m;
+
+.button {
+  @include m.flex-center(0.5rem);
+  padding: t.spacing(2.5) t.spacing(5);
+  border-radius: t.$border-radius;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+
+  &amp;.primary {
+    background: t.$color-primary;
+    color: white;
+    &amp;:hover { background: t.$color-primary-600; }
+  }
+
+  &amp;.sm { padding: t.spacing(1.5) t.spacing(3); font-size: 0.875rem; }
+  &amp;.lg { padding: t.spacing(3)   t.spacing(6); font-size: 1.125rem; }
+}
+
+// Button.tsx — React bileşeni
+import styles from './Button.module.scss';
+import clsx from 'clsx';
+
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  children: React.ReactNode;
+  onClick?: () =&gt; void;
+}
+
+export function Button({ variant = 'primary', size = 'md', children, onClick }: ButtonProps) {
+  return (
+    &lt;button
+      className={clsx(styles.button, styles[variant], size !== 'md' &amp;&amp; styles[size])}
+      onClick={onClick}
+    &gt;
+      {children}
+    &lt;/button&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <strong>Dikkat:</strong> <code>@import</code> Sass'ta deprecated durumdadır ve gelecekteki bir sürümde kaldırılacaktır. Yeni projelerde ve mevcut projeleri güncellerken <code>@use</code>/<code>@forward</code> sistemine geçin. Bu sistem daha iyi kapsülleme ve performans sağlar.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Modern Sass/SCSS, <code>@use</code>/<code>@forward</code> modül sistemi, güçlü mixin ve fonksiyon altyapısı, design token yönetimi ve CSS Modules entegrasyonu ile kurumsal ölçekte stil mimarileri oluşturmanızı sağlar. Nesting ile okunabilirliği artırın, mixins ile kod tekrarını önleyin, design tokens ile temayı merkezi yönetin ve <code>@use</code>/<code>@forward</code> ile modülerliği benimseyin. Bu prensipler, büyüyen projelerde stil kodunu bakımı kolay tutmanın temelini oluşturur.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://sass-lang.com/documentation/" target="_blank" rel="noopener noreferrer">Sass Resmi Dokümantasyonu</a></li>
+  <li><a href="https://sass-lang.com/documentation/at-rules/use/" target="_blank" rel="noopener noreferrer">Sass — @use Kuralı</a></li>
+  <li><a href="https://sass-lang.com/documentation/at-rules/forward/" target="_blank" rel="noopener noreferrer">Sass — @forward Kuralı</a></li>
+  <li><a href="https://nextjs.org/docs/basic-features/built-in-css-support#sass-support" target="_blank" rel="noopener noreferrer">Next.js — Sass Desteği</a></li>
+  <li><a href="https://www.smashingmagazine.com/2021/05/css-architecture-large-scale-projects/" target="_blank" rel="noopener noreferrer">Smashing Magazine — Large Scale CSS Architecture</a></li>
+</ul>

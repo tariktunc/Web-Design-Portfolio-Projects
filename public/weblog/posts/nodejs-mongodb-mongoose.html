@@ -1,0 +1,281 @@
+<h2>MongoDB ve Mongoose: Node.js Veritabanı Rehberi</h2>
+
+<p>MongoDB, NoSQL veritabanları arasında en popüler document-oriented veritabanıdır. JSON benzeri BSON formatında veri saklayan MongoDB, esnek şema yapısı ve yatay ölçeklenebilirliği ile modern web uygulamalarında yaygın olarak tercih edilir. Mongoose ise MongoDB için Node.js'in en güçlü ODM (Object Document Mapper) kütüphanesidir. Bu rehberde MongoDB'nin temellerini, Mongoose ile şema tanımlama, CRUD operasyonları, ilişkiler, middleware'ler ve performans optimizasyonlarını kapsamlı şekilde inceleyeceğiz.</p>
+
+<h3>1. MongoDB Bağlantısı ve Mongoose Kurulumu</h3>
+
+<p>Mongoose, MongoDB'ye bağlanmak, şemalar tanımlamak ve veri doğrulama yapmak için güçlü bir API sunar. Connection management, production uygulamalarının temelini oluşturur. Bağlantı havuzu (connection pool), yeniden bağlanma stratejisi ve hata yönetimi doğru yapılandırılmalıdır.</p>
+
+<pre><code>const mongoose = require('mongoose');
+require('dotenv').config();
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/myapp';
+
+// Bağlantı seçenekleri
+const connectionOptions = {
+  maxPoolSize: 10,
+  minPoolSize: 2,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4
+};
+
+// Bağlantı fonksiyonu
+async function connectDB() {
+  try {
+    await mongoose.connect(MONGODB_URI, connectionOptions);
+    console.log('MongoDB bağlantısı başarılı');
+  } catch (error) {
+    console.error('MongoDB bağlantı hatası:', error.message);
+    process.exit(1);
+  }
+}
+
+// Bağlantı event'leri
+mongoose.connection.on('connected', () => console.log('Mongoose connected'));
+mongoose.connection.on('error', (err) => console.error('Mongoose error:', err));
+mongoose.connection.on('disconnected', () => console.log('Mongoose disconnected'));
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('MongoDB bağlantısı kapatıldı');
+  process.exit(0);
+});
+
+module.exports = connectDB;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Production ortamında MongoDB Atlas kullanmanız önerilir. Atlas, otomatik yedekleme, monitoring, otomatik ölçeklendirme ve güvenlik özellikleri sunar. Connection string'inizi environment variable olarak saklayın.
+</div>
+
+<h3>2. Şema Tanımlama ve Model Oluşturma</h3>
+
+<p>Mongoose şemaları, belgelerinizin yapısını, veri tiplerini, doğrulama kurallarını ve varsayılan değerlerini tanımlar. İyi tasarlanmış şemalar, veri bütünlüğünü sağlar ve uygulamanızın güvenilirliğini artırır.</p>
+
+<pre><code>const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'İsim alanı zorunludur'],
+    trim: true,
+    minlength: [2, 'İsim en az 2 karakter olmalıdır'],
+    maxlength: [50, 'İsim en fazla 50 karakter olabilir']
+  },
+  email: {
+    type: String,
+    required: [true, 'Email alanı zorunludur'],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, 'Geçerli bir email adresi giriniz']
+  },
+  password: {
+    type: String,
+    required: [true, 'Şifre alanı zorunludur'],
+    minlength: [8, 'Şifre en az 8 karakter olmalıdır'],
+    select: false  // Sorgularda şifreyi varsayılan olarak getirme
+  },
+  role: {
+    type: String,
+    enum: ['user', 'editor', 'admin'],
+    default: 'user'
+  },
+  avatar: String,
+  bio: { type: String, maxlength: 500 },
+  isActive: { type: Boolean, default: true },
+  lastLogin: Date,
+  loginAttempts: { type: Number, default: 0 },
+  posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }]
+}, {
+  timestamps: true,   // createdAt ve updatedAt otomatik eklenir
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual field
+userSchema.virtual('displayName').get(function() {
+  return `${this.name} (${this.role})`;
+});
+
+// Index tanımlama
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ name: 'text', bio: 'text' });  // Text search index
+
+// Pre-save middleware (şifre hash'leme)
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+// Instance method
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Static method
+userSchema.statics.findByEmail = function(email) {
+  return this.findOne({ email: email.toLowerCase() });
+};
+
+const User = mongoose.model('User', userSchema);
+module.exports = User;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> unique: true bir validation değil, bir MongoDB index'idir. Mongoose validation aşamasında duplicate key kontrolü yapmaz; bu hata MongoDB seviyesinde oluşur. Duplicate key hatalarını error handling middleware'inizde ele almayı unutmayın.
+</div>
+
+<h3>3. CRUD Operasyonları ve Sorgulama</h3>
+
+<p>Mongoose, MongoDB'nin güçlü sorgulama yeteneklerini kullanımı kolay bir API ile sunar. Filtreleme, sıralama, sayfalama, projeksiyon ve population gibi özellikler, verileri etkili şekilde yönetmenizi sağlar.</p>
+
+<pre><code>// CREATE
+const createUser = async (userData) => {
+  const user = new User(userData);
+  await user.save();
+  return user;
+  // veya: const user = await User.create(userData);
+};
+
+// READ - Gelişmiş sorgulama
+const getUsers = async (queryParams) => {
+  const { page = 1, limit = 10, sort = '-createdAt', search, role } = queryParams;
+
+  const filter = { isActive: true };
+  if (role) filter.role = role;
+  if (search) filter.$text = { $search: search };
+
+  const users = await User.find(filter)
+    .select('-password -__v')
+    .sort(sort)
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit))
+    .populate('posts', 'title slug -_id')
+    .lean();  // Plain JS object döndür (daha hızlı)
+
+  const total = await User.countDocuments(filter);
+
+  return {
+    data: users,
+    pagination: {
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit)
+    }
+  };
+};
+
+// UPDATE
+const updateUser = async (id, updateData) => {
+  const user = await User.findByIdAndUpdate(
+    id,
+    { $set: updateData },
+    {
+      new: true,          // Güncellenmiş belgeyi döndür
+      runValidators: true  // Validation kurallarını çalıştır
+    }
+  ).select('-password');
+
+  if (!user) throw new Error('Kullanıcı bulunamadı');
+  return user;
+};
+
+// DELETE (soft delete)
+const deleteUser = async (id) => {
+  const user = await User.findByIdAndUpdate(
+    id,
+    { isActive: false },
+    { new: true }
+  );
+  if (!user) throw new Error('Kullanıcı bulunamadı');
+  return user;
+};
+
+// Aggregation Pipeline
+const getUserStats = async () => {
+  return User.aggregate([
+    { $match: { isActive: true } },
+    { $group: {
+        _id: '$role',
+        count: { $sum: 1 },
+        latestLogin: { $max: '$lastLogin' }
+    }},
+    { $sort: { count: -1 } }
+  ]);
+};</code></pre>
+
+<h3>4. İlişkiler ve Population</h3>
+
+<p>MongoDB document-based olmasına rağmen, Mongoose'un populate özelliği ile belgeler arasında ilişki kurabilirsiniz. Referans tabanlı (normalized) ve gömülü (embedded/denormalized) olmak üzere iki temel ilişki türü vardır. Veri yapınızı tasarlarken okuma/yazma oranını, veri boyutunu ve erişim pattern'lerini göz önünde bulundurmalısınız.</p>
+
+<pre><code>// Post şeması (User ile ilişkili)
+const postSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  slug: { type: String, unique: true },
+  content: { type: String, required: true },
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  // Gömülü (embedded) ilişki - yorumlar
+  comments: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    text: { type: String, required: true, maxlength: 1000 },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  tags: [{ type: String, lowercase: true }],
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'archived'],
+    default: 'draft'
+  },
+  viewCount: { type: Number, default: 0 }
+}, { timestamps: true });
+
+// Slug otomatik oluşturma
+postSchema.pre('save', function(next) {
+  if (this.isModified('title')) {
+    this.slug = this.title
+      .toLowerCase()
+      .replace(/[^a-z0-9ğüşıöç]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+  next();
+});
+
+const Post = mongoose.model('Post', postSchema);
+
+// Population kullanımı
+const getPostWithAuthor = async (slug) => {
+  return Post.findOne({ slug, status: 'published' })
+    .populate('author', 'name avatar')
+    .populate('comments.user', 'name avatar')
+    .lean();
+};</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Sık birlikte okunan ve nadiren değişen veriler için embedding (gömülü) kullanın. Bağımsız olarak erişilen, sık güncellenen veya büyüyen veriler için referans kullanın. Bir belgenin 16MB sınırını aşabileceği durumlarda mutlaka referans tercih edin.
+</div>
+
+<h3>5. Performans Optimizasyonu</h3>
+
+<p>MongoDB performansını artırmak için doğru index stratejisi, sorgu optimizasyonu ve lean() kullanımı kritik öneme sahiptir. explain() metodu ile sorgu planlarını analiz edebilir ve bottleneck'leri tespit edebilirsiniz. Compound index'ler, sık kullanılan sorgu kombinasyonlarını hızlandırır.</p>
+
+<p>Büyük veri setlerinde cursor tabanlı sayfalama (cursor-based pagination) kullanmak, skip/limit'ten çok daha performanslıdır. lean() metodu Mongoose document wrapper'ı atlar ve plain JavaScript nesnesi döndürür; bu, okuma ağırlıklı operasyonlarda bellek kullanımını ve CPU süresini önemli ölçüde azaltır.</p>
+
+<h3>Sonuç</h3>
+
+<p>MongoDB ve Mongoose, Node.js uygulamalarında esnek ve güçlü bir veritabanı çözümü sunar. Şema tasarımı, doğrulama, ilişkiler ve performans optimizasyonu konularında doğru kararlar vermek, uygulamanızın ölçeklenebilirliğini ve bakımını doğrudan etkiler. Bu rehberdeki kavramları uygulamaya koyarak production-ready bir veritabanı katmanı oluşturabilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+  <li><a href="https://mongoosejs.com/docs/guide.html" target="_blank" rel="noopener noreferrer">Mongoose Official Documentation</a></li>
+  <li><a href="https://www.mongodb.com/docs/manual/" target="_blank" rel="noopener noreferrer">MongoDB Manual</a></li>
+  <li><a href="https://www.mongodb.com/developer/products/mongodb/schema-design-anti-pattern-massive-arrays/" target="_blank" rel="noopener noreferrer">MongoDB Schema Design Anti-Patterns</a></li>
+  <li><a href="https://mongoosejs.com/docs/populate.html" target="_blank" rel="noopener noreferrer">Mongoose Population Guide</a></li>
+</ul>

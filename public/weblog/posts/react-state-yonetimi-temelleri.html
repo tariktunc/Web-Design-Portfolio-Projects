@@ -1,0 +1,328 @@
+<h2>React'te State Yönetimi: Temel Kavramlar ve Uygulamalar</h2>
+
+<p>State (durum), React bileşenlerinin dinamik ve etkileşimli olmasını sağlayan temel kavramdır. Kullanıcı etkileşimleri, API yanıtları veya zamanlayıcılar gibi olaylara bağlı olarak değişen verileri temsil eder. Bu yazıda React'te state yönetiminin temellerini, state tasarım prensiplerini ve yaygın hataları detaylı olarak inceleyeceğiz.</p>
+
+<h3>State vs Props: Temel Fark</h3>
+
+<p>State ve props arasındaki farkı anlamak React'in en önemli kavramlarından biridir:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Özellik</th>
+      <th>State</th>
+      <th>Props</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Sahiplik</td>
+      <td>Bileşenin kendisi yönetir</td>
+      <td>Üst bileşen tarafından aktarılır</td>
+    </tr>
+    <tr>
+      <td>Değiştirilebilirlik</td>
+      <td>setState ile değiştirilebilir</td>
+      <td>Salt okunur (read-only)</td>
+    </tr>
+    <tr>
+      <td>Amaç</td>
+      <td>Bileşenin iç durumunu yönetmek</td>
+      <td>Bileşeni yapılandırmak</td>
+    </tr>
+    <tr>
+      <td>Değiştiğinde</td>
+      <td>Re-render tetiklenir</td>
+      <td>Re-render tetiklenir</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>State, bir bileşenin "hafızası"dır. Render'lar arasında bilgiyi korur ve değiştiğinde bileşenin güncellenmesini sağlar.</blockquote>
+
+<h3>useState ile State Tanımlama</h3>
+
+<p>Modern React'te state yönetiminin en temel aracı <code>useState</code> hook'udur:</p>
+
+<pre><code>import { useState } from 'react';
+
+function RegistrationForm() {
+  // Farklı türlerde state tanımlama
+  const [name, setName] = useState('');           // string
+  const [age, setAge] = useState(0);              // number
+  const [isAgreed, setIsAgreed] = useState(false); // boolean
+  const [hobbies, setHobbies] = useState([]);      // array
+  const [address, setAddress] = useState({         // object
+    city: '',
+    district: '',
+    zipCode: ''
+  });
+
+  const handleAddressChange = (field, value) =&gt; {
+    // Object state güncelleme - spread operatörü ile
+    setAddress(prev =&gt; ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const addHobby = (hobby) =&gt; {
+    // Array state güncelleme - spread operatörü ile
+    setHobbies(prev =&gt; [...prev, hobby]);
+  };
+
+  const removeHobby = (index) =&gt; {
+    setHobbies(prev =&gt; prev.filter((_, i) =&gt; i !== index));
+  };
+
+  return (
+    &lt;form&gt;
+      &lt;input
+        value={name}
+        onChange={(e) =&gt; setName(e.target.value)}
+        placeholder="Adınız"
+      /&gt;
+      &lt;input
+        type="number"
+        value={age}
+        onChange={(e) =&gt; setAge(Number(e.target.value))}
+        placeholder="Yaşınız"
+      /&gt;
+      &lt;input
+        value={address.city}
+        onChange={(e) =&gt; handleAddressChange('city', e.target.value)}
+        placeholder="Şehir"
+      /&gt;
+      &lt;label&gt;
+        &lt;input
+          type="checkbox"
+          checked={isAgreed}
+          onChange={(e) =&gt; setIsAgreed(e.target.checked)}
+        /&gt;
+        Koşulları kabul ediyorum
+      &lt;/label&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+<h3>State Güncelleme Kuralları</h3>
+
+<h4>1. State Güncellemeleri Asenkrondur</h4>
+
+<p>React, performans için state güncellemelerini toplu (batch) olarak işler:</p>
+
+<pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = () =&gt; {
+    // YANLIŞ: Her ikisi de aynı count değerini kullanır
+    setCount(count + 1); // count hala 0
+    setCount(count + 1); // count hala 0 - sonuç: 1
+
+    // DOĞRU: Fonksiyonel güncelleme ile önceki değeri kullan
+    setCount(prev =&gt; prev + 1); // 0 + 1 = 1
+    setCount(prev =&gt; prev + 1); // 1 + 1 = 2 - sonuç: 2
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Sayaç: {count}&lt;/p&gt;
+      &lt;button onClick={handleClick}&gt;+2 Artır&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <p><strong>Uyarı:</strong> State güncelleme fonksiyonu çağrıldıktan hemen sonra state değeri hala eski değeri korur. Yeni değer bir sonraki render'da kullanılabilir. Bu nedenle güncellenmiş değere bağlı işlemlerde fonksiyonel güncelleme pattern'ini kullanın.</p>
+</div>
+
+<h4>2. State'i Doğrudan Mutate Etmeyin</h4>
+
+<pre><code>function TodoManager() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'React öğren', done: false }
+  ]);
+
+  // YANLIŞ - doğrudan mutasyon
+  const wrongToggle = (id) =&gt; {
+    const todo = todos.find(t =&gt; t.id === id);
+    todo.done = !todo.done; // Doğrudan mutasyon!
+    setTodos(todos); // Aynı referans - React değişikliği algılamaz
+  };
+
+  // DOĞRU - yeni referans oluşturma
+  const correctToggle = (id) =&gt; {
+    setTodos(prev =&gt;
+      prev.map(todo =&gt;
+        todo.id === id ? { ...todo, done: !todo.done } : todo
+      )
+    );
+  };
+
+  // Ekleme
+  const addTodo = (text) =&gt; {
+    setTodos(prev =&gt; [...prev, { id: Date.now(), text, done: false }]);
+  };
+
+  // Silme
+  const removeTodo = (id) =&gt; {
+    setTodos(prev =&gt; prev.filter(todo =&gt; todo.id !== id));
+  };
+
+  // Güncelleme
+  const updateTodo = (id, newText) =&gt; {
+    setTodos(prev =&gt;
+      prev.map(todo =&gt;
+        todo.id === id ? { ...todo, text: newText } : todo
+      )
+    );
+  };
+
+  return (
+    &lt;ul&gt;
+      {todos.map(todo =&gt; (
+        &lt;li key={todo.id}&gt;
+          &lt;span style={{ textDecoration: todo.done ? 'line-through' : 'none' }}&gt;
+            {todo.text}
+          &lt;/span&gt;
+          &lt;button onClick={() =&gt; correctToggle(todo.id)}&gt;Tamamla&lt;/button&gt;
+          &lt;button onClick={() =&gt; removeTodo(todo.id)}&gt;Sil&lt;/button&gt;
+        &lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+
+<h3>State Tasarım Prensipleri</h3>
+
+<h4>1. Derived State Kullanmayın</h4>
+
+<p>Mevcut state'ten hesaplanabilecek değerleri ayrı bir state olarak tanımlamayın:</p>
+
+<pre><code>function ShoppingCart() {
+  const [items, setItems] = useState([]);
+
+  // YANLIŞ: totalPrice ayrı bir state olarak tanımlamak
+  // const [totalPrice, setTotalPrice] = useState(0);
+
+  // DOĞRU: Mevcut state'ten hesapla (derived value)
+  const totalPrice = items.reduce((sum, item) =&gt; sum + item.price * item.quantity, 0);
+  const itemCount = items.reduce((sum, item) =&gt; sum + item.quantity, 0);
+  const hasItems = items.length &gt; 0;
+
+  return (
+    &lt;div&gt;
+      &lt;h3&gt;Sepetim ({itemCount} ürün)&lt;/h3&gt;
+      {items.map(item =&gt; (
+        &lt;div key={item.id}&gt;
+          {item.name} - {item.price} TL x {item.quantity}
+        &lt;/div&gt;
+      ))}
+      {hasItems &amp;&amp; &lt;p&gt;&lt;strong&gt;Toplam: {totalPrice.toFixed(2)} TL&lt;/strong&gt;&lt;/p&gt;}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <p><strong>İpucu:</strong> Bir değer mevcut state veya props'tan hesaplanabiliyorsa onu ayrı bir state olarak tanımlamayın. Bu, state senkronizasyon sorunlarını önler ve kodunuzu basitleştirir. Hesaplama maliyetli ise <code>useMemo</code> kullanabilirsiniz.</p>
+</div>
+
+<h4>2. State'i Mümkün Olduğunca Düz Tutun</h4>
+
+<pre><code>// KÖTÜ - iç içe yapı
+const [formData, setFormData] = useState({
+  user: {
+    personal: {
+      name: '',
+      email: ''
+    },
+    preferences: {
+      theme: 'light',
+      language: 'tr'
+    }
+  }
+});
+
+// İYİ - düz yapı
+const [name, setName] = useState('');
+const [email, setEmail] = useState('');
+const [theme, setTheme] = useState('light');
+const [language, setLanguage] = useState('tr');</code></pre>
+
+<h3>State Lifting (State'i Yukarı Taşıma)</h3>
+
+<p>İki kardeş bileşenin aynı state'i paylaşması gerektiğinde, state ortak üst bileşene taşınır:</p>
+
+<pre><code>function TemperatureConverter() {
+  const [celsius, setCelsius] = useState('');
+
+  const fahrenheit = celsius !== ''
+    ? ((parseFloat(celsius) * 9/5) + 32).toFixed(1)
+    : '';
+
+  return (
+    &lt;div&gt;
+      &lt;h3&gt;Sıcaklık Dönüştürücü&lt;/h3&gt;
+      &lt;TemperatureInput
+        label="Celsius"
+        value={celsius}
+        onChange={setCelsius}
+      /&gt;
+      &lt;TemperatureInput
+        label="Fahrenheit"
+        value={fahrenheit}
+        onChange={(f) =&gt; {
+          const c = ((parseFloat(f) - 32) * 5/9).toFixed(1);
+          setCelsius(c);
+        }}
+      /&gt;
+    &lt;/div&gt;
+  );
+}
+
+function TemperatureInput({ label, value, onChange }) {
+  return (
+    &lt;label&gt;
+      {label}:
+      &lt;input
+        type="number"
+        value={value}
+        onChange={(e) =&gt; onChange(e.target.value)}
+      /&gt;
+    &lt;/label&gt;
+  );
+}</code></pre>
+
+<div class="info">
+  <p><strong>Bilgi:</strong> React 18 ile birlikte state güncellemeleri artık tüm durumlarda (event handler'lar, setTimeout, Promise'ler) otomatik olarak batch (toplu) olarak işlenir. Bu, gereksiz re-render'ları azaltarak performansı artırır.</p>
+</div>
+
+<h3>Lazy Initialization</h3>
+
+<p>useState'e başlangıç değeri olarak maliyetli bir hesaplama gerekiyorsa, fonksiyon geçirin:</p>
+
+<pre><code>function ExpensiveComponent() {
+  // YANLIŞ: Her render'da hesaplanır
+  // const [data, setData] = useState(expensiveCalculation());
+
+  // DOĞRU: Yalnızca ilk render'da hesaplanır
+  const [data, setData] = useState(() =&gt; {
+    const saved = localStorage.getItem('appData');
+    return saved ? JSON.parse(saved) : { items: [], settings: {} };
+  });
+
+  return &lt;div&gt;{/* ... */}&lt;/div&gt;;
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>State yönetimi, React uygulamalarının kalbidir. Doğru state tasarımı, uygulamanızın performansını, bakım kolaylığını ve hata ayıklama sürecini doğrudan etkiler. State'i immutable tutmak, derived state'ten kaçınmak, state'i mümkün olduğunca düz yapıda tutmak ve fonksiyonel güncelleme pattern'ini kullanmak en temel en iyi uygulamalardır. Daha karmaşık state senaryoları için useReducer hook'unu ve Context API'yi incelemenizi öneriyorum.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/learn/state-a-components-memory" target="_blank" rel="noopener noreferrer">React Docs - State: A Component's Memory</a></li>
+  <li><a href="https://react.dev/learn/choosing-the-state-structure" target="_blank" rel="noopener noreferrer">React Docs - Choosing the State Structure</a></li>
+  <li><a href="https://react.dev/learn/sharing-state-between-components" target="_blank" rel="noopener noreferrer">React Docs - Sharing State Between Components</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" target="_blank" rel="noopener noreferrer">MDN - Array Referansı</a></li>
+</ul>

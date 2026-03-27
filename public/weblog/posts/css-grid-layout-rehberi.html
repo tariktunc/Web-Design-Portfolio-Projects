@@ -1,0 +1,242 @@
+<h2>CSS Grid Layout: Modern Sayfa Düzeni Rehberi</h2>
+
+<p>CSS Grid Layout, iki boyutlu düzenleme sistemiyle web sayfalarının yapısını kökten değiştirdi. Satır ve sütunları aynı anda kontrol edebilme yeteneği, daha önce JavaScript veya karmaşık CSS hack'leri gerektiren düzenleri birkaç satır kodla mümkün kılıyor. Bu rehberde CSS Grid'in temellerinden ileri seviye tekniklerine kadar her şeyi pratik örneklerle keşfedeceğiz.</p>
+
+<h3>1. Grid Temelleri: Container ve Track'ler</h3>
+
+<p>Grid sistemi, bir container elemana <code>display: grid</code> tanımlayarak başlar. Ardından <code>grid-template-columns</code> ve <code>grid-template-rows</code> ile satır ve sütun yapısını tanımlarsınız. <code>fr</code> birimi, kullanılabilir alanı orantılı olarak dağıtır ve Grid'in en güçlü özelliklerinden biridir.</p>
+
+<pre><code>/* Temel Grid Tanımı */
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr; /* 3 sütun: 1/4, 2/4, 1/4 oranında */
+  grid-template-rows: auto 1fr auto;  /* Header, Content, Footer */
+  gap: 1.5rem;                         /* Satır ve sütun boşluğu */
+  min-height: 100vh;
+}
+
+/* repeat() ile tekrarlayan yapı */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 eşit sütun */
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* minmax() ile esnek sütunlar */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Sabit + Esnek sütun kombinasyonu */
+.sidebar-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr; /* Sabit sidebar + esnek içerik */
+  gap: 2rem;
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>auto-fill</code> mümkün olduğunca çok sütun oluşturur (boş sütunlar dahil), <code>auto-fit</code> ise boş sütunları daraltarak mevcut item'ları genişletir. Çoğu responsive tasarımda <code>auto-fit</code> daha kullanışlıdır.
+</div>
+
+<h3>2. Grid Area ve Template ile Sayfa Düzeni</h3>
+
+<p>CSS Grid'in en etkileyici özelliklerinden biri <code>grid-template-areas</code> ile görsel bir harita oluşturabilmenizdir. Bu yöntemle sayfa düzeninizi ASCII art gibi tanımlayabilir, karmaşık layoutları son derece okunabilir şekilde kodlayabilirsiniz.</p>
+
+<pre><code>/* Grid Template Areas ile Dashboard Layout */
+.dashboard {
+  display: grid;
+  grid-template-areas:
+    "header  header  header"
+    "sidebar main    aside"
+    "sidebar footer  footer";
+  grid-template-columns: 240px 1fr 300px;
+  grid-template-rows: 64px 1fr 48px;
+  min-height: 100vh;
+  gap: 0;
+}
+
+.dashboard-header  { grid-area: header; }
+.dashboard-sidebar { grid-area: sidebar; }
+.dashboard-main    { grid-area: main; }
+.dashboard-aside   { grid-area: aside; }
+.dashboard-footer  { grid-area: footer; }
+
+/* Responsive: Mobilde tek sütun */
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-areas:
+      "header"
+      "main"
+      "sidebar"
+      "aside"
+      "footer";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Grid area isimlerinde nokta (<code>.</code>) kullanarak boş hücre oluşturabilirsiniz: <code>"header header ."</code> sağ üst köşeyi boş bırakır.
+</div>
+
+<h3>3. Grid Item Yerleştirme ve Span</h3>
+
+<p>Grid item'ları belirli satır ve sütun çizgilerine yerleştirebilir veya birden fazla hücreyi kaplayacak şekilde genişletebilirsiniz. Bu özellik, magazin tarzı düzenlemeler ve karmaşık dashboard tasarımları için idealdir.</p>
+
+<pre><code>/* Çizgi bazlı yerleştirme */
+.featured-article {
+  grid-column: 1 / 3;  /* 1. çizgiden 3. çizgiye: 2 sütun kapla */
+  grid-row: 1 / 3;     /* 1. çizgiden 3. çizgiye: 2 satır kapla */
+}
+
+/* span ile kaplama */
+.wide-card {
+  grid-column: span 2; /* 2 sütun kapla */
+}
+
+.tall-card {
+  grid-row: span 2;    /* 2 satır kapla */
+}
+
+/* Negatif çizgi numaraları */
+.full-width-banner {
+  grid-column: 1 / -1; /* İlk çizgiden son çizgiye: tam genişlik */
+}
+
+/* Magazin Layout */
+.magazine-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 200px;
+  gap: 1rem;
+}
+
+.magazine-grid .hero {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+}
+
+.magazine-grid .highlight {
+  grid-column: 3 / 5;
+}
+
+.magazine-grid .standard {
+  /* Otomatik yerleşim — Grid akışına bırak */
+}</code></pre>
+
+<h3>4. Subgrid ve İleri Seviye Teknikler</h3>
+
+<p>CSS Subgrid, iç içe grid'lerin ana grid'in çizgilerini miras almasını sağlar. Bu özellik, özellikle card listelerinde başlıkların ve butonların aynı hizada olmasını garantiler. Ayrıca <code>grid-auto-flow: dense</code> ile boşlukları otomatik doldurabilirsiniz.</p>
+
+<pre><code>/* Subgrid — İç içe hizalama */
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.card {
+  display: grid;
+  grid-template-rows: subgrid; /* Ana grid satırlarını miras al */
+  grid-row: span 3; /* Başlık, içerik, buton — 3 satır */
+}
+
+/* Dense packing — Boşlukları doldur */
+.masonry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-auto-flow: dense;
+  gap: 1rem;
+}
+
+/* Overlay Grid — Üst üste binen elemanlar */
+.hero-section {
+  display: grid;
+  grid-template: 1fr / 1fr; /* Tek hücre */
+}
+
+.hero-section > * {
+  grid-area: 1 / 1; /* Tüm çocuklar aynı hücrede */
+}
+
+.hero-section .overlay {
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem;
+  color: white;
+}
+
+/* Named Lines */
+.advanced-layout {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(1rem, 1fr)
+    [content-start] minmax(0, 70ch)
+    [content-end] minmax(1rem, 1fr)
+    [full-end];
+}
+
+.content { grid-column: content; }
+.full-bleed { grid-column: full; }</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Subgrid desteği modern tarayıcılarda (Chrome 117+, Firefox 71+, Safari 16+) mevcuttur. Eski tarayıcıları desteklemeniz gerekiyorsa, fallback olarak sabit yükseklikler veya Flexbox kullanabilirsiniz.
+</div>
+
+<h3>5. Grid vs Flexbox: Ne Zaman Hangisi?</h3>
+
+<p>Grid ve Flexbox rakip değil, tamamlayıcı araçlardır. Genel kural olarak: sayfa düzeni ve iki boyutlu yerleşimler için Grid, tek boyutlu hizalama ve component içi düzenlemeler için Flexbox kullanılır.</p>
+
+<pre><code>/* Grid: Sayfa düzeni */
+.page {
+  display: grid;
+  grid-template-columns: 1fr min(65ch, 100%) 1fr;
+}
+
+.page > * {
+  grid-column: 2;
+}
+
+/* Flexbox: Component içi düzenleme */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* İkisini birlikte kullanma */
+.product-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.product-page .gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.product-page .details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>CSS Grid Layout, modern web tasarımının en güçlü araçlarından biridir. <code>grid-template-areas</code> ile okunabilir düzenler, <code>auto-fill</code>/<code>auto-fit</code> ile media query gerektirmeyen responsive tasarımlar, subgrid ile mükemmel iç hizalama elde edebilirsiniz. Grid ve Flexbox'ı birlikte kullanarak, daha önce imkansız görünen düzenleri bile kolayca hayata geçirebilirsiniz. Firefox DevTools'un Grid Inspector'ı, öğrenme sürecinizde en büyük yardımcınız olacaktır.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout" target="_blank">MDN: CSS Grid Layout</a></li>
+  <li><a href="https://css-tricks.com/snippets/css/complete-guide-grid/" target="_blank">CSS-Tricks: A Complete Guide to Grid</a></li>
+  <li><a href="https://cssgridgarden.com/" target="_blank">Grid Garden — Oyunla Öğrenin</a></li>
+  <li><a href="https://web.dev/learn/css/grid/" target="_blank">web.dev: Grid</a></li>
+  <li><a href="https://gridbyexample.com/" target="_blank">Grid by Example — Rachel Andrew</a></li>
+</ul>

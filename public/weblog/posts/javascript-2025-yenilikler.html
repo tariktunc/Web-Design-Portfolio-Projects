@@ -1,0 +1,250 @@
+<h2>JavaScript 2025 Yenilikleri: ECMAScript Güncellemeleri</h2>
+
+<p>JavaScript ekosistemi her yıl yeni özelliklerle genişlemeye devam ediyor. ECMAScript 2025 (ES2025) ve yakın dönemde Stage 3-4 aşamasına ulaşan teklifler, dilin ifade gücünü ve geliştiricilerin üretkenliğini önemli ölçüde artırıyor. Bu rehberde <strong>Decorators</strong>, <strong>Record/Tuple</strong>, <strong>Pattern Matching</strong>, <strong>Temporal API</strong> ve <strong>Iterator Helpers</strong> gibi öne çıkan yenilikleri gerçek dünya örnekleriyle inceleyeceğiz.</p>
+
+<h3>1. Decorators: Sınıf ve Metod Dekoratörleri</h3>
+
+<p>Decorators, sınıflar, metotlar, erişimciler ve alanlar üzerine meta-programlama yapmanın standart yolunu sunar. TypeScript'te yıllardır deneysel olarak kullanılan bu özellik artık JavaScript standardının parçası haline geldi.</p>
+
+<pre><code>// Metod dekoratörü: önbellek (memoize)
+function memoize(target, context) {
+  const cache = new Map();
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) return cache.get(key);
+    const result = target.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+// Metod dekoratörü: loglama
+function log(target, context) {
+  return function (...args) {
+    console.log(`[${context.name}] çağrıldı:`, args);
+    const result = target.apply(this, args);
+    console.log(`[${context.name}] döndü:`, result);
+    return result;
+  };
+}
+
+// Sınıf dekoratörü: singleton
+function singleton(Class) {
+  let instance;
+  return class extends Class {
+    constructor(...args) {
+      if (instance) return instance;
+      super(...args);
+      instance = this;
+    }
+  };
+}
+
+@singleton
+class ConfigService {
+  @log
+  @memoize
+  fetchConfig(key) {
+    return expensiveConfigLookup(key);
+  }
+}
+
+const c1 = new ConfigService();
+const c2 = new ConfigService();
+console.log(c1 === c2); // true — singleton</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Decorators Stage 3 aşamasından geçerek ES2025 ile standarda dahil oldu. TypeScript 5.0+ ve modern Babel konfigürasyonlarıyla bugünden kullanabilirsiniz. Eski <code>experimentalDecorators</code> API'siyle uyumsuz olduğuna dikkat edin.
+</div>
+
+<h3>2. Record ve Tuple: Değişmez Veri Yapıları</h3>
+
+<p>Record ve Tuple, nesne ve dizilerin değişmez (immutable) ve değere göre eşitlik özelliğine sahip muadilleridir. React state yönetiminde ve fonksiyonel programlamada büyük kolaylık sağlar.</p>
+
+<pre><code>// Record: Değişmez nesne (# prefix ile)
+const k1 = #{ x: 10, y: 20 };
+const k2 = #{ x: 10, y: 20 };
+console.log(k1 === k2); // true! Değer karşılaştırması
+
+const obj1 = { x: 10 };
+const obj2 = { x: 10 };
+console.log(obj1 === obj2); // false (referans)
+
+// Tuple: Değişmez dizi
+const p1 = #[1, 2, 3];
+const p2 = #[1, 2, 3];
+console.log(p1 === p2); // true
+
+// Map key olarak kullanım — büyük avantaj
+const ziyaretler = new Map();
+ziyaretler.set(#{ x: 0, y: 0 }, 'Başlangıç noktası');
+console.log(ziyaretler.get(#{ x: 0, y: 0 })); // 'Başlangıç noktası'
+
+// Spread ile güncelleme
+let state = #{ count: 0, user: #{ name: 'Ali' } };
+state = #{ ...state, count: state.count + 1 };
+console.log(state.count); // 1</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Record ve Tuple, React ve Redux gibi state yönetim kütüphanelerinde shallow equality karşılaştırmalarını doğru sonuç verecek hale getirir. Artık derin karşılaştırma (deep equal) fonksiyonlarına gerek kalmaz.
+</div>
+
+<h3>3. Pattern Matching: switch'in Güçlü Halefi</h3>
+
+<p>Pattern Matching, karmaşık koşullu mantığı açık ve okunabilir sözdizimi ile ifade etmeyi sağlar. Rust ve F# gibi dillerden ilham alınan bu özellik JavaScript'e <code>match</code> ifadesi olarak geliyor.</p>
+
+<pre><code>// Temel pattern matching
+const mesaj = match (response) {
+  when { status: 200, body } =&gt; `Başarı: ${body}`,
+  when { status: 404 }       =&gt; 'Bulunamadı',
+  when { status: 500 }       =&gt; 'Sunucu hatası',
+  when { status }            =&gt; `Bilinmeyen: ${status}`,
+};
+
+// Tip kontrolü ile
+function formatDeger(deger) {
+  return match (deger) {
+    when (x: number) if x &lt; 0  =&gt; `Negatif: ${x}`,
+    when (x: number)            =&gt; `Pozitif: ${x}`,
+    when (x: string) if x === '' =&gt; 'Boş string',
+    when (x: string)            =&gt; `Metin: "${x}"`,
+    when null | undefined       =&gt; 'Değer yok',
+    when (x: Array)             =&gt; `${x.length} öğeli dizi`,
+    else                        =&gt; 'Bilinmeyen tip',
+  };
+}
+
+// Derin nesne desenleri
+const isle = (sinyal) =&gt; match (sinyal) {
+  when { type: 'HATA',   hata: { kod: 404 } } =&gt; tekrarDene(),
+  when { type: 'HATA',   hata: { kod }      } =&gt; logla(kod),
+  when { type: 'BAŞARI', veri               } =&gt; isleVeri(veri),
+  when { type: 'YÜKLEME'                    } =&gt; gosterSpinner(),
+};</code></pre>
+
+<h3>4. Temporal API: Tarih/Saat Yönetiminde Devrim</h3>
+
+<p>JavaScript'in <code>Date</code> nesnesi onlarca yıldır geliştiricileri zorladı. Temporal API, sezgisel, değişmez (immutable) ve timezone-aware bir tarih/saat kütüphanesi sunuyor.</p>
+
+<pre><code>// Anlık zaman
+const simdi = Temporal.Now.plainDateTimeISO();
+console.log(simdi.toString()); // "2025-03-27T14:30:00"
+
+const zonlu = Temporal.Now.zonedDateTimeISO('Europe/Istanbul');
+console.log(zonlu.toString());
+// "2025-03-27T14:30:00+03:00[Europe/Istanbul]"
+
+// Tarih oluşturma ve aritmetik (değişmez!)
+const toplanti = Temporal.PlainDateTime.from('2025-04-10T09:00:00');
+const birHaftaSonra = toplanti.add({ weeks: 1, hours: 2 });
+console.log(birHaftaSonra.toString()); // "2025-04-17T11:00:00"
+
+// Gün sayısı hesaplama
+const bugun  = Temporal.Now.plainDateISO();
+const hedef  = Temporal.PlainDate.from('2025-12-31');
+const fark   = bugun.until(hedef);
+console.log(`${fark.days} gün kaldı`);
+
+// Timezone dönüşümü
+const ist  = Temporal.ZonedDateTime.from('2025-04-01T10:00:00[Europe/Istanbul]');
+const tkyo = ist.withTimeZone('Asia/Tokyo');
+console.log(tkyo.toString());
+// "2025-04-01T16:00:00+09:00[Asia/Tokyo]"
+
+// Karşılaştırma
+const t1 = Temporal.PlainDate.from('2025-01-15');
+const t2 = Temporal.PlainDate.from('2025-06-20');
+console.log(Temporal.PlainDate.compare(t1, t2)); // -1 (t1 önce)</code></pre>
+
+<div class="warning">
+  <strong>Dikkat:</strong> Temporal API Stage 3 aşamasındadır ve henüz tüm tarayıcılarda yerel destek yoktur. Üretim kullanımı için <a href="https://github.com/js-temporal/temporal-polyfill">temporal-polyfill</a> paketini kullanın.
+</div>
+
+<h3>5. Iterator Helpers: Tembel Veri İşleme</h3>
+
+<p>Iterator Helpers, büyük veri setlerini belleğe tamamen yüklemeden işleme imkânı sunar. Tüm ara sonuçlar için yeni dizi oluşturmak yerine lazy (tembel) değerlendirme yapılır.</p>
+
+<pre><code>// Sonsuz iterator + lazy zincirleme
+function* sayiUret(bas = 0) {
+  let n = bas;
+  while (true) yield n++;
+}
+
+const sonuclar = sayiUret(1)
+  .map(x =&gt; x * x)
+  .filter(x =&gt; x % 2 === 0)
+  .take(5)
+  .toArray();
+console.log(sonuclar); // [4, 16, 36, 64, 100]
+
+// flatMap ile kelime listesi
+const cumleler = ['Merhaba Dünya', 'TypeScript harika'];
+const kelimeler = cumleler[Symbol.iterator]()
+  .flatMap(c =&gt; c.split(' '))
+  .toArray();
+console.log(kelimeler); // ['Merhaba', 'Dünya', 'TypeScript', 'harika']
+
+// reduce
+const toplam = [1, 2, 3, 4, 5][Symbol.iterator]()
+  .filter(x =&gt; x % 2 !== 0)
+  .reduce((acc, x) =&gt; acc + x, 0);
+console.log(toplam); // 9 (1+3+5)
+
+// Sayfalanmış API üzerinde lazy okuma
+async function* kayitlar() {
+  let sayfa = 1;
+  while (true) {
+    const data = await fetchPage(sayfa++);
+    if (!data.length) return;
+    yield* data;
+  }
+}
+
+const aktifler = await kayitlar()
+  .filter(u =&gt; u.active)
+  .take(10)
+  .toArray();</code></pre>
+
+<h3>6. Diğer ES2025 Yenilikleri</h3>
+
+<pre><code>// Promise.try — senkron hatalar için
+const sonuc = await Promise.try(() =&gt; {
+  if (Math.random() &gt; 0.5) throw new Error('Hata');
+  return 'Başarılı';
+}).catch(e =&gt; `Yakalandı: ${e.message}`);
+
+// RegExp.escape — güvenli regex oluşturma
+const aramaMetni = 'kullanıcı@email.com (test)';
+const pattern = new RegExp(RegExp.escape(aramaMetni), 'i');
+// Nokta ve parantezler otomatik escape edilir
+
+// Object.groupBy (artık yerleşik)
+const urunler = [
+  { ad: 'Elma',    kategori: 'meyve' },
+  { ad: 'Patates', kategori: 'sebze' },
+];
+const gruplar = Object.groupBy(urunler, u =&gt; u.kategori);
+// { meyve: [...], sebze: [...] }
+
+// String.isWellFormed / toWellFormed
+const bozuk = 'Merhaba \uD800 Dünya';
+console.log(bozuk.isWellFormed()); // false
+console.log(bozuk.toWellFormed()); // 'Merhaba  Dünya'</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> ES2025 özelliklerini bugünden kullanmak için Babel'in <code>@babel/preset-env</code> veya TypeScript'in yeni sürümlerini kullanabilirsiniz. <a href="https://tc39.es/proposals/">TC39 Proposals</a> sayfasından hangi özelliklerin hangi aşamada olduğunu takip edin.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>JavaScript 2025 ve yakın dönem ECMAScript güncellemeleri dilin ifade gücünü önemli ölçüde artırıyor. Decorators ile meta-programlama artık standart, Temporal API ile tarih sorunları tarih oluyor, Pattern Matching ile karmaşık koşullu mantık okunabilir hale geliyor, Record/Tuple ile değer eşitliği sorunu çözülüyor ve Iterator Helpers ile büyük veri setleri verimli biçimde işleniyor. Polyfill ve transpiler araçlarıyla bu özellikleri bugünden deneyebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://tc39.es/proposals/" target="_blank" rel="noopener noreferrer">TC39 — ECMAScript Teklifleri</a></li>
+  <li><a href="https://tc39.es/proposal-temporal/docs/" target="_blank" rel="noopener noreferrer">Temporal API Dokümantasyonu</a></li>
+  <li><a href="https://github.com/tc39/proposal-record-tuple" target="_blank" rel="noopener noreferrer">TC39 — Record &amp; Tuple Teklifi</a></li>
+  <li><a href="https://github.com/tc39/proposal-iterator-helpers" target="_blank" rel="noopener noreferrer">TC39 — Iterator Helpers Teklifi</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols" target="_blank" rel="noopener noreferrer">MDN — Iterator Protocol</a></li>
+</ul>

@@ -1,0 +1,216 @@
+<h2>tsconfig.json Kapsamlı Rehberi: Her Seçenek Açıklamalı</h2>
+
+<p>tsconfig.json, TypeScript derleyicisinin davranışını belirleyen yapılandırma dosyasıdır. Doğru yapılandırma, projenizin kalitesini ve geliştirici deneyimini doğrudan etkiler. Bu yazıda tsconfig.json'ın en önemli seçeneklerini kategorilere ayırarak detaylı bir şekilde açıklayacağız.</p>
+
+<h3>tsconfig.json Oluşturma</h3>
+
+<pre><code># Varsayılan tsconfig oluşturma
+npx tsc --init
+
+# Önerilen başlangıç yapılandırması
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}</code></pre>
+
+<h3>Target ve Module Seçenekleri</h3>
+
+<pre><code>{
+  "compilerOptions": {
+    // target: Derleme çıktısının JavaScript sürümü
+    // ES5, ES6/ES2015, ES2016-ES2023, ESNext
+    "target": "ES2022",
+
+    // module: Kullanılacak modül sistemi
+    // commonjs, es2015, es2020, es2022, esnext, node16, nodenext
+    "module": "ESNext",
+
+    // moduleResolution: Modüllerin nasıl bulunacağı
+    // classic, node, node16, nodenext, bundler
+    "moduleResolution": "bundler",
+
+    // lib: Dahil edilecek tip tanım kütüphaneleri
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    // Diğer modül seçenekleri
+    "esModuleInterop": true,    // CommonJS/ESM uyumluluğu
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,  // JSON dosyalarını import etme
+    "isolatedModules": true     // Her dosyanın bağımsız derlenmesi
+  }
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Modern projeler için <code>"module": "ESNext"</code> ve <code>"moduleResolution": "bundler"</code> kombinasyonu önerilir. Node.js projeleri için <code>"module": "NodeNext"</code> ve <code>"moduleResolution": "nodenext"</code> kullanın.
+</div>
+
+<h3>Strict Mode Seçenekleri</h3>
+
+<pre><code>{
+  "compilerOptions": {
+    // strict: true tüm strict seçenekleri etkinleştirir
+    "strict": true,
+
+    // strict: true şunları açar:
+    "noImplicitAny": true,           // Örtük any kullanımını yasaklar
+    "strictNullChecks": true,        // null/undefined kontrolünü zorunlu kılar
+    "strictFunctionTypes": true,     // Fonksiyon parametreleri contravariant
+    "strictBindCallApply": true,     // bind/call/apply tip kontrolü
+    "strictPropertyInitialization": true, // Class özelliklerinin init kontrolü
+    "noImplicitThis": true,          // Örtük this kullanımını yasaklar
+    "useUnknownInCatchVariables": true,  // catch(e) => e: unknown
+    "alwaysStrict": true,            // "use strict" ekler
+
+    // Ek kontroller (strict'te dahil değil)
+    "noUnusedLocals": true,          // Kullanılmayan değişken uyarısı
+    "noUnusedParameters": true,      // Kullanılmayan parametre uyarısı
+    "noImplicitReturns": true,       // Tüm dalların dönüş yapmasını zorunlu kılar
+    "noFallthroughCasesInSwitch": true, // Switch'te break zorunluluğu
+    "noUncheckedIndexedAccess": true,   // Index erişimde undefined kontrolü
+    "exactOptionalPropertyTypes": true  // Opsiyonel özellik hassasiyeti
+  }
+}</code></pre>
+
+<h3>Output Seçenekleri</h3>
+
+<pre><code>{
+  "compilerOptions": {
+    "outDir": "./dist",              // Çıktı dizini
+    "rootDir": "./src",              // Kaynak dizini
+    "declaration": true,             // .d.ts dosyaları oluştur
+    "declarationMap": true,          // .d.ts.map dosyaları
+    "sourceMap": true,               // .js.map dosyaları (debug)
+    "inlineSourceMap": false,        // Inline source map
+    "removeComments": false,         // Yorumları kaldır
+    "noEmit": false,                 // Çıktı dosyası oluşturma
+    "emitDeclarationOnly": false,    // Sadece .d.ts oluştur
+    "importHelpers": true,           // tslib'den helper import et
+    "downlevelIteration": true,      // ES5'e iteration desteği
+    "preserveConstEnums": false      // const enum'ları koru
+  }
+}</code></pre>
+
+<h3>Path Mapping ve Project References</h3>
+
+<pre><code>// Path alias yapılandırması
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@components/*": ["./components/*"],
+      "@hooks/*": ["./hooks/*"],
+      "@services/*": ["./services/*"],
+      "@utils/*": ["./utils/*"],
+      "@types/*": ["./types/*"]
+    }
+  }
+}
+
+// Project references (monorepo için)
+// tsconfig.json (root)
+{
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/frontend" },
+    { "path": "./packages/backend" }
+  ],
+  "files": [],
+  "compilerOptions": {
+    "composite": true
+  }
+}
+
+// packages/shared/tsconfig.json
+{
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}
+
+// packages/frontend/tsconfig.json
+{
+  "compilerOptions": {
+    "composite": true
+  },
+  "references": [
+    { "path": "../shared" }
+  ]
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Path alias'lar TypeScript derleyicisi tarafından çözülür ancak çalışma zamanında geçerli değildir. Bundler'ınızda (Webpack, Vite) veya Node.js'de aynı alias'ları ayrıca yapılandırmanız gerekir. Vite için <code>vite.config.ts</code>'de resolve.alias, Webpack için resolve.alias kullanın.
+</div>
+
+<h3>Proje Tiplerine Göre Önerilen Yapılandırmalar</h3>
+
+<pre><code>// React + Vite projesi
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src"]
+}
+
+// Node.js (ES Modules) projesi
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> TypeScript ekibi, topluluk tarafından önerilen başlangıç yapılandırmalarını <code>@tsconfig/recommended</code>, <code>@tsconfig/node20</code>, <code>@tsconfig/strictest</code> gibi paketlerle sunar. Bunları <code>"extends"</code> ile kullanarak hızlı başlangıç yapabilirsiniz: <code>"extends": "@tsconfig/node20/tsconfig.json"</code>
+</div>
+
+<h3>Sonuç</h3>
+
+<p>tsconfig.json, TypeScript projenizin kalitesini belirleyen kritik bir dosyadır. Strict mode'u etkinleştirmek, doğru module resolution stratejisini seçmek ve path alias'ları yapılandırmak, üretken bir geliştirme ortamı için vazgeçilmezdir. Projenizin türüne göre uygun yapılandırmayı seçerek başlayın ve ihtiyaçlarınıza göre özelleştirin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/tsconfig" target="_blank" rel="noopener noreferrer">TSConfig Reference</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/project-references.html" target="_blank" rel="noopener noreferrer">Project References</a></li>
+  <li><a href="https://github.com/tsconfig/bases" target="_blank" rel="noopener noreferrer">TSConfig Bases</a></li>
+</ul>

@@ -1,0 +1,300 @@
+<h2>VS Code Verimlilik: Extension'lar, Shortcut'lar ve İpuçları</h2>
+
+<p>Visual Studio Code, web geliştiricilerin büyük çoğunluğunun tercih ettiği kod editörüdür. Ancak VS Code'un gerçek gücü, doğru yapılandırma, extension'lar ve kısayollarla ortaya çıkar. Bu rehberde günlük geliştirme sürecinizi önemli ölçüde hızlandıracak VS Code ipuçlarını, olmazsa olmaz extension'ları ve az bilinen ama güçlü özellikleri detaylı olarak inceliyoruz.</p>
+
+<h3>Temel Kısayollar</h3>
+
+<p>VS Code'da verimli çalışmanın temeli klavye kısayollarıdır. En çok kullanacağınız kısayollar:</p>
+
+<pre><code># Dosya ve Navigasyon
+Ctrl+P              → Hızlı dosya açma (Quick Open)
+Ctrl+Shift+P        → Komut Paleti (Command Palette)
+Ctrl+Shift+E        → Explorer paneli
+Ctrl+Shift+F        → Projede arama
+Ctrl+Shift+G        → Git paneli
+Ctrl+`              → Terminal aç/kapat
+
+# Düzenleme
+Ctrl+D              → Kelimeyi seç / sonraki aynı kelimeyi seç
+Ctrl+Shift+L        → Tüm aynı kelimeleri seç
+Alt+Up/Down         → Satırı yukarı/aşağı taşı
+Shift+Alt+Up/Down   → Satırı kopyala
+Ctrl+Shift+K        → Satırı sil
+Ctrl+/              → Satırı yorum yap/aç
+Ctrl+Shift+A        → Blok yorum
+
+# Multi-cursor
+Alt+Click           → Birden fazla cursor ekle
+Ctrl+Alt+Up/Down    → Yukarı/aşağı cursor ekle
+Ctrl+Shift+L        → Seçili kelimenin tüm tekrarlarına cursor
+
+# Kod Navigasyonu
+F12                 → Tanıma git (Go to Definition)
+Alt+F12             → Tanıma göz at (Peek Definition)
+Shift+F12           → Referansları bul
+Ctrl+Shift+O        → Dosyadaki semboller
+Ctrl+T              → Projedeki semboller</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>Ctrl+P</code> ile dosya ararken, <code>:</code> ekleyerek satır numarasına, <code>@</code> ekleyerek sembol'e, <code>#</code> ekleyerek projedeki sembollere hızlıca atlayabilirsiniz. Örneğin: <code>page.tsx:25</code> dosyanın 25. satırına gider.
+</div>
+
+<h3>Olmazsa Olmaz Extension'lar</h3>
+
+<p>Her web geliştiricinin yüklemesi gereken temel extension'lar:</p>
+
+<pre><code>// .vscode/extensions.json
+{
+  "recommendations": [
+    // Kod Kalitesi
+    "dbaeumer.vscode-eslint",           // ESLint entegrasyonu
+    "esbenp.prettier-vscode",           // Prettier formatlama
+    "usernamehw.errorlens",             // Hataları satır içinde göster
+
+    // Geliştirme Deneyimi
+    "bradlc.vscode-tailwindcss",        // Tailwind CSS IntelliSense
+    "dsznajder.es7-react-js-snippets",  // React snippet'ları
+    "prisma.prisma",                     // Prisma ORM desteği
+
+    // Git
+    "eamodio.gitlens",                  // Git süper güçleri
+    "mhutchie.git-graph",              // Git dallanma grafiği
+
+    // Genel Araçlar
+    "christian-kohler.path-intellisense", // Dosya yolu otomatik tamamlama
+    "streetsidesoftware.code-spell-checker", // Yazım denetimi
+    "formulahendry.auto-rename-tag",     // HTML tag otomatik yeniden adlandırma
+    "naumovs.color-highlight",           // Renk kodlarını görselleştir
+
+    // AI Araçları
+    "github.copilot",                    // GitHub Copilot
+    "anthropic.claude-code"              // Claude Code
+  ]
+}</code></pre>
+
+<h3>Workspace Ayarları</h3>
+
+<p>Proje bazında VS Code ayarlarını yapılandırmak, takım tutarlılığı için kritiktir:</p>
+
+<pre><code>// .vscode/settings.json
+{
+  // Formatlama
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  // TypeScript
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  // Editor
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.inlineSuggest.enabled": true,
+  "editor.stickyScroll.enabled": true,
+  "editor.minimap.enabled": false,
+  "editor.wordWrap": "on",
+  "editor.tabSize": 2,
+  "editor.linkedEditing": true,
+
+  // Dosya Yönetimi
+  "files.autoSave": "onFocusChange",
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/coverage": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true
+  },
+
+  // Terminal
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.fontSize": 14,
+
+  // Emmet
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
+  "emmet.triggerExpansionOnTab": true,
+
+  // Tailwind CSS
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ]
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>.vscode/settings.json</code> dosyası repository'ye commit edilmelidir. Bu sayede tüm takım aynı editor ayarlarıyla çalışır. Kişisel tercihleri (tema, font boyutu) user settings'te, proje standartlarını workspace settings'te tutun.
+</div>
+
+<h3>VS Code Snippet'ları</h3>
+
+<p>Sık kullandığınız kod kalıpları için özel snippet'lar oluşturun:</p>
+
+<pre><code>// .vscode/typescriptreact.code-snippets
+{
+  "React Functional Component": {
+    "prefix": "rfc",
+    "body": [
+      "interface ${1:${TM_FILENAME_BASE}}Props {",
+      "  $2",
+      "}",
+      "",
+      "export function ${1:${TM_FILENAME_BASE}}({ $3 }: ${1:${TM_FILENAME_BASE}}Props) {",
+      "  return (",
+      "    <div>",
+      "      $0",
+      "    </div>",
+      "  );",
+      "}"
+    ],
+    "description": "React Functional Component with TypeScript"
+  },
+  "useState Hook": {
+    "prefix": "us",
+    "body": [
+      "const [${1:state}, set${1/(.*)/${1:/capitalize}/}] = useState<${2:string}>(${3:''});"
+    ],
+    "description": "useState hook with TypeScript"
+  },
+  "useEffect Hook": {
+    "prefix": "ue",
+    "body": [
+      "useEffect(() => {",
+      "  $1",
+      "",
+      "  return () => {",
+      "    $2",
+      "  };",
+      "}, [$3]);"
+    ],
+    "description": "useEffect hook with cleanup"
+  },
+  "Console Log Variable": {
+    "prefix": "clv",
+    "body": [
+      "console.log('${1:variable}:', ${1:variable});"
+    ],
+    "description": "Console log with variable name"
+  }
+}</code></pre>
+
+<h3>Debugging Yapılandırması</h3>
+
+<p>VS Code'un yerleşik debugger'ını yapılandırarak breakpoint'ler ile kod akışını izleyin:</p>
+
+<pre><code>// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: Debug Server",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Next.js: Debug Client",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src"
+    },
+    {
+      "name": "Jest: Current File",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": [
+        "${relativeFile}",
+        "--config",
+        "jest.config.ts",
+        "--no-cache"
+      ],
+      "console": "integratedTerminal"
+    }
+  ]
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Debug modunda <code>console.log</code> yerine breakpoint'ler kullanmak çok daha verimlidir. Breakpoint'lerle değişken değerlerini, call stack'i ve scope'u inceleyebilirsiniz. Conditional breakpoint'ler ile sadece belirli koşullarda durmasını sağlayabilirsiniz.
+</div>
+
+<h3>Verimlilik İpuçları</h3>
+
+<ul>
+  <li><strong>Zen Mode:</strong> <code>Ctrl+K Z</code> ile dikkat dağıtıcı tüm panelleri gizleyerek sadece koda odaklanın</li>
+  <li><strong>Sticky Scroll:</strong> Uzun dosyalarda hangi fonksiyon/class içinde olduğunuzu üstte gösterir</li>
+  <li><strong>Timeline View:</strong> Dosyanın Git geçmişini Explorer panelinde görüntüleyin</li>
+  <li><strong>Emmet Abbreviations:</strong> HTML/JSX yazarken <code>div.container>ul>li*5</code> gibi kısaltmalar kullanın</li>
+  <li><strong>Multi-root Workspaces:</strong> Birden fazla proje klasörünü tek bir pencerede açın</li>
+  <li><strong>Task Runner:</strong> <code>.vscode/tasks.json</code> ile build, test gibi görevleri tanımlayın</li>
+  <li><strong>Diff Editor:</strong> İki dosyayı karşılaştırmak için <code>code --diff file1.ts file2.ts</code></li>
+</ul>
+
+<h3>Terminal İpuçları</h3>
+
+<pre><code># VS Code entegre terminalde faydalı komutlar
+
+# Terminal'i ikiye böl
+Ctrl+Shift+5
+
+# Terminaller arası geçiş
+Ctrl+PageUp / Ctrl+PageDown
+
+# Terminal'i yeniden adlandır
+# Terminal sekmesine sağ tıklayıp "Rename" seçin
+
+# Terminal profile'ları (settings.json)
+"terminal.integrated.profiles.windows": {
+  "Git Bash": {
+    "source": "Git Bash",
+    "icon": "terminal-bash"
+  },
+  "PowerShell": {
+    "source": "PowerShell",
+    "icon": "terminal-powershell"
+  }
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> VS Code'un <code>Ctrl+Shift+P</code> ile açılan Command Palette'i binlerce komut sunar. "Preferences: Open Keyboard Shortcuts" ile tüm kısayolları görüntüleyebilir ve özelleştirebilirsiniz. Kendi workflow'unuza uygun kısayollar tanımlamaktan çekinmeyin.
+</div>
+
+<h3>Performans Optimizasyonu</h3>
+
+<p>Büyük projelerde VS Code'un hızlı kalması için:</p>
+
+<ul>
+  <li><code>files.watcherExclude</code> ile gereksiz klasörleri izlemeden çıkarın</li>
+  <li>Kullanmadığınız extension'ları devre dışı bırakın veya workspace bazında etkinleştirin</li>
+  <li><code>search.exclude</code> ile arama kapsamını daraltın</li>
+  <li>Minimap'i kapatın (<code>"editor.minimap.enabled": false</code>)</li>
+  <li>Extension bisect özelliği ile yavaşlatan extension'ı tespit edin</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>VS Code, doğru yapılandırıldığında geliştirme verimliliğinizi katbekat artıran güçlü bir araçtır. Kısayolları öğrenmek, doğru extension'ları seçmek, workspace ayarlarını standardize etmek ve snippet'larla tekrarlayan işleri otomatikleştirmek, profesyonel geliştirici deneyiminin temelini oluşturur. Bu rehberdeki ayarları projenize uygulayarak hemen farkı görmeye başlayabilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://code.visualstudio.com/docs" target="_blank" rel="noopener noreferrer">VS Code Resmi Dokümantasyonu</a></li>
+  <li><a href="https://code.visualstudio.com/docs/getstarted/keybindings" target="_blank" rel="noopener noreferrer">VS Code Klavye Kısayolları</a></li>
+  <li><a href="https://marketplace.visualstudio.com/" target="_blank" rel="noopener noreferrer">VS Code Extension Marketplace</a></li>
+  <li><a href="https://code.visualstudio.com/docs/editor/debugging" target="_blank" rel="noopener noreferrer">VS Code Debugging Rehberi</a></li>
+</ul>

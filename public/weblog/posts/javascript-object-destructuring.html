@@ -1,0 +1,195 @@
+<h2>JavaScript Destructuring: Object ve Array Ayrıştırma</h2>
+
+<p>Destructuring (ayrıştırma), ES6 ile gelen ve JavaScript'te veri yapılarından değer çıkarmayı kolaylaştıran güçlü bir sözdizimidir. Obje ve dizi ayrıştırma, fonksiyon parametreleri, iç içe yapılar ve varsayılan değerler ile birlikte kullanıldığında kod okunabilirliğini dramatik şekilde artırır.</p>
+
+<h3>1. Object Destructuring Temelleri</h3>
+
+<p>Obje ayrıştırma, bir objenin özelliklerini aynı isimli değişkenlere atar. Farklı isim vermek, varsayılan değer atamak ve iç içe objeleri ayrıştırmak mümkündür.</p>
+
+<pre><code>const kullanici = {
+  ad: "Tarık",
+  soyad: "Tunç",
+  yas: 30,
+  email: "tarik@example.com",
+  adres: {
+    sehir: "İstanbul",
+    ilce: "Kadıköy",
+    postaKodu: "34710"
+  },
+  yetenekler: ["JavaScript", "React", "Node.js"]
+};
+
+// Temel ayrıştırma
+const { ad, soyad, yas } = kullanici;
+console.log(ad, soyad); // "Tarık" "Tunç"
+
+// Farklı isim verme (alias)
+const { email: ePosta, yas: kullaniciYasi } = kullanici;
+console.log(ePosta); // "tarik@example.com"
+
+// Varsayılan değer
+const { telefon = "Belirtilmemiş", ad: isim } = kullanici;
+console.log(telefon); // "Belirtilmemiş"
+
+// İç içe (nested) ayrıştırma
+const { adres: { sehir, ilce } } = kullanici;
+console.log(sehir); // "İstanbul"
+
+// Rest operatörü ile kalan özellikler
+const { ad: _ad, soyad: _soyad, ...digerBilgiler } = kullanici;
+console.log(digerBilgiler);
+// { yas: 30, email: "...", adres: {...}, yetenekler: [...] }
+
+// Computed property names
+const alan = "email";
+const { [alan]: deger } = kullanici;
+console.log(deger); // "tarik@example.com"</code></pre>
+
+<h3>2. Array Destructuring</h3>
+
+<p>Dizi ayrıştırma pozisyona dayalıdır — eleman sırası önemlidir. Elemanları atlama, varsayılan değer ve rest operatörü ile birlikte kullanılabilir.</p>
+
+<pre><code>const renkler = ["kırmızı", "yeşil", "mavi", "sarı", "turuncu"];
+
+// Temel ayrıştırma
+const [birinci, ikinci, ucuncu] = renkler;
+console.log(birinci); // "kırmızı"
+
+// Eleman atlama
+const [, , ucuncuRenk] = renkler;
+console.log(ucuncuRenk); // "mavi"
+
+// Rest operatörü
+const [ana, ...diger] = renkler;
+console.log(diger); // ["yeşil", "mavi", "sarı", "turuncu"]
+
+// Varsayılan değer
+const [a, b, c, d, e, f = "mor"] = renkler;
+console.log(f); // "mor"
+
+// Değişken değiş tokuşu (swap) — geçici değişken gerektirmez
+let x = 10, y = 20;
+[x, y] = [y, x];
+console.log(x, y); // 20, 10
+
+// Fonksiyondan birden fazla değer döndürme
+function bolumeIsle(bolen, bolunen) {
+  return [Math.floor(bolunen / bolen), bolunen % bolen];
+}
+
+const [bolum, kalan] = bolumeIsle(3, 17);
+console.log(bolum, kalan); // 5, 2
+
+// String ayrıştırma
+const [ilkHarf, ...kalanHarfler] = "Merhaba";
+console.log(ilkHarf); // "M"</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Array destructuring, iterable olan her nesne üzerinde çalışır: String, Array, Map, Set, generator fonksiyonları ve özel iterable nesneler. Bu esneklik sayesinde farklı veri yapılarından aynı sözdizimi ile veri çıkarabilirsiniz.
+</div>
+
+<h3>3. Fonksiyon Parametrelerinde Destructuring</h3>
+
+<p>Fonksiyon parametrelerinde destructuring kullanmak, özellikle çok parametreli fonksiyonlarda okunabilirliği ve esnekliği büyük ölçüde artırır.</p>
+
+<pre><code>// Obje parametresi ayrıştırma
+function kullaniciKarti({ ad, soyad, yas, email = "Yok" }) {
+  return `
+    Ad: ${ad} ${soyad}
+    Yaş: ${yas}
+    Email: ${email}
+  `;
+}
+
+kullaniciKarti({ ad: "Tarık", soyad: "Tunç", yas: 30 });
+
+// Varsayılan değerli konfigürasyon objesi
+function sunucuBaslat({
+  port = 3000,
+  host = "localhost",
+  ssl = false,
+  logSeviyesi = "info",
+  maxBaglanti = 100
+} = {}) {
+  console.log(`Sunucu: ${ssl ? "https" : "http"}://${host}:${port}`);
+  console.log(`Log seviyesi: ${logSeviyesi}, Max bağlantı: ${maxBaglanti}`);
+}
+
+sunucuBaslat({ port: 8080, ssl: true });
+sunucuBaslat(); // Tüm varsayılanlar kullanılır
+
+// Array parametresi ayrıştırma
+const noktalar = [[1, 2], [3, 4], [5, 6]];
+const mesafeler = noktalar.map(([x, y]) => Math.sqrt(x ** 2 + y ** 2));
+
+// İç içe destructuring
+function siparisBilgisi({
+  musteri: { ad, sehir },
+  urunler,
+  toplam
+}) {
+  console.log(`${ad} (${sehir}): ${urunler.length} ürün, ${toplam} TL`);
+}
+
+siparisBilgisi({
+  musteri: { ad: "Tarık", sehir: "İstanbul" },
+  urunler: ["Laptop", "Mouse"],
+  toplam: 25350
+});</code></pre>
+
+<h3>4. İleri Düzey Destructuring Pattern'leri</h3>
+
+<pre><code>// Pattern 1: API yanıtı işleme
+async function veriGetir(url) {
+  const { data: { kullanicilar, toplam }, status } = await axios.get(url);
+  console.log(`${toplam} kullanıcıdan ${kullanicilar.length} tanesi alındı (${status})`);
+  return kullanicilar;
+}
+
+// Pattern 2: React props destructuring
+function ProfilKarti({ ad, avatar, bio, sosyalMedya: { twitter, github } = {} }) {
+  // Component kodu...
+}
+
+// Pattern 3: Regex gruplarını ayrıştırma
+const tarihStr = "2026-03-27";
+const { groups: { yil, ay, gun } } = tarihStr.match(
+  /(?&lt;yil&gt;\d{4})-(?&lt;ay&gt;\d{2})-(?&lt;gun&gt;\d{2})/
+);
+console.log(`${gun}.${ay}.${yil}`); // "27.03.2026"
+
+// Pattern 4: Map iterasyonu ile destructuring
+const ayarlar = new Map([
+  ["tema", "koyu"],
+  ["dil", "tr"],
+  ["bildirim", true]
+]);
+
+for (const [anahtar, deger] of ayarlar) {
+  console.log(`${anahtar}: ${deger}`);
+}
+
+// Pattern 5: Promise.allSettled sonuçları
+const sonuclar = await Promise.allSettled([p1, p2, p3]);
+const basarililar = sonuclar
+  .filter(({ status }) => status === "fulfilled")
+  .map(({ value }) => value);</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> <code>null</code> veya <code>undefined</code> değerini ayrıştırmaya çalışmak <code>TypeError</code> fırlatır. Güvenli olmayan veriler ile çalışırken varsayılan değer (<code>= {}</code>) kullanın veya optional chaining ile kontrol edin.
+</div>
+
+<div class="info">
+<strong>Bilgi:</strong> Destructuring sadece sözdizimsel kolaylık değildir; JavaScript motoru tarafından optimize edilir ve okunabilirliği artırırken performans kaybına neden olmaz.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Destructuring, modern JavaScript'in en sık kullanılan özelliklerinden biridir. Obje ve array ayrıştırma, fonksiyon parametrelerinde kullanımı, iç içe yapılar, varsayılan değerler ve rest operatörü ile birlikte güçlü ve okunabilir kod yazmanızı sağlar. API yanıtlarını işleme, konfigürasyon objeleri oluşturma ve React props yönetimi gibi günlük görevlerde destructuring'i aktif olarak kullanarak kodunuzu sadeleştirin.</p>
+
+<h4>Kaynaklar</h4>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment" target="_blank" rel="noopener noreferrer">MDN — Destructuring Assignment</a></li>
+  <li><a href="https://javascript.info/destructuring-assignment" target="_blank" rel="noopener noreferrer">JavaScript.info — Destructuring Assignment</a></li>
+  <li><a href="https://exploringjs.com/es6/ch_destructuring.html" target="_blank" rel="noopener noreferrer">Exploring ES6 — Destructuring</a></li>
+</ul>

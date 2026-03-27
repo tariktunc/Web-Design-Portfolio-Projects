@@ -1,0 +1,206 @@
+<h2>TypeScript Enum: Sabit Değerler Yönetimi</h2>
+
+<p>Enum'lar (enumeration), ilişkili sabit değerleri mantıksal bir grup altında toplamanızı sağlayan TypeScript özelliğidir. Kod okunabilirliğini artırır, magic number ve magic string kullanımını ortadan kaldırır. Bu yazıda TypeScript enum'larını tüm yönleriyle inceleyeceğiz.</p>
+
+<h3>Numeric Enum</h3>
+
+<p>En temel enum türüdür. Varsayılan olarak 0'dan başlayan sayısal değerler atanır:</p>
+
+<pre><code>// Varsayılan numeric enum
+enum Yon {
+  Kuzey,  // 0
+  Guney,  // 1
+  Dogu,   // 2
+  Bati    // 3
+}
+
+console.log(Yon.Kuzey); // 0
+console.log(Yon[0]);     // "Kuzey" (reverse mapping)
+
+// Başlangıç değeri belirleme
+enum HttpDurum {
+  OK = 200,
+  Created = 201,
+  BadRequest = 400,
+  Unauthorized = 401,
+  NotFound = 404,
+  InternalServerError = 500
+}
+
+function durumKontrol(kod: HttpDurum): string {
+  switch (kod) {
+    case HttpDurum.OK:
+      return "Başarılı";
+    case HttpDurum.NotFound:
+      return "Bulunamadı";
+    case HttpDurum.InternalServerError:
+      return "Sunucu Hatası";
+    default:
+      return "Bilinmeyen Durum";
+  }
+}</code></pre>
+
+<h3>String Enum</h3>
+
+<p>String enum'lar, daha okunabilir ve debug edilebilir değerler sunar:</p>
+
+<pre><code>enum SiparisDurumu {
+  Beklemede = "BEKLEMEDE",
+  Hazirlaniyor = "HAZIRLANIYOR",
+  Kargoda = "KARGODA",
+  TeslimEdildi = "TESLIM_EDILDI",
+  IptalEdildi = "IPTAL_EDILDI"
+}
+
+enum Renk {
+  Kirmizi = "#FF0000",
+  Yesil = "#00FF00",
+  Mavi = "#0000FF",
+  Siyah = "#000000",
+  Beyaz = "#FFFFFF"
+}
+
+function durumMesaji(durum: SiparisDurumu): string {
+  switch (durum) {
+    case SiparisDurumu.Beklemede:
+      return "Siparişiniz onay bekliyor.";
+    case SiparisDurumu.Kargoda:
+      return "Siparişiniz yola çıktı!";
+    case SiparisDurumu.TeslimEdildi:
+      return "Siparişiniz teslim edildi.";
+    default:
+      return "Durum güncelleniyor...";
+  }
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> String enum'lar, numeric enum'lardan farklı olarak reverse mapping desteklemez. Ancak hata ayıklama sırasında değerler doğrudan okunabilir olduğu için daha kullanışlıdır. API iletişiminde de string enum'lar tercih edilir.
+</div>
+
+<h3>const enum</h3>
+
+<p><code>const enum</code>, derleme zamanında inline edilir ve üretilen JavaScript'te enum objesi oluşturulmaz:</p>
+
+<pre><code>const enum Islem {
+  Topla = "TOPLA",
+  Cikar = "CIKAR",
+  Carp = "CARP",
+  Bol = "BOL"
+}
+
+// Derleme sonrası: const sonuc = "TOPLA"
+const sonuc = Islem.Topla;
+
+// Karşılaştırma
+// Normal enum - runtime'da obje oluşturur
+enum NormalYon {
+  Kuzey = "KUZEY",
+  Guney = "GUNEY"
+}
+
+// const enum - inline edilir, obje oluşturmaz
+const enum ConstYon {
+  Kuzey = "KUZEY",
+  Guney = "GUNEY"
+}
+
+// const enum ile reverse mapping yapılamaz
+// ConstYon["KUZEY"] // HATA!</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>const enum</code> kullanırken dikkatli olun. Eğer kütüphane geliştiriyorsanız, tüketiciler <code>isolatedModules</code> flag'i kullanıyorsa sorun yaşayabilir. Bu durumda normal enum veya union type tercih edin.
+</div>
+
+<h3>Enum Alternatifleri</h3>
+
+<p>Modern TypeScript'te enum'ların bazı dezavantajları nedeniyle alternatifler de yaygın kullanılır:</p>
+
+<pre><code>// Alternatif 1: Union Type (Önerilen)
+type SiparisDurumu = "beklemede" | "hazirlaniyor" | "kargoda" | "teslim_edildi";
+
+function durumKontrol(durum: SiparisDurumu): boolean {
+  return durum === "teslim_edildi";
+}
+
+// Alternatif 2: as const ile obje
+const HTTP_DURUM = {
+  OK: 200,
+  NotFound: 404,
+  ServerError: 500
+} as const;
+
+type HttpDurumDeger = typeof HTTP_DURUM[keyof typeof HTTP_DURUM];
+// 200 | 404 | 500
+
+function istek(durum: HttpDurumDeger): void {
+  if (durum === HTTP_DURUM.OK) {
+    console.log("Başarılı!");
+  }
+}
+
+// Alternatif 3: const object + helper
+const Renkler = {
+  Kirmizi: "#FF0000",
+  Yesil: "#00FF00",
+  Mavi: "#0000FF"
+} as const;
+
+type RenkAdi = keyof typeof Renkler;         // "Kirmizi" | "Yesil" | "Mavi"
+type RenkDeger = typeof Renkler[RenkAdi];     // "#FF0000" | "#00FF00" | "#0000FF"</code></pre>
+
+<h3>Enum ve Type Guard</h3>
+
+<pre><code>enum KullaniciTipi {
+  Admin = "ADMIN",
+  Editor = "EDITOR",
+  Okuyucu = "OKUYUCU"
+}
+
+interface AdminKullanici {
+  tip: KullaniciTipi.Admin;
+  isim: string;
+  superYetki: boolean;
+}
+
+interface EditorKullanici {
+  tip: KullaniciTipi.Editor;
+  isim: string;
+  kategoriler: string[];
+}
+
+interface OkuyucuKullanici {
+  tip: KullaniciTipi.Okuyucu;
+  isim: string;
+}
+
+type Kullanici = AdminKullanici | EditorKullanici | OkuyucuKullanici;
+
+function kullaniciIsle(kullanici: Kullanici): void {
+  switch (kullanici.tip) {
+    case KullaniciTipi.Admin:
+      console.log(`Admin: ${kullanici.isim}, Super: ${kullanici.superYetki}`);
+      break;
+    case KullaniciTipi.Editor:
+      console.log(`Editör: ${kullanici.isim}, Kategoriler: ${kullanici.kategoriler}`);
+      break;
+    case KullaniciTipi.Okuyucu:
+      console.log(`Okuyucu: ${kullanici.isim}`);
+      break;
+  }
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Enum vs Union Type tartışması TypeScript topluluğunda hâlâ devam etmektedir. Genel kural: basit durumlarda union type, runtime'da değerlere erişim gerekiyorsa enum veya as const object kullanın. React projelerinde union type ve as const yaklaşımı daha yaygındır.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript enum'ları, sabit değerleri organize etmenin güçlü bir yoludur. Numeric enum, string enum ve const enum arasındaki farkları anlamak, doğru seçimi yapmanızı sağlar. Modern TypeScript'te union type ve as const alternatifleri de değerlendirilmelidir. Projenizin ihtiyaçlarına göre en uygun yaklaşımı seçin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/enums.html" target="_blank" rel="noopener noreferrer">TypeScript Handbook: Enums</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions" target="_blank" rel="noopener noreferrer">Discriminated Unions</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types" target="_blank" rel="noopener noreferrer">Literal Types</a></li>
+</ul>

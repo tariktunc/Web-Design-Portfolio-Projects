@@ -1,0 +1,232 @@
+<h2>JavaScript Promise: Derinlemesine İnceleme</h2>
+
+<p>Promise, JavaScript'te asenkron işlemlerin sonucunu temsil eden bir nesnedir. Callback cehennemini (callback hell) ortadan kaldırmak için tasarlanan Promise yapısı, zincirleme işlemler ve hata yönetimi konusunda güçlü bir altyapı sunar. Bu yazıda Promise'in iç çalışma mekanizmasından, mikro görev kuyruğuna, özel Promise implementasyonuna kadar derinlemesine inceleme yapıyoruz.</p>
+
+<h3>1. Promise Yaşam Döngüsü</h3>
+
+<p>Bir Promise üç durumdan birinde olabilir: <strong>pending</strong> (beklemede), <strong>fulfilled</strong> (başarılı) veya <strong>rejected</strong> (başarısız). Durum bir kez değiştikten sonra geri dönüşü yoktur — bu özelliğe "settled" denir.</p>
+
+<pre><code>// Promise oluşturma
+const veriPromise = new Promise((resolve, reject) => {
+  const veri = veritabanindanOku();
+
+  if (veri) {
+    resolve(veri);  // fulfilled durumuna geçiş
+  } else {
+    reject(new Error("Veri bulunamadı"));  // rejected durumuna geçiş
+  }
+});
+
+// Promise durumlarını gözlemleme
+veriPromise
+  .then(veri => {
+    console.log("Başarılı:", veri);     // fulfilled
+  })
+  .catch(hata => {
+    console.error("Hata:", hata.message); // rejected
+  })
+  .finally(() => {
+    console.log("İşlem tamamlandı");     // her iki durumda da çalışır
+  });
+
+// Anlık çözülmüş Promise'ler
+const hemen = Promise.resolve(42);
+const hata = Promise.reject(new Error("Anlık hata"));</code></pre>
+
+<h3>2. Promise Zincirleme (Chaining)</h3>
+
+<p>Promise'lerin en güçlü özelliklerinden biri zincirleme yeteneğidir. Her <code>.then()</code> yeni bir Promise döner, bu da sıralı asenkron işlemleri düz bir akışta yazmayı mümkün kılar.</p>
+
+<pre><code>// Zincirleme ile sıralı işlemler
+function kullaniciIslemleri(kullaniciId) {
+  return kullaniciyiGetir(kullaniciId)
+    .then(kullanici => {
+      console.log("Kullanıcı bulundu:", kullanici.ad);
+      return profilGetir(kullanici.profilId);
+    })
+    .then(profil => {
+      console.log("Profil yüklendi:", profil.bio);
+      return arkadaslariGetir(profil.id);
+    })
+    .then(arkadaslar => {
+      console.log(`${arkadaslar.length} arkadaş bulundu`);
+      return arkadaslar;
+    })
+    .catch(hata => {
+      // Zincirdeki herhangi bir adımdan gelen hatayı yakalar
+      console.error("İşlem başarısız:", hata.message);
+      return []; // Varsayılan değer döndür
+    });
+}
+
+// Değer dönüştürme zinciri
+Promise.resolve(5)
+  .then(x => x * 2)      // 10
+  .then(x => x + 3)      // 13
+  .then(x => x.toString()) // "13"
+  .then(console.log);     // "13"</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> <code>.then()</code> içinde bir değer döndürürseniz, sonraki <code>.then()</code> bu değeri alır. Bir Promise döndürürseniz, sonraki <code>.then()</code> bu Promise'in sonucunu bekler. Bu sayede asenkron ve senkron işlemleri aynı zincirde karıştırabilirsiniz.
+</div>
+
+<h3>3. Promise Statik Metotları</h3>
+
+<p>Promise sınıfı, birden fazla Promise'i yönetmek için güçlü statik metotlar sunar. Her birinin farklı kullanım senaryoları vardır.</p>
+
+<pre><code>const p1 = fetch("/api/kullanicilar");
+const p2 = fetch("/api/urunler");
+const p3 = fetch("/api/siparisler");
+
+// Promise.all — Hepsi başarılı olmalı
+try {
+  const [kullanicilar, urunler, siparisler] = await Promise.all([p1, p2, p3]);
+  console.log("Tümü başarılı");
+} catch (hata) {
+  console.log("En az biri başarısız:", hata);
+}
+
+// Promise.allSettled — Sonuçları topla, hata olsa bile
+const sonuclar = await Promise.allSettled([p1, p2, p3]);
+sonuclar.forEach((sonuc, i) => {
+  if (sonuc.status === "fulfilled") {
+    console.log(`İstek ${i}: Başarılı`);
+  } else {
+    console.log(`İstek ${i}: Başarısız - ${sonuc.reason}`);
+  }
+});
+
+// Promise.race — İlk tamamlanan
+const enHizli = await Promise.race([
+  sunucu1danGetir(),
+  sunucu2danGetir(),
+  sunucu3danGetir()
+]);
+
+// Promise.any — İlk başarılı olan (ES2021)
+try {
+  const ilkBasarili = await Promise.any([
+    riskliIslem1(),
+    riskliIslem2(),
+    riskliIslem3()
+  ]);
+  console.log("En az biri başarılı:", ilkBasarili);
+} catch (hata) {
+  // AggregateError — hepsi başarısız olursa
+  console.log("Tümü başarısız:", hata.errors);
+}</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> <code>Promise.race</code> ilk settle olan (başarılı veya başarısız) Promise'i dönerken, <code>Promise.any</code> ilk başarılı olanı döner. Yalnızca tüm Promise'ler reject olursa <code>AggregateError</code> fırlatır.
+</div>
+
+<h3>4. Mikro Görev Kuyruğu (Microtask Queue)</h3>
+
+<p>Promise callback'leri mikro görev (microtask) kuyruğunda çalışır. Bu kuyruk, makro görev (setTimeout, setInterval) kuyruğundan önce işlenir. Bu davranışı anlamak, event loop'u kavramak için kritiktir.</p>
+
+<pre><code>console.log("1 - Senkron");
+
+setTimeout(() => {
+  console.log("2 - Makro görev (setTimeout)");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("3 - Mikro görev (Promise)");
+});
+
+queueMicrotask(() => {
+  console.log("4 - Mikro görev (queueMicrotask)");
+});
+
+console.log("5 - Senkron");
+
+// Çıktı sırası:
+// 1 - Senkron
+// 5 - Senkron
+// 3 - Mikro görev (Promise)
+// 4 - Mikro görev (queueMicrotask)
+// 2 - Makro görev (setTimeout)</code></pre>
+
+<div class="info">
+<strong>Bilgi:</strong> Mikro görevler mevcut çalışma yığını boşaldıktan hemen sonra, bir sonraki makro görevden önce işlenir. Bu yüzden Promise.then() callback'leri setTimeout(..., 0) callback'lerinden her zaman önce çalışır.
+</div>
+
+<h3>5. Kendi Promise Implementasyonunuzu Yazma</h3>
+
+<p>Promise'in nasıl çalıştığını gerçekten anlamak için basit bir implementasyon yazmak çok faydalıdır.</p>
+
+<pre><code>class BasitPromise {
+  #durum = "pending";
+  #deger = undefined;
+  #thenKuyrugu = [];
+  #catchKuyrugu = [];
+
+  constructor(calistirici) {
+    const resolve = (deger) => {
+      if (this.#durum !== "pending") return;
+      this.#durum = "fulfilled";
+      this.#deger = deger;
+      this.#thenKuyrugu.forEach(fn => fn(deger));
+    };
+
+    const reject = (neden) => {
+      if (this.#durum !== "pending") return;
+      this.#durum = "rejected";
+      this.#deger = neden;
+      this.#catchKuyrugu.forEach(fn => fn(neden));
+    };
+
+    try {
+      calistirici(resolve, reject);
+    } catch (hata) {
+      reject(hata);
+    }
+  }
+
+  then(onFulfilled) {
+    return new BasitPromise((resolve, reject) => {
+      const isleyici = (deger) => {
+        try {
+          const sonuc = onFulfilled(deger);
+          resolve(sonuc);
+        } catch (hata) {
+          reject(hata);
+        }
+      };
+
+      if (this.#durum === "fulfilled") {
+        queueMicrotask(() => isleyici(this.#deger));
+      } else {
+        this.#thenKuyrugu.push(isleyici);
+      }
+    });
+  }
+
+  catch(onRejected) {
+    if (this.#durum === "rejected") {
+      queueMicrotask(() => onRejected(this.#deger));
+    } else {
+      this.#catchKuyrugu.push(onRejected);
+    }
+    return this;
+  }
+}
+
+// Kullanım
+const p = new BasitPromise((resolve) => {
+  setTimeout(() => resolve("Merhaba!"), 1000);
+});
+
+p.then(deger => console.log(deger)); // 1 saniye sonra: "Merhaba!"</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Promise, JavaScript asenkron programlamasının temel yapı taşıdır. Yaşam döngüsünü, zincirleme mekanizmasını, statik metotları ve mikro görev kuyruğundaki davranışını anlamak, hem daha güvenilir kod yazmanızı hem de async/await'in perde arkasında ne yaptığını kavramanızı sağlar. Promise pattern'lerini projelerinizde bilinçli şekilde kullanarak hata yönetimini güçlendirebilir ve performansı artırabilirsiniz.</p>
+
+<h4>Kaynaklar</h4>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" target="_blank" rel="noopener noreferrer">MDN — Promise</a></li>
+  <li><a href="https://promisesaplus.com/" target="_blank" rel="noopener noreferrer">Promises/A+ Specification</a></li>
+  <li><a href="https://javascript.info/promise-basics" target="_blank" rel="noopener noreferrer">JavaScript.info — Promise Temelleri</a></li>
+  <li><a href="https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/" target="_blank" rel="noopener noreferrer">Jake Archibald — Tasks, Microtasks, Queues and Schedules</a></li>
+</ul>

@@ -1,0 +1,262 @@
+<h2>Next.js Middleware: Request/Response İşleme</h2>
+
+<p>Next.js Middleware, bir istek tamamlanmadan önce kod çalıştırmanıza olanak tanır. Gelen isteğe göre yönlendirme, header değiştirme, authentication kontrolü ve daha fazlasını yapabilirsiniz. Middleware, Edge Runtime üzerinde çalışır ve her route'a uygulanabilir. Bu rehberde middleware'in tüm yeteneklerini ve pratik kullanım senaryolarını inceleyeceğiz.</p>
+
+<h3>Middleware Temelleri</h3>
+
+<p>Middleware, projenizin kök dizininde (veya <code>src</code> klasöründe) <code>middleware.ts</code> dosyası olarak tanımlanır:</p>
+
+<pre><code>// middleware.ts (veya src/middleware.ts)
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  console.log('İstek URL:', request.nextUrl.pathname);
+
+  // İsteği olduğu gibi devam ettir
+  return NextResponse.next();
+}
+
+// Middleware'in çalışacağı path'leri belirle
+export const config = {
+  matcher: ['/dashboard/:path*', '/api/:path*'],
+};</code></pre>
+
+<h3>Matcher Konfigürasyonu</h3>
+
+<p>Middleware'in hangi path'lerde çalışacağını <code>config.matcher</code> ile belirlersiniz:</p>
+
+<pre><code>// Tek bir path
+export const config = {
+  matcher: '/about',
+};
+
+// Birden fazla path
+export const config = {
+  matcher: ['/about', '/dashboard/:path*', '/api/:path*'],
+};
+
+// Regex ile gelişmiş eşleşme
+export const config = {
+  matcher: [
+    // Statik dosyalar ve API hariç tümü
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+  ],
+};</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Matcher kullanmak performans açısından önemlidir. Matcher olmadan middleware tüm isteklerde çalışır, bu da statik dosyalar dahil her şeyi yavaşlatır.
+</div>
+
+<h3>Authentication Middleware</h3>
+
+<p>En yaygın kullanım senaryolarından biri, korumalı sayfalara erişim kontrolüdür:</p>
+
+<pre><code>// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+const protectedPaths = ['/dashboard', '/profile', '/settings'];
+const authPaths = ['/login', '/register'];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const token = request.cookies.get('auth-token')?.value;
+
+  // Korumalı sayfalar — token yoksa login'e yönlendir
+  const isProtected = protectedPaths.some((path) =>
+    pathname.startsWith(path)
+  );
+
+  if (isProtected && !token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Auth sayfaları — token varsa dashboard'a yönlendir
+  const isAuthPath = authPaths.some((path) => pathname.startsWith(path));
+
+  if (isAuthPath && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/profile/:path*', '/settings/:path*', '/login', '/register'],
+};</code></pre>
+
+<h3>Geolocation ve Dil Yönlendirmesi</h3>
+
+<p>Kullanıcının lokasyonuna veya tarayıcı diline göre yönlendirme yapabilirsiniz:</p>
+
+<pre><code>// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+const locales = ['tr', 'en', 'de'];
+const defaultLocale = 'tr';
+
+function getLocale(request: NextRequest): string {
+  // Accept-Language header'ından dili belirle
+  const acceptLanguage = request.headers.get('accept-language') || '';
+
+  for (const locale of locales) {
+    if (acceptLanguage.includes(locale)) {
+      return locale;
+    }
+  }
+
+  return defaultLocale;
+}
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Zaten locale prefix'i var mı kontrol et
+  const hasLocale = locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
+
+  if (hasLocale) return NextResponse.next();
+
+  // Locale ekleyerek yönlendir
+  const locale = getLocale(request);
+  const url = new URL(`/${locale}${pathname}`, request.url);
+
+  return NextResponse.redirect(url);
+}
+
+export const config = {
+  matcher: ['/((?!_next|api|favicon.ico).*)'],
+};</code></pre>
+
+<h3>Rate Limiting</h3>
+
+<p>Basit bir rate limiting mekanizması oluşturabilirsiniz:</p>
+
+<pre><code>// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+const rateLimit = new Map&lt;string, { count: number; timestamp: number }&gt;();
+
+const WINDOW_MS = 60 * 1000; // 1 dakika
+const MAX_REQUESTS = 100;
+
+export function middleware(request: NextRequest) {
+  if (!request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
+  const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+  const now = Date.now();
+  const windowData = rateLimit.get(ip);
+
+  if (!windowData || now - windowData.timestamp > WINDOW_MS) {
+    rateLimit.set(ip, { count: 1, timestamp: now });
+    return NextResponse.next();
+  }
+
+  if (windowData.count >= MAX_REQUESTS) {
+    return NextResponse.json(
+      { error: 'Çok fazla istek. Lütfen bekleyin.' },
+      { status: 429 }
+    );
+  }
+
+  windowData.count++;
+  return NextResponse.next();
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Bu rate limiting örneği basit bir in-memory yaklaşımdır. Production'da Redis veya Upstash gibi dağıtık bir çözüm kullanmanız gerekir çünkü Edge Runtime'da memory paylaşımı yoktur.
+</div>
+
+<h3>Header ve Cookie İşlemleri</h3>
+
+<pre><code>// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+
+  // Custom header ekle
+  response.headers.set('x-custom-header', 'middleware-value');
+  response.headers.set('x-request-id', crypto.randomUUID());
+
+  // Security headers
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+
+  // Cookie ayarla
+  if (!request.cookies.has('visitor-id')) {
+    response.cookies.set('visitor-id', crypto.randomUUID(), {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365, // 1 yıl
+    });
+  }
+
+  return response;
+}</code></pre>
+
+<h3>A/B Testing Middleware</h3>
+
+<pre><code>// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const bucket = request.cookies.get('ab-bucket')?.value;
+  const response = NextResponse.next();
+
+  if (!bucket) {
+    // Rastgele grup ata
+    const newBucket = Math.random() < 0.5 ? 'control' : 'variant';
+    response.cookies.set('ab-bucket', newBucket, {
+      maxAge: 60 * 60 * 24 * 30, // 30 gün
+    });
+
+    // Variant grubuna farklı sayfa göster
+    if (newBucket === 'variant' && request.nextUrl.pathname === '/pricing') {
+      return NextResponse.rewrite(new URL('/pricing-v2', request.url));
+    }
+  } else if (bucket === 'variant' && request.nextUrl.pathname === '/pricing') {
+    return NextResponse.rewrite(new URL('/pricing-v2', request.url));
+  }
+
+  return response;
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>NextResponse.rewrite()</code> URL'yi değiştirmeden farklı bir sayfa gösterir. Kullanıcı URL çubuğunda <code>/pricing</code> görürken aslında <code>/pricing-v2</code> içeriğini alır.
+</div>
+
+<h3>Edge Runtime Sınırlamaları</h3>
+
+<p>Middleware, Edge Runtime üzerinde çalıştığı için bazı sınırlamalar vardır:</p>
+
+<ul>
+  <li>Node.js API'lerinin tamamı kullanılamaz (fs, path, vb.)</li>
+  <li>Maksimum 1 MB boyut sınırı</li>
+  <li>Native Node.js modülleri desteklenmez</li>
+  <li>Dynamic code evaluation (<code>eval</code>) devre dışıdır</li>
+  <li>Sadece Web API'leri kullanılabilir (fetch, crypto, URL, vb.)</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Next.js Middleware, istek-yanıt döngüsünde güçlü bir müdahale noktası sunar. Authentication, yönlendirme, A/B testing ve header manipülasyonu gibi cross-cutting concern'leri merkezi bir noktada yönetmenize olanak tanır. Edge Runtime'da çalışması sayesinde son derece hızlıdır ancak Node.js API sınırlamalarını göz önünde bulundurmanız gerekir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/routing/middleware" target="_blank" rel="noopener noreferrer">Next.js Middleware</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/functions/next-response" target="_blank" rel="noopener noreferrer">NextResponse API</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/functions/next-request" target="_blank" rel="noopener noreferrer">NextRequest API</a></li>
+</ul>

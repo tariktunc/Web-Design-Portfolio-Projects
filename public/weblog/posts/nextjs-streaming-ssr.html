@@ -1,0 +1,297 @@
+<h2>Next.js Streaming SSR ve Progressive Rendering</h2>
+
+<p>Next.js App Router, React 18'in Streaming SSR özelliğini yerleşik olarak destekler. Sayfanın hazır olan bölümlerini anında göndererek, yavaş veri kaynaklarının tüm sayfayı engellemesini önler. <strong>Progressive rendering</strong> ile kullanıcılar içeriği aşamalı olarak görür ve daha hızlı bir deneyim yaşar. Bu yazıda Next.js'te streaming SSR'ın nasıl çalıştığını ve nasıl optimize edileceğini adım adım inceleyeceğiz.</p>
+
+<h3>Streaming SSR Nasıl Çalışır?</h3>
+
+<p>Geleneksel SSR'da tüm veri fetch'leri tamamlanmadan hiçbir HTML gönderilmez. Streaming SSR'da ise sayfa parça parça (chunk) gönderilir:</p>
+
+<ol>
+  <li>Sunucu, shell (layout, navigation, skeleton) HTML'ini hemen gönderir</li>
+  <li>Kullanıcı shell'i anında görür</li>
+  <li>Suspense boundary'leri içindeki veriler hazır oldukça stream edilir</li>
+  <li>Her parça geldiğinde DOM otomatik güncellenir</li>
+</ol>
+
+<pre><code>// app/dashboard/page.js
+import { Suspense } from 'react';
+import { RevenueChart } from '@/components/RevenueChart';
+import { LatestOrders } from '@/components/LatestOrders';
+import { TopProducts } from '@/components/TopProducts';
+import { DashboardSkeleton } from '@/components/Skeletons';
+
+export default function DashboardPage() {
+  return (
+    &lt;div className="dashboard"&gt;
+      &lt;h1&gt;Dashboard&lt;/h1&gt;
+
+      {/* Her bölüm bağımsız olarak stream edilir */}
+      &lt;div className="grid grid-cols-2 gap-4"&gt;
+        &lt;Suspense fallback={&lt;ChartSkeleton /&gt;}&gt;
+          &lt;RevenueChart /&gt;
+        &lt;/Suspense&gt;
+
+        &lt;Suspense fallback={&lt;OrdersSkeleton /&gt;}&gt;
+          &lt;LatestOrders /&gt;
+        &lt;/Suspense&gt;
+      &lt;/div&gt;
+
+      &lt;Suspense fallback={&lt;ProductsSkeleton /&gt;}&gt;
+        &lt;TopProducts /&gt;
+      &lt;/Suspense&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>loading.js ile Instant Loading States</h3>
+
+<p>Next.js App Router'da <code>loading.js</code> dosyası, route segment için otomatik bir Suspense boundary oluşturur:</p>
+
+<pre><code>// app/dashboard/loading.js
+export default function DashboardLoading() {
+  return (
+    &lt;div className="dashboard-skeleton"&gt;
+      &lt;div className="skeleton-header animate-pulse" /&gt;
+      &lt;div className="grid grid-cols-2 gap-4"&gt;
+        &lt;div className="skeleton-card animate-pulse" /&gt;
+        &lt;div className="skeleton-card animate-pulse" /&gt;
+      &lt;/div&gt;
+      &lt;div className="skeleton-table animate-pulse" /&gt;
+    &lt;/div&gt;
+  );
+}
+
+// Bu, aşağıdakine eşdeğerdir:
+// &lt;Suspense fallback={&lt;DashboardLoading /&gt;}&gt;
+//   &lt;DashboardPage /&gt;
+// &lt;/Suspense&gt;</code></pre>
+
+<h3>Async Server Components ile Streaming</h3>
+
+<p>Server Component'ler async olabilir ve doğrudan veri fetch'i yapabilir. Suspense boundary'leri içine yerleştirildiğinde otomatik olarak stream edilir:</p>
+
+<pre><code>// components/RevenueChart.jsx (Server Component)
+async function RevenueChart() {
+  // Bu fetch 2-3 saniye sürebilir
+  const revenue = await fetch('https://api.example.com/revenue', {
+    next: { revalidate: 3600 },
+  }).then((res) =&gt; res.json());
+
+  return (
+    &lt;div className="chart-container"&gt;
+      &lt;h2&gt;Gelir Grafiği&lt;/h2&gt;
+      &lt;div className="chart"&gt;
+        {revenue.months.map((month) =&gt; (
+          &lt;div
+            key={month.name}
+            className="bar"
+            style={{ height: `${month.value / 100}%` }}
+          &gt;
+            &lt;span&gt;{month.name}&lt;/span&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+// components/LatestOrders.jsx (Server Component)
+async function LatestOrders() {
+  // Bu fetch 1 saniye sürebilir
+  const orders = await fetch('https://api.example.com/orders/latest').then(
+    (res) =&gt; res.json()
+  );
+
+  return (
+    &lt;div className="orders-list"&gt;
+      &lt;h2&gt;Son Siparişler&lt;/h2&gt;
+      &lt;ul&gt;
+        {orders.map((order) =&gt; (
+          &lt;li key={order.id}&gt;
+            &lt;span&gt;{order.customer}&lt;/span&gt;
+            &lt;span&gt;{order.total} TL&lt;/span&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Nested Suspense ile Granüler Streaming</h3>
+
+<pre><code>export default function ProductPage({ params }) {
+  return (
+    &lt;div&gt;
+      {/* Ürün bilgisi hızlı yüklenir */}
+      &lt;Suspense fallback={&lt;ProductSkeleton /&gt;}&gt;
+        &lt;ProductDetails id={params.id} /&gt;
+      &lt;/Suspense&gt;
+
+      {/* Yorumlar daha yavaş yüklenebilir */}
+      &lt;Suspense fallback={&lt;ReviewsSkeleton /&gt;}&gt;
+        &lt;ProductReviews id={params.id} /&gt;
+
+        {/* Nested: Yorum istatistikleri en son yüklenebilir */}
+        &lt;Suspense fallback={&lt;StatsSkeleton /&gt;}&gt;
+          &lt;ReviewStats id={params.id} /&gt;
+        &lt;/Suspense&gt;
+      &lt;/Suspense&gt;
+
+      {/* Öneriler bağımsız stream edilir */}
+      &lt;Suspense fallback={&lt;RecommendationsSkeleton /&gt;}&gt;
+        &lt;Recommendations productId={params.id} /&gt;
+      &lt;/Suspense&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Suspense boundary'leri bağımsız olarak resolve olur. Yukarıdaki örnekte Reviews 3 saniyede, ProductDetails 1 saniyede ve Recommendations 2 saniyede hazır olabilir. Her biri hazır olduğu anda kullanıcıya gösterilir.
+</div>
+
+<h3>Skeleton Bileşenleri Best Practices</h3>
+
+<pre><code>// components/Skeletons.jsx
+export function CardSkeleton() {
+  return (
+    &lt;div className="card animate-pulse"&gt;
+      &lt;div className="h-4 bg-gray-200 rounded w-3/4 mb-4" /&gt;
+      &lt;div className="h-3 bg-gray-200 rounded w-full mb-2" /&gt;
+      &lt;div className="h-3 bg-gray-200 rounded w-5/6 mb-2" /&gt;
+      &lt;div className="h-3 bg-gray-200 rounded w-4/6" /&gt;
+    &lt;/div&gt;
+  );
+}
+
+export function TableSkeleton({ rows = 5 }) {
+  return (
+    &lt;div className="table-skeleton"&gt;
+      {Array.from({ length: rows }).map((_, i) =&gt; (
+        &lt;div key={i} className="flex gap-4 py-3 animate-pulse"&gt;
+          &lt;div className="h-4 bg-gray-200 rounded w-1/4" /&gt;
+          &lt;div className="h-4 bg-gray-200 rounded w-1/3" /&gt;
+          &lt;div className="h-4 bg-gray-200 rounded w-1/6" /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}
+
+// Skeleton, gerçek içerikle aynı boyutta olmalı — layout shift'i önler
+export function ChartSkeleton() {
+  return (
+    &lt;div className="chart-container" style={{ height: 400 }}&gt;
+      &lt;div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse" /&gt;
+      &lt;div className="h-full bg-gray-100 rounded animate-pulse" /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Parallel Data Fetching</h3>
+
+<pre><code>// Kötü: Sıralı fetch (waterfall)
+async function SlowDashboard() {
+  const revenue = await getRevenue();     // 2s
+  const orders = await getOrders();       // 1s
+  const products = await getProducts();   // 1.5s
+  // Toplam: ~4.5s
+
+  return &lt;div&gt;{/* render */}&lt;/div&gt;;
+}
+
+// İyi: Paralel fetch
+async function FastDashboard() {
+  const [revenue, orders, products] = await Promise.all([
+    getRevenue(),     // 2s
+    getOrders(),      // 1s (paralel)
+    getProducts(),    // 1.5s (paralel)
+  ]);
+  // Toplam: ~2s (en yavaş olanın süresi)
+
+  return &lt;div&gt;{/* render */}&lt;/div&gt;;
+}
+
+// En iyi: Suspense ile bağımsız streaming
+function OptimalDashboard() {
+  return (
+    &lt;div&gt;
+      &lt;Suspense fallback={&lt;Skeleton /&gt;}&gt;
+        &lt;Revenue /&gt;       {/* 2s sonra görünür */}
+      &lt;/Suspense&gt;
+      &lt;Suspense fallback={&lt;Skeleton /&gt;}&gt;
+        &lt;Orders /&gt;        {/* 1s sonra görünür */}
+      &lt;/Suspense&gt;
+      &lt;Suspense fallback={&lt;Skeleton /&gt;}&gt;
+        &lt;Products /&gt;      {/* 1.5s sonra görünür */}
+      &lt;/Suspense&gt;
+    &lt;/div&gt;
+  );
+  // Her bölüm hazır olduğu anda gösterilir!
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Streaming'in en büyük avantajı, yavaş veri kaynaklarının hızlı bölümleri engellemesidir. Kritik içeriği (ürün adı, fiyat) Suspense dışında tutarak anında gösterin, daha az kritik içeriği (yorumlar, öneriler) Suspense ile sarmalayarak aşamalı yükleyin.
+</div>
+
+<h3>Streaming ve SEO</h3>
+
+<p>Next.js, arama motoru bot'ları için özel davranış uygular:</p>
+
+<pre><code>// Next.js, bot'lar için tüm Suspense boundary'lerini bekler
+// ve tam HTML'i gönderir. Normal kullanıcılar için streaming yapar.
+
+// next.config.js ile bot detection yapılandırması
+// Next.js bunu otomatik olarak yönetir
+
+// Metadata her zaman shell'de gönderilir
+export const metadata = {
+  title: 'Dashboard',
+  description: 'Yönetim paneli',
+};</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Streaming, CDN ve reverse proxy yapılandırmasını etkileyebilir. Bazı CDN'ler chunked response'u buffer'lar. Vercel bu sorunu otomatik çözer, ancak self-hosted ortamlarda proxy ayarlarını kontrol edin.
+</div>
+
+<h3>Performans Metrikleri Etkisi</h3>
+
+<table>
+  <tr>
+    <th>Metrik</th>
+    <th>Streaming Olmadan</th>
+    <th>Streaming ile</th>
+  </tr>
+  <tr>
+    <td>TTFB</td>
+    <td>Tüm veri bekler (yavaş)</td>
+    <td>Shell anında gönderilir (hızlı)</td>
+  </tr>
+  <tr>
+    <td>FCP</td>
+    <td>Geç</td>
+    <td>Shell ile birlikte (erken)</td>
+  </tr>
+  <tr>
+    <td>LCP</td>
+    <td>En yavaş fetch'e bağlı</td>
+    <td>Kritik içeriğin hızına bağlı</td>
+  </tr>
+  <tr>
+    <td>CLS</td>
+    <td>Düşük (tek seferde render)</td>
+    <td>Skeleton tasarımına bağlı</td>
+  </tr>
+</table>
+
+<h3>Sonuç</h3>
+
+<p>Next.js Streaming SSR, kullanıcı deneyimini önemli ölçüde iyileştiren güçlü bir özelliktir. Suspense boundary'leri ile sayfanın hangi bölümlerinin aşamalı yükleneceğini kontrol edebilir, loading.js ile otomatik skeleton state'leri oluşturabilir ve nested Suspense ile granüler streaming yapabilirsiniz. Skeleton bileşenlerini gerçek içerikle aynı boyutta tasarlayarak CLS'yi minimize edin, kritik içeriği Suspense dışında tutarak FCP'yi iyileştirin. Next.js, SEO bot'ları için tam HTML'i otomatik gönderdiğinden, streaming kullanmak SEO'yu olumsuz etkilemez.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming" target="_blank" rel="noopener noreferrer">Next.js Docs — Loading UI and Streaming</a></li>
+  <li><a href="https://react.dev/reference/react/Suspense" target="_blank" rel="noopener noreferrer">React Docs — Suspense</a></li>
+  <li><a href="https://nextjs.org/learn/dashboard-app/streaming" target="_blank" rel="noopener noreferrer">Next.js Learn — Streaming</a></li>
+  <li><a href="https://web.dev/articles/rendering-on-the-web" target="_blank" rel="noopener noreferrer">web.dev — Rendering on the Web</a></li>
+</ul>

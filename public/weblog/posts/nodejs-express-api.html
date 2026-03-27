@@ -1,0 +1,266 @@
+<h2>Express.js ile REST API Oluşturma Rehberi</h2>
+
+<p>Express.js, Node.js ekosisteminin en popüler web framework'üdür ve minimal, esnek yapısıyla REST API geliştirmek için ideal bir araçtır. Bu rehberde Express.js ile sıfırdan profesyonel bir REST API oluşturacak, route yapılandırmasından middleware kullanımına, hata yönetiminden request validation'a kadar tüm temel konuları detaylı şekilde inceleyeceğiz. Production ortamına hazır bir API mimarisi kurmak için gereken bilgi ve pratikleri adım adım ele alacağız.</p>
+
+<h3>1. Express.js Projesi Kurulumu</h3>
+
+<p>Express.js ile çalışmaya başlamak için önce bir Node.js projesi oluşturmalı ve gerekli paketleri yüklemeliyiz. İyi yapılandırılmış bir proje dizin yapısı, projenin büyüdükçe yönetilebilir kalmasını sağlar. MVC (Model-View-Controller) veya layered architecture kalıplarını izlemek en iyi pratiktir.</p>
+
+<pre><code># Proje oluşturma
+mkdir express-api && cd express-api
+npm init -y
+npm install express cors helmet morgan dotenv
+npm install -D nodemon
+
+# Proje yapısı
+# express-api/
+# ├── src/
+# │   ├── controllers/
+# │   ├── routes/
+# │   ├── middleware/
+# │   ├── models/
+# │   ├── utils/
+# │   └── app.js
+# ├── .env
+# ├── .gitignore
+# └── package.json
+
+# package.json scripts
+# "dev": "nodemon src/app.js",
+# "start": "node src/app.js"</code></pre>
+
+<p>Bu yapıda controllers iş mantığını, routes URL eşlemelerini, middleware istek işleme katmanlarını, models veri modellerini ve utils yardımcı fonksiyonları içerir. Her katmanın sorumlulukları net bir şekilde ayrılmıştır ve bu Separation of Concerns prensibi kodun test edilebilirliğini ve bakımını kolaylaştırır.</p>
+
+<h3>2. Express Uygulamasını Yapılandırma</h3>
+
+<p>Express uygulamasının ana dosyasında middleware'leri sırasıyla tanımlamak, route'ları bağlamak ve sunucuyu başlatmak gerekir. Middleware sırası önemlidir; güvenlik middleware'leri en başta, hata yakalama middleware'i en sonda olmalıdır.</p>
+
+<pre><code>const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Güvenlik ve yardımcı middleware'ler
+app.use(helmet());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true
+}));
+app.use(morgan('combined'));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Route'ları bağla
+const userRoutes = require('./routes/userRoutes');
+const productRoutes = require('./routes/productRoutes');
+
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/products', productRoutes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `${req.method} ${req.url} endpoint bulunamadı`
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(`[ERROR] ${err.message}`, err.stack);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: process.env.NODE_ENV === 'production'
+      ? 'Sunucu hatası oluştu'
+      : err.message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`API sunucusu ${PORT} portunda çalışıyor`);
+  console.log(`Ortam: ${process.env.NODE_ENV || 'development'}`);
+});</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> API versiyonlama (/api/v1/) kullanmak, API'nizde breaking change yapmanız gerektiğinde mevcut istemcileri etkilemeden yeni sürüm sunmanızı sağlar. Baştan versiyonlama eklemek iyi bir pratiktir.
+</div>
+
+<h3>3. CRUD Route ve Controller Yapısı</h3>
+
+<p>REST API'nin temelini CRUD (Create, Read, Update, Delete) operasyonları oluşturur. Route dosyaları URL eşlemelerini tanımlarken, controller dosyaları iş mantığını içerir. Bu ayrım, kodun tekrar kullanılabilirliğini ve test edilebilirliğini artırır.</p>
+
+<pre><code>// routes/userRoutes.js
+const express = require('express');
+const router = express.Router();
+const userController = require('../controllers/userController');
+const { validateUser, validateId } = require('../middleware/validation');
+
+router.get('/', userController.getAllUsers);
+router.get('/:id', validateId, userController.getUserById);
+router.post('/', validateUser, userController.createUser);
+router.put('/:id', validateId, validateUser, userController.updateUser);
+router.delete('/:id', validateId, userController.deleteUser);
+
+module.exports = router;
+
+// controllers/userController.js
+let users = []; // Gerçek projede veritabanı kullanılır
+let nextId = 1;
+
+exports.getAllUsers = (req, res) => {
+  const { page = 1, limit = 10, search } = req.query;
+  let filteredUsers = users;
+
+  if (search) {
+    filteredUsers = users.filter(u =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+
+  const startIndex = (page - 1) * limit;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + parseInt(limit));
+
+  res.json({
+    success: true,
+    data: paginatedUsers,
+    pagination: {
+      total: filteredUsers.length,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(filteredUsers.length / limit)
+    }
+  });
+};
+
+exports.getUserById = (req, res) => {
+  const user = users.find(u => u.id === parseInt(req.params.id));
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'Kullanıcı bulunamadı'
+    });
+  }
+  res.json({ success: true, data: user });
+};
+
+exports.createUser = (req, res) => {
+  const { name, email, role = 'user' } = req.body;
+  const newUser = {
+    id: nextId++,
+    name,
+    email,
+    role,
+    createdAt: new Date().toISOString()
+  };
+  users.push(newUser);
+  res.status(201).json({ success: true, data: newUser });
+};
+
+exports.updateUser = (req, res) => {
+  const index = users.findIndex(u => u.id === parseInt(req.params.id));
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı' });
+  }
+  users[index] = { ...users[index], ...req.body, updatedAt: new Date().toISOString() };
+  res.json({ success: true, data: users[index] });
+};
+
+exports.deleteUser = (req, res) => {
+  const index = users.findIndex(u => u.id === parseInt(req.params.id));
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı' });
+  }
+  const deleted = users.splice(index, 1)[0];
+  res.json({ success: true, data: deleted, message: 'Kullanıcı silindi' });
+};</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Yukarıdaki örnekte veriler bellekte tutulmaktadır. Production ortamında mutlaka MongoDB, PostgreSQL gibi bir veritabanı kullanmalısınız. Bellekteki veriler sunucu yeniden başlatıldığında kaybolur.
+</div>
+
+<h3>4. Request Validation Middleware</h3>
+
+<p>Gelen isteklerin doğrulanması (validation), API güvenliğinin ve veri bütünlüğünün temel taşıdır. express-validator veya joi gibi kütüphaneler kullanarak request body, params ve query parametrelerini doğrulayabilirsiniz. Validation middleware'i, isteğin controller'a ulaşmadan önce kontrol edilmesini sağlar.</p>
+
+<pre><code>// middleware/validation.js
+const validateUser = (req, res, next) => {
+  const { name, email } = req.body;
+  const errors = [];
+
+  if (!name || name.trim().length < 2) {
+    errors.push({ field: 'name', message: 'İsim en az 2 karakter olmalıdır' });
+  }
+  if (name && name.length > 100) {
+    errors.push({ field: 'name', message: 'İsim en fazla 100 karakter olabilir' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    errors.push({ field: 'email', message: 'Geçerli bir email adresi giriniz' });
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Doğrulama hatası',
+      errors
+    });
+  }
+
+  // Sanitize input
+  req.body.name = name.trim();
+  req.body.email = email.toLowerCase().trim();
+  next();
+};
+
+const validateId = (req, res, next) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id) || id < 1) {
+    return res.status(400).json({
+      success: false,
+      message: 'Geçersiz ID parametresi'
+    });
+  }
+  next();
+};
+
+module.exports = { validateUser, validateId };</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Production uygulamalarında Joi veya Zod gibi schema-based validation kütüphaneleri kullanmanız önerilir. Bu kütüphaneler daha kapsamlı doğrulama kuralları, tip dönüşümleri ve özel hata mesajları sunar.
+</div>
+
+<h3>5. Response Standardizasyonu ve Best Practices</h3>
+
+<p>Tutarlı bir API response yapısı, hem frontend geliştiricilerin hem de API tüketicilerinin hayatını kolaylaştırır. Her yanıtta success durumu, data, mesaj ve gerektiğinde hata detayları yer almalıdır. HTTP status kodları doğru kullanılmalıdır: 200 başarılı okuma, 201 başarılı oluşturma, 400 istemci hatası, 401 kimlik doğrulama hatası, 404 bulunamadı, 500 sunucu hatası.</p>
+
+<p>Ayrıca rate limiting, request logging, response compression ve CORS yapılandırması gibi cross-cutting concern'ler middleware olarak uygulanmalıdır. API dokümantasyonu için Swagger/OpenAPI kullanmak, API'nizin keşfedilebilirliğini ve kullanılabilirliğini artırır.</p>
+
+<h3>Sonuç</h3>
+
+<p>Express.js ile REST API oluşturma süreci, doğru mimari kararlar ve best practice'ler ile başlar. Bu rehberde ele aldığımız konular — proje yapısı, middleware kullanımı, CRUD operasyonları, validation ve hata yönetimi — production-ready bir API'nin temel bileşenleridir. Bir sonraki adım olarak veritabanı entegrasyonu, authentication ve deployment konularını incelemenizi öneriyorum.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+  <li><a href="https://expressjs.com/en/guide/routing.html" target="_blank" rel="noopener noreferrer">Express.js Routing Guide</a></li>
+  <li><a href="https://expressjs.com/en/guide/error-handling.html" target="_blank" rel="noopener noreferrer">Express.js Error Handling</a></li>
+  <li><a href="https://restfulapi.net/" target="_blank" rel="noopener noreferrer">REST API Design Best Practices</a></li>
+  <li><a href="https://swagger.io/specification/" target="_blank" rel="noopener noreferrer">OpenAPI Specification</a></li>
+</ul>

@@ -1,0 +1,251 @@
+<h2>npm Package Yönetimi: Bağımlılık ve Versiyon Kontrolü</h2>
+
+<p>Node.js ekosisteminin kalbi olan <strong>npm</strong> (Node Package Manager), milyonlarca paketi barındıran dünyanın en büyük yazılım kayıt defterini yönetir. Ancak bağımlılık yönetimi sadece <code>npm install</code> çalıştırmaktan ibaret değildir. Versiyon çakışmaları, güvenlik açıkları, package-lock.json yönetimi ve performans optimizasyonu gibi konuları anlamak, sağlıklı bir proje sürdürmenin anahtarıdır. Bu rehberde npm'in ileri seviye özelliklerini, bağımlılık stratejilerini ve en iyi pratikleri detaylı olarak inceliyoruz.</p>
+
+<h3>Semantic Versioning (SemVer) Sistemi</h3>
+
+<p>npm paketleri Semantic Versioning standardını kullanır. Bu sistemi anlamak, bağımlılık yönetiminin temelidir:</p>
+
+<pre><code># Versiyon formatı: MAJOR.MINOR.PATCH
+# Örnek: 4.18.2
+
+# MAJOR (4.x.x): Geriye uyumsuz değişiklikler (breaking changes)
+# MINOR (x.18.x): Geriye uyumlu yeni özellikler
+# PATCH (x.x.2): Geriye uyumlu bug fix'ler
+
+# package.json'daki versiyon operatörleri:
+{
+  "dependencies": {
+    "react": "^18.2.0",    // ^: MAJOR sabit, MINOR ve PATCH güncellenir (18.x.x)
+    "lodash": "~4.17.21",  // ~: MAJOR ve MINOR sabit, sadece PATCH güncellenir (4.17.x)
+    "express": "4.18.2",   // Tam versiyon: Sadece bu versiyon yüklenir
+    "next": ">=14.0.0",    // Bu versiyon ve üstü
+    "typescript": "*"      // Herhangi bir versiyon (önerilmez)
+  }
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>^</code> (caret) operatörü npm'in varsayılanıdır ve genellikle güvenlidir. Ancak bazı paketler MINOR güncellemelerde breaking change yapabilir. Production uygulamalarında <code>package-lock.json</code> dosyasını mutlaka versiyon kontrolüne dahil edin ve CI'da <code>npm ci</code> kullanın.
+</div>
+
+<h3>package.json ve package-lock.json</h3>
+
+<p>Bu iki dosya arasındaki farkı anlamak kritik öneme sahiptir:</p>
+
+<pre><code>// package.json - Bağımlılık aralıklarını tanımlar
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "^18.2.0"      // 18.2.0 - 18.x.x arası
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"   // 5.3.0 - 5.x.x arası
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"      // Bu paketin çalışması için React 18+ gerekli
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.0"     // Yüklenemezse hata vermez (macOS specific)
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+
+// package-lock.json - Tam versiyon ağacını kilitler
+// Bu dosyayı ASLA manuel düzenlemeyin
+// Her zaman versiyon kontrolüne dahil edin</code></pre>
+
+<h3>Temel npm Komutları</h3>
+
+<pre><code># Paket yükleme
+npm install express                # dependencies'e ekle
+npm install -D jest                # devDependencies'e ekle
+npm install --save-exact react     # Tam versiyon ile kaydet (^ olmadan)
+
+# Global paket yönetimi
+npm install -g vercel              # Global yükleme
+npm list -g --depth=0              # Global paketleri listele
+npm uninstall -g create-react-app  # Global paketi kaldır
+
+# Bağımlılık bilgileri
+npm list                           # Bağımlılık ağacını görüntüle
+npm list --depth=0                 # Sadece direkt bağımlılıkları göster
+npm outdated                       # Güncel olmayan paketleri listele
+npm view react versions           # Paketin tüm versiyonlarını görüntüle
+npm info express                   # Paket detay bilgileri
+
+# Güncelleme
+npm update                         # Tüm paketleri güncelle (SemVer'e uygun)
+npm update lodash                  # Belirli bir paketi güncelle
+
+# Temizlik
+npm prune                          # Kullanılmayan paketleri kaldır
+npm cache clean --force            # npm cache'ini temizle</code></pre>
+
+<h3>npm ci vs npm install</h3>
+
+<p>CI/CD ortamlarında doğru komutu kullanmak önemlidir:</p>
+
+<pre><code># npm install
+# - package-lock.json'u GÜNCELLEYEBİLİR
+# - Mevcut node_modules'u korur
+# - Geliştirme ortamında kullanın
+
+# npm ci (Clean Install)
+# - package-lock.json'u DEĞİŞTİRMEZ
+# - node_modules'u SİLİP sıfırdan oluşturur
+# - package-lock.json ile package.json uyumsuzsa HATA verir
+# - CI/CD ortamlarında kullanın
+# - Daha hızlı ve daha güvenilir
+
+# CI pipeline örneği
+npm ci --ignore-scripts  # Post-install script'lerini atla (güvenlik)
+npm ci --only=production # Sadece production bağımlılıkları</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>npm ci</code> her zaman <code>node_modules</code> klasörünü sıfırdan oluşturur, bu yüzden "bende çalışıyor" sorunlarını önler. CI/CD pipeline'larınızda mutlaka <code>npm ci</code> kullanın.
+</div>
+
+<h3>Güvenlik Denetimi</h3>
+
+<p>Bağımlılıklarınızdaki güvenlik açıklarını düzenli olarak kontrol edin:</p>
+
+<pre><code># Güvenlik taraması
+npm audit
+
+# Detaylı rapor
+npm audit --json
+
+# Otomatik düzeltme
+npm audit fix
+
+# Breaking change içeren düzeltmeler dahil
+npm audit fix --force  # DİKKAT: Major version güncellemesi yapabilir
+
+# Belirli seviyedeki açıkları filtrele
+npm audit --audit-level=high
+
+# CI'da güvenlik kontrolü (high ve critical açıklarda başarısız olur)
+npm audit --audit-level=high</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>npm audit fix --force</code> komutu major version güncellemeleri yapabilir ve breaking change'lere yol açabilir. Bu komutu kullanmadan önce <code>npm audit</code> çıktısını inceleyip, güncelemelerin etkisini değerlendirin.
+</div>
+
+<h3>Workspaces ile Monorepo Yönetimi</h3>
+
+<p>npm workspaces, tek bir repository'de birden fazla paketi yönetmenizi sağlar:</p>
+
+<pre><code>// package.json (root)
+{
+  "name": "my-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}
+
+// Proje yapısı:
+// my-monorepo/
+// ├── package.json
+// ├── packages/
+// │   ├── ui/package.json
+// │   └── utils/package.json
+// └── apps/
+//     ├── web/package.json
+//     └── mobile/package.json</code></pre>
+
+<pre><code># Workspace komutları
+npm install                              # Tüm workspace'lerin bağımlılıklarını yükle
+npm run build -w packages/ui             # Belirli workspace'te komut çalıştır
+npm run test --workspaces                # Tüm workspace'lerde test çalıştır
+npm install lodash -w apps/web           # Belirli workspace'e paket ekle</code></pre>
+
+<h3>npx ve Paket Çalıştırma</h3>
+
+<pre><code># npx: Paketleri yüklemeden çalıştır
+npx create-next-app@latest my-app
+npx eslint --init
+npx prettier --write .
+
+# npm exec (npm 7+)
+npm exec -- eslint .
+
+# package.json script'leri
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "preinstall": "npx only-allow npm",  # Sadece npm kullanımını zorla
+    "prepare": "husky install"            # npm install sonrası otomatik çalışır
+  }
+}</code></pre>
+
+<h3>npm Alternatifleri Karşılaştırması</h3>
+
+<table>
+  <tr>
+    <th>Özellik</th>
+    <th>npm</th>
+    <th>yarn</th>
+    <th>pnpm</th>
+  </tr>
+  <tr>
+    <td>Disk Kullanımı</td>
+    <td>Yüksek (flat)</td>
+    <td>Yüksek (flat)</td>
+    <td>Düşük (hardlinks)</td>
+  </tr>
+  <tr>
+    <td>Kurulum Hızı</td>
+    <td>Orta</td>
+    <td>Hızlı</td>
+    <td>En hızlı</td>
+  </tr>
+  <tr>
+    <td>Monorepo Desteği</td>
+    <td>Workspaces</td>
+    <td>Workspaces</td>
+    <td>Workspaces + strict</td>
+  </tr>
+  <tr>
+    <td>Phantom Dependencies</td>
+    <td>Mümkün</td>
+    <td>Mümkün</td>
+    <td>Engellenir</td>
+  </tr>
+</table>
+
+<div class="info">
+  <strong>Bilgi:</strong> pnpm, aynı paketin farklı versiyonlarını hardlink'ler aracılığıyla tek bir yerde saklar. Bu, disk kullanımını önemli ölçüde azaltır ve yükleme süresini hızlandırır. Monorepo projelerinde pnpm özellikle avantajlıdır.
+</div>
+
+<h3>Best Practices</h3>
+
+<ul>
+  <li><strong>package-lock.json'u commit edin:</strong> Tüm ortamlarda aynı bağımlılıkların yüklenmesini garanti eder</li>
+  <li><strong>engines alanını tanımlayın:</strong> Node.js ve npm versiyon gereksinimlerini belirtin</li>
+  <li><strong>Düzenli güncelleme yapın:</strong> <code>npm outdated</code> ile güncel olmayan paketleri kontrol edin</li>
+  <li><strong>Güvenlik taraması yapın:</strong> CI'da <code>npm audit</code> çalıştırın</li>
+  <li><strong>Gereksiz bağımlılıklardan kaçının:</strong> Her eklediğiniz paket potansiyel bir risk ve bakım yüküdür</li>
+  <li><strong>.npmrc ile yapılandırma yapın:</strong> Registry, save-exact gibi ayarları proje bazında tanımlayın</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>npm, JavaScript ekosisteminin bağımlılık yönetim merkezidir. Semantic versioning'i anlamak, package-lock.json'u doğru yönetmek, güvenlik taramalarını düzenli yapmak ve CI/CD'de doğru komutları kullanmak, sağlıklı bir proje sürdürmenin temelini oluşturur. Bu rehberdeki pratikleri uygulayarak bağımlılık yönetimi konusunda profesyonel bir yaklaşım geliştirebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://docs.npmjs.com/" target="_blank" rel="noopener noreferrer">npm Resmi Dokümantasyonu</a></li>
+  <li><a href="https://semver.org/" target="_blank" rel="noopener noreferrer">Semantic Versioning Spesifikasyonu</a></li>
+  <li><a href="https://docs.npmjs.com/cli/v10/using-npm/workspaces" target="_blank" rel="noopener noreferrer">npm Workspaces Rehberi</a></li>
+  <li><a href="https://pnpm.io/" target="_blank" rel="noopener noreferrer">pnpm Dokümantasyonu</a></li>
+</ul>

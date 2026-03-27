@@ -1,0 +1,276 @@
+<h2>Performance Budget: Performans Bütçesi Oluşturma</h2>
+
+<p>Performance budget (performans bütçesi), web uygulamanızın performans metriklerini belirli sınırlar dahilinde tutmayı hedefleyen bir stratejidir. Tıpkı mali bütçede olduğu gibi, her kaynak ve metrik için bir limit belirler ve bu limiti aşmamaya çalışırsınız. Bu rehberde performans bütçesi oluşturmayı, izlemeyi ve CI/CD sürecine entegre etmeyi adım adım inceleyeceğiz.</p>
+
+<h3>1. Performance Budget Neden Gerekli?</h3>
+
+<ul>
+<li><strong>Performans regresyonunu engeller:</strong> Her yeni özellik performansı düşürebilir, bütçe bunu kontrol eder</li>
+<li><strong>Takım farkındalığı:</strong> Herkes performans etkisini düşünmek zorunda kalır</li>
+<li><strong>Kullanıcı deneyimi:</strong> Hızlı siteler daha yüksek dönüşüm oranına sahiptir</li>
+<li><strong>SEO etkisi:</strong> Core Web Vitals sıralama faktörüdür</li>
+<li><strong>Maliyet kontrolü:</strong> Daha az veri transferi = daha düşük sunucu maliyeti</li>
+</ul>
+
+<h3>2. Budget Türleri</h3>
+
+<h4>Zamanlama Bazlı Bütçeler</h4>
+
+<table>
+<tr><th>Metrik</th><th>İyi</th><th>Orta</th><th>Kötü</th></tr>
+<tr><td>Time to First Byte (TTFB)</td><td>&lt; 200ms</td><td>&lt; 500ms</td><td>&gt; 500ms</td></tr>
+<tr><td>First Contentful Paint (FCP)</td><td>&lt; 1.8s</td><td>&lt; 3.0s</td><td>&gt; 3.0s</td></tr>
+<tr><td>Largest Contentful Paint (LCP)</td><td>&lt; 2.5s</td><td>&lt; 4.0s</td><td>&gt; 4.0s</td></tr>
+<tr><td>Time to Interactive (TTI)</td><td>&lt; 3.8s</td><td>&lt; 7.3s</td><td>&gt; 7.3s</td></tr>
+<tr><td>Cumulative Layout Shift (CLS)</td><td>&lt; 0.1</td><td>&lt; 0.25</td><td>&gt; 0.25</td></tr>
+<tr><td>Interaction to Next Paint (INP)</td><td>&lt; 200ms</td><td>&lt; 500ms</td><td>&gt; 500ms</td></tr>
+</table>
+
+<h4>Boyut Bazlı Bütçeler</h4>
+
+<pre><code># Önerilen boyut bütçeleri
+Toplam sayfa boyutu: < 1.5MB (sıkıştırılmış)
+JavaScript toplam: < 300KB (sıkıştırılmış)
+CSS toplam: < 100KB (sıkıştırılmış)
+Resimler toplam: < 1MB
+Font dosyaları: < 100KB
+Üçüncü parti script: < 100KB</code></pre>
+
+<h4>İstek Bazlı Bütçeler</h4>
+
+<pre><code># Önerilen istek sayıları
+Toplam HTTP istekleri: < 50
+JavaScript dosyaları: < 10
+CSS dosyaları: < 5
+Font istekleri: < 4
+Üçüncü parti istekler: < 10</code></pre>
+
+<h3>3. Budget Oluşturma Adımları</h3>
+
+<h4>Adım 1: Mevcut Durumu Ölçün</h4>
+
+<pre><code># Lighthouse CI ile mevcut metrikleri ölçün
+npm install -g @lhci/cli
+
+lhci autorun --collect.url=https://www.example.com
+
+# WebPageTest API ile
+curl "https://www.webpagetest.org/runtest.php?url=https://example.com&f=json&k=YOUR_API_KEY"</code></pre>
+
+<h4>Adım 2: Rakip Analizi</h4>
+
+<pre><code># Rakip sitelerinizi ölçün ve ortalamanın %20 altını hedefleyin
+# Örnek:
+# Rakip ortalama LCP: 3.2s
+# Hedefiniz: 3.2s x 0.80 = 2.56s → 2.5s</code></pre>
+
+<h4>Adım 3: Budget Tanımlama</h4>
+
+<pre><code>// budget.json
+[
+  {
+    "path": "/*",
+    "timings": [
+      { "metric": "first-contentful-paint", "budget": 1800 },
+      { "metric": "largest-contentful-paint", "budget": 2500 },
+      { "metric": "interactive", "budget": 3800 },
+      { "metric": "cumulative-layout-shift", "budget": 0.1 },
+      { "metric": "total-blocking-time", "budget": 200 }
+    ],
+    "resourceSizes": [
+      { "resourceType": "total", "budget": 1500 },
+      { "resourceType": "script", "budget": 300 },
+      { "resourceType": "stylesheet", "budget": 100 },
+      { "resourceType": "image", "budget": 1000 },
+      { "resourceType": "font", "budget": 100 },
+      { "resourceType": "third-party", "budget": 100 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "total", "budget": 50 },
+      { "resourceType": "script", "budget": 10 },
+      { "resourceType": "stylesheet", "budget": 5 },
+      { "resourceType": "third-party", "budget": 10 }
+    ]
+  }
+]</code></pre>
+
+<h3>4. Webpack ile Bundle Budget</h3>
+
+<pre><code>// webpack.config.js
+module.exports = {
+  performance: {
+    maxEntrypointSize: 250000,  // 250KB
+    maxAssetSize: 200000,       // 200KB
+    hints: 'error',             // Build'i durdur ('warning' da olabilir)
+    assetFilter: function(assetFilename) {
+      return assetFilename.endsWith('.js') || assetFilename.endsWith('.css');
+    },
+  },
+};</code></pre>
+
+<pre><code>// next.config.js — Next.js experimental budget
+/** @type {import('next').NextConfig} */
+module.exports = {
+  experimental: {
+    // Bundle analyzer
+  },
+  // Custom webpack config
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.performance = {
+        maxEntrypointSize: 300000,
+        maxAssetSize: 200000,
+        hints: 'warning',
+      };
+    }
+    return config;
+  },
+};</code></pre>
+
+<h3>5. Lighthouse CI ile Otomatik Kontrol</h3>
+
+<pre><code># .lighthouserc.js
+module.exports = {
+  ci: {
+    collect: {
+      url: ['http://localhost:3000/', 'http://localhost:3000/blog'],
+      numberOfRuns: 3,
+    },
+    assert: {
+      assertions: {
+        'categories:performance': ['error', { minScore: 0.9 }],
+        'first-contentful-paint': ['error', { maxNumericValue: 1800 }],
+        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
+        'total-blocking-time': ['warn', { maxNumericValue: 200 }],
+        'interactive': ['error', { maxNumericValue: 3800 }],
+        'resource-summary:script:size': ['error', { maxNumericValue: 300000 }],
+        'resource-summary:total:size': ['error', { maxNumericValue: 1500000 }],
+      },
+    },
+    upload: {
+      target: 'temporary-public-storage',
+    },
+  },
+};</code></pre>
+
+<h3>6. CI/CD Pipeline Entegrasyonu</h3>
+
+<pre><code># .github/workflows/performance.yml
+name: Performance Budget Check
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install & Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Start server
+        run: npm start &
+
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          configPath: './.lighthouserc.js'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Bundle Size Check
+        uses: siddharthkp/bundlesize2@v0.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}</code></pre>
+
+<pre><code>// bundlesize yapılandırması (package.json)
+{
+  "bundlesize": [
+    {
+      "path": ".next/static/chunks/*.js",
+      "maxSize": "200 kB"
+    },
+    {
+      "path": ".next/static/css/*.css",
+      "maxSize": "50 kB"
+    }
+  ]
+}</code></pre>
+
+<h3>7. Budget Aşımında Aksiyon Planı</h3>
+
+<pre><code># Budget aşıldığında kontrol listesi:
+
+1. Bundle analizi yapın
+   npx @next/bundle-analyzer
+   npx webpack-bundle-analyzer stats.json
+
+2. Gereksiz bağımlılıkları tespit edin
+   npx depcheck
+   npx bundlephobia [paket-adi]
+
+3. Code splitting uygulayın
+   - Dynamic import kullanın
+   - Route bazlı lazy loading
+
+4. Resim optimizasyonu kontrol edin
+   - WebP/AVIF formatları
+   - Responsive images (srcset)
+   - CDN kullanımı
+
+5. Üçüncü parti script'leri değerlendirin
+   - Gerekli mi? Alternatif var mı?
+   - async/defer kullanılıyor mu?
+   - Script boyutu ne kadar?</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Her yeni npm paketi eklemeden önce <a href="https://bundlephobia.com" target="_blank">bundlephobia.com</a> ile boyutunu kontrol edin. Küçük bir utility için 100KB'lık bir paket eklemek bütçenizi ciddi şekilde zorlayabilir.
+</div>
+
+<h3>8. Real User Monitoring (RUM)</h3>
+
+<pre><code>// web-vitals ile gerçek kullanıcı verisi toplama
+import { onLCP, onFID, onCLS, onINP, onTTFB } from 'web-vitals';
+
+function sendToAnalytics({ name, value, id }) {
+  const body = JSON.stringify({ name, value, id, page: window.location.pathname });
+
+  // Beacon API ile güvenilir gönderim
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon('/api/vitals', body);
+  } else {
+    fetch('/api/vitals', { body, method: 'POST', keepalive: true });
+  }
+}
+
+onLCP(sendToAnalytics);
+onCLS(sendToAnalytics);
+onINP(sendToAnalytics);
+onTTFB(sendToAnalytics);</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> Lab verileri (Lighthouse) ve field verileri (RUM) farklı sonuçlar verebilir. Her ikisini de izleyin. Budget'ınızı field verileri (gerçek kullanıcı deneyimi) üzerinden kalibre edin.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Performance budget, web performansını sürdürülebilir kılmanın en etkili yoludur. Zamanlama, boyut ve istek bazlı bütçeler belirleyerek performans regresyonunu erken tespit edin. Lighthouse CI ve bundlesize gibi araçlarla CI/CD pipeline'ınıza entegre edin ve her PR'ın performans etkisini otomatik kontrol edin. Bütçe aşımlarında sistematik bir aksiyon planı uygulayın. Unutmayın: performans bir özellik değil, sürekli bir süreçtir.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://web.dev/performance-budgets-101/" target="_blank">web.dev — Performance Budgets 101</a></li>
+<li><a href="https://github.com/GoogleChrome/lighthouse-ci" target="_blank">Lighthouse CI GitHub</a></li>
+<li><a href="https://github.com/siddharthkp/bundlesize" target="_blank">bundlesize — Bundle Size Checker</a></li>
+<li><a href="https://bundlephobia.com/" target="_blank">Bundlephobia — Paket Boyut Analizi</a></li>
+<li><a href="https://timkadlec.com/remembers/2019-03-07-performance-budgets-that-stick/" target="_blank">Tim Kadlec — Performance Budgets That Stick</a></li>
+</ul>

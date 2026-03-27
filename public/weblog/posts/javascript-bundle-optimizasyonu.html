@@ -1,0 +1,206 @@
+<h2>JavaScript Bundle Optimizasyonu: Tree Shaking ve Code Splitting</h2>
+
+<p>JavaScript, modern web uygulamalarının en büyük performans darboğazlarından biridir. Tarayıcı JavaScript'i indirmek, parse etmek, derlemek ve çalıştırmak zorundadır — her adım zaman alır. HTTP Archive'a göre medyan bir web sayfası 500KB'ın üzerinde JavaScript yükler ve bu süre mobil cihazlarda ciddi gecikmelere yol açar. Bu rehberde tree shaking, code splitting, lazy loading ve bundle analiz tekniklerini kullanarak JavaScript yükünü nasıl minimize edeceğinizi öğreneceksiniz.</p>
+
+<h3>JavaScript'in Performans Maliyeti</h3>
+
+<p>JavaScript, aynı boyuttaki bir görselden çok daha maliyetlidir. 200KB'lık bir JPEG indirildikten sonra hızlıca decode edilirken, 200KB'lık JavaScript indirme, parse, derleme ve çalıştırma aşamalarından geçer. Bu durum özellikle düşük güçlü mobil cihazlarda belirginleşir.</p>
+
+<ul>
+  <li><strong>Parse ve compile:</strong> V8 motoru JavaScript'i bytecode'a çevirir, bu işlem CPU-yoğundur</li>
+  <li><strong>Execution:</strong> Kod çalıştırılırken ana thread bloke olur</li>
+  <li><strong>Memory:</strong> Her kütüphane RAM tüketir, özellikle SPA'larda birikir</li>
+</ul>
+
+<div class="info">
+  <strong>Bilgi:</strong> Addy Osmani'nin araştırmasına göre, düşük-orta seviye bir mobil cihazda 1MB JavaScript'in parse ve compile süresi 3-4 saniyeyi bulabilir. Bu süre boyunca sayfa etkileşime kapalıdır.
+</div>
+
+<h3>Tree Shaking: Kullanılmayan Kodu Eleme</h3>
+
+<p>Tree shaking, ES Module'lerin statik yapısını kullanarak kullanılmayan export'ları bundle'dan çıkarır. Webpack, Rollup ve esbuild bu özelliği destekler.</p>
+
+<pre><code>// utils.js - Bu modülden sadece formatDate kullanılıyor
+export function formatDate(date) {
+  return new Intl.DateTimeFormat('tr-TR').format(date);
+}
+
+export function formatCurrency(amount) {
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency', currency: 'TRY'
+  }).format(amount);
+}
+
+export function calculateTax(amount) {
+  return amount * 0.18;
+}
+
+// app.js - Sadece formatDate import ediliyor
+// Tree shaking ile formatCurrency ve calculateTax bundle'a dahil edilmez
+import { formatDate } from './utils';
+console.log(formatDate(new Date()));</code></pre>
+
+<p>Tree shaking'in etkili çalışması için dikkat edilmesi gerekenler:</p>
+
+<pre><code>// webpack.config.js - Tree shaking konfigürasyonu
+module.exports = {
+  mode: 'production',  // Production modda tree shaking otomatik aktif
+  optimization: {
+    usedExports: true,    // Kullanılmayan export'ları işaretle
+    minimize: true,       // Terser ile dead code elimination
+    sideEffects: true,    // package.json sideEffects alanını kontrol et
+    concatenateModules: true  // Module concatenation (scope hoisting)
+  }
+};
+
+// package.json - Side effects tanımlama
+{
+  "name": "my-library",
+  "sideEffects": false,  // Tüm modüller pure (side effect yok)
+  // veya belirli dosyaları hariç tut:
+  "sideEffects": [
+    "*.css",
+    "./src/polyfills.js"
+  ]
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> CommonJS (<code>require()</code>) modülleri statik olarak analiz edilemez, bu nedenle tree shaking çalışmaz. Kütüphanelerin ES Module (ESM) versiyonlarını tercih edin. <code>package.json</code>'daki <code>module</code> veya <code>exports</code> alanı ESM giriş noktasını belirtir.
+</div>
+
+<h3>Code Splitting: Kodu Parçalara Ayırma</h3>
+
+<p>Code splitting, uygulamanızı mantıksal parçalara bölerek sadece gerekli kodu yüklemenizi sağlar. Üç temel strateji vardır:</p>
+
+<pre><code>// 1. Dynamic Import ile route-based code splitting
+// React.lazy ile component-level splitting
+import React, { lazy, Suspense } from 'react';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Analytics = lazy(() =>
+  import(/* webpackChunkName: "analytics" */ './pages/Analytics')
+);
+
+function App() {
+  return (
+    &lt;Suspense fallback={&lt;LoadingSpinner /&gt;}&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/dashboard" element={&lt;Dashboard /&gt;} /&gt;
+        &lt;Route path="/settings" element={&lt;Settings /&gt;} /&gt;
+        &lt;Route path="/analytics" element={&lt;Analytics /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/Suspense&gt;
+  );
+}
+
+// 2. Event-based lazy loading
+async function openHeavyModal() {
+  const { HeavyModal } = await import('./components/HeavyModal');
+  renderModal(HeavyModal);
+}
+
+document.getElementById('openModal').addEventListener('click', openHeavyModal);
+
+// 3. Vendor splitting - Webpack konfigürasyonu
+// webpack.config.js
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+          priority: 10
+        },
+        common: {
+          minChunks: 2,
+          priority: 5,
+          reuseExistingChunk: true
+        }
+      }
+    }
+  }
+};</code></pre>
+
+<h3>Bundle Analizi</h3>
+
+<p>Optimizasyon yapmadan önce mevcut durumu analiz etmelisiniz:</p>
+
+<pre><code># webpack-bundle-analyzer kurulumu ve kullanımı
+npm install --save-dev webpack-bundle-analyzer
+
+# webpack.config.js'e ekle
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+module.exports = {
+  plugins: [
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      reportFilename: 'bundle-report.html',
+      openAnalyzer: false
+    })
+  ]
+};
+
+# Next.js için @next/bundle-analyzer
+npm install @next/bundle-analyzer
+
+# next.config.js
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+module.exports = withBundleAnalyzer({
+  // next config
+});
+
+# Analiz raporu oluştur
+ANALYZE=true npm run build</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Bundle analiz raporunda en büyük modüllere odaklanın. Genellikle <code>moment.js</code> (300KB+), <code>lodash</code> (70KB+) gibi kütüphaneler bundle'ın büyük kısmını oluşturur. <code>date-fns</code> ve <code>lodash-es</code> gibi tree-shakeable alternatiflere geçiş yaparak dramatik boyut azaltımı sağlayabilirsiniz.
+</div>
+
+<h3>Pratik Optimizasyon Örnekleri</h3>
+
+<p>Sık kullanılan kütüphanelerin optimize import yöntemleri:</p>
+
+<pre><code>// Kötü: Tüm lodash'ı import eder (~70KB gzipped)
+import _ from 'lodash';
+_.debounce(fn, 300);
+
+// İyi: Sadece debounce fonksiyonunu import et (~1KB)
+import debounce from 'lodash/debounce';
+debounce(fn, 300);
+
+// Kötü: Tüm moment.js (~300KB)
+import moment from 'moment';
+
+// İyi: date-fns ile sadece gerekli fonksiyon (~2KB per function)
+import { format, parseISO } from 'date-fns';
+import { tr } from 'date-fns/locale';
+format(parseISO('2025-01-01'), 'dd MMMM yyyy', { locale: tr });
+
+// Kötü: Tüm Material UI ikonları (~5MB!)
+import { Delete, Edit, Add } from '@mui/icons-material';
+
+// İyi: Named import ile tree shaking
+import Delete from '@mui/icons-material/Delete';
+import Edit from '@mui/icons-material/Edit';
+import Add from '@mui/icons-material/Add';</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>JavaScript bundle optimizasyonu, web performansını iyileştirmenin en etkili yollarından biridir. Tree shaking ile kullanılmayan kodu eleyin, code splitting ile sadece gerekli kodu yükleyin ve bundle analizi ile büyük bağımlılıkları tespit edin. Bu tekniklerin kombinasyonu, JavaScript yükünü %50-70 oranında azaltabilir ve kullanıcılarınıza çok daha hızlı bir deneyim sunabilir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://webpack.js.org/guides/tree-shaking/" target="_blank" rel="noopener noreferrer">Webpack - Tree Shaking Guide</a></li>
+  <li><a href="https://web.dev/articles/reduce-javascript-payloads-with-tree-shaking" target="_blank" rel="noopener noreferrer">web.dev - Reduce JavaScript Payloads</a></li>
+  <li><a href="https://web.dev/articles/code-splitting-suspense" target="_blank" rel="noopener noreferrer">web.dev - Code Splitting with React.lazy</a></li>
+  <li><a href="https://bundlephobia.com/" target="_blank" rel="noopener noreferrer">Bundlephobia - Package Size Analyzer</a></li>
+</ul>

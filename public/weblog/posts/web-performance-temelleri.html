@@ -1,0 +1,223 @@
+<h2>Web Performance Temelleri: Hız Neden Önemli?</h2>
+
+<p>Web performansı, modern dijital dünyada kullanıcı deneyiminin en kritik bileşenlerinden biridir. Araştırmalar, sayfa yükleme süresindeki her 1 saniyelik artışın dönüşüm oranını %7 düşürdüğünü göstermektedir. Google'ın kendi verilerine göre, mobil kullanıcıların %53'ü 3 saniyeden uzun sürede yüklenmeyen siteleri terk ediyor. Performans yalnızca teknik bir metrik değil, doğrudan gelir ve kullanıcı memnuniyetini etkileyen iş odaklı bir konudur.</p>
+
+<h3>Performansın İş Etkisi</h3>
+
+<p>Web performansı üç temel alanda doğrudan etki yaratır:</p>
+
+<ul>
+  <li><strong>Kullanıcı Deneyimi (UX):</strong> Hızlı siteler daha düşük bounce rate ve daha yüksek engagement oranlarına sahiptir.</li>
+  <li><strong>SEO ve Arama Sıralaması:</strong> Google, Core Web Vitals metriklerini sıralama faktörü olarak kullanır. Yavaş siteler arama sonuçlarında geri düşer.</li>
+  <li><strong>Dönüşüm ve Gelir:</strong> Amazon'un hesaplamalarına göre sayfa yükleme süresindeki 100ms'lik iyileşme, yıllık gelirde %1'lik artışa karşılık gelir.</li>
+</ul>
+
+<div class="info">
+  <strong>Bilgi:</strong> Google'ın 2021'de başlattığı Page Experience güncellemesi ile Core Web Vitals metrikleri (LCP, INP, CLS) resmi sıralama faktörleri haline gelmiştir. Performans artık sadece teknik borç değil, SEO stratejisinin ayrılmaz bir parçasıdır.
+</div>
+
+<h3>Performans Metrikleri: Neyi Ölçmeliyiz?</h3>
+
+<p>Web performansını anlamak için doğru metrikleri ölçmemiz gerekir. Bu metrikler kullanıcının gerçek deneyimini yansıtmalıdır.</p>
+
+<p><strong>Yükleme metrikleri:</strong></p>
+<ul>
+  <li><strong>Time to First Byte (TTFB):</strong> Sunucunun ilk byte'ı gönderme süresi. 800ms altı iyi kabul edilir.</li>
+  <li><strong>First Contentful Paint (FCP):</strong> İlk görsel içeriğin ekrana çizilmesi. 1.8 saniye altı hedeflenmelidir.</li>
+  <li><strong>Largest Contentful Paint (LCP):</strong> En büyük içerik öğesinin render süresi. 2.5 saniye altı "iyi" kabul edilir.</li>
+</ul>
+
+<p><strong>Etkileşim metrikleri:</strong></p>
+<ul>
+  <li><strong>Interaction to Next Paint (INP):</strong> Kullanıcı etkileşimlerinin yanıt süresi. 200ms altı hedeflenmelidir.</li>
+  <li><strong>Total Blocking Time (TBT):</strong> Ana thread'in bloke olduğu toplam süre.</li>
+</ul>
+
+<p><strong>Görsel kararlılık:</strong></p>
+<ul>
+  <li><strong>Cumulative Layout Shift (CLS):</strong> Sayfadaki beklenmeyen layout kaymaları. 0.1 altı "iyi" kabul edilir.</li>
+</ul>
+
+<h3>Performance API ile Ölçüm</h3>
+
+<p>Tarayıcının yerleşik Performance API'si ile temel metrikleri programatik olarak ölçebilirsiniz:</p>
+
+<pre><code>// Navigation Timing ile sayfa yükleme metriklerini ölçme
+function measurePageLoad() {
+  const [entry] = performance.getEntriesByType('navigation');
+
+  if (entry) {
+    console.log('DNS Çözümleme:', entry.domainLookupEnd - entry.domainLookupStart, 'ms');
+    console.log('TCP Bağlantı:', entry.connectEnd - entry.connectStart, 'ms');
+    console.log('TTFB:', entry.responseStart - entry.requestStart, 'ms');
+    console.log('DOM Hazır:', entry.domContentLoadedEventEnd - entry.fetchStart, 'ms');
+    console.log('Sayfa Yükleme:', entry.loadEventEnd - entry.fetchStart, 'ms');
+  }
+}
+
+// Sayfa tamamen yüklendikten sonra ölç
+window.addEventListener('load', () => {
+  setTimeout(measurePageLoad, 0);
+});</code></pre>
+
+<h3>LCP Ölçümü ile PerformanceObserver</h3>
+
+<p>Core Web Vitals metriklerini gerçek zamanlı olarak izlemek için <code>PerformanceObserver</code> API'sini kullanabilirsiniz:</p>
+
+<pre><code>// LCP (Largest Contentful Paint) ölçümü
+const lcpObserver = new PerformanceObserver((entryList) => {
+  const entries = entryList.getEntries();
+  const lastEntry = entries[entries.length - 1];
+
+  console.log('LCP:', lastEntry.startTime, 'ms');
+  console.log('LCP Öğesi:', lastEntry.element);
+
+  // Analytics'e gönder
+  sendToAnalytics({
+    metric: 'LCP',
+    value: lastEntry.startTime,
+    element: lastEntry.element?.tagName
+  });
+});
+
+lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+
+// CLS (Cumulative Layout Shift) ölçümü
+let clsValue = 0;
+const clsObserver = new PerformanceObserver((entryList) => {
+  for (const entry of entryList.getEntries()) {
+    if (!entry.hadRecentInput) {
+      clsValue += entry.value;
+    }
+  }
+  console.log('CLS:', clsValue);
+});
+
+clsObserver.observe({ type: 'layout-shift', buffered: true });</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Google'ın <code>web-vitals</code> kütüphanesi, tüm Core Web Vitals metriklerini kolayca ölçmenizi sağlar. Kendi ölçüm kodunuzu yazmak yerine bu kütüphaneyi kullanmanız önerilir: <code>npm install web-vitals</code>
+</div>
+
+<h3>Temel Performans Optimizasyon Stratejileri</h3>
+
+<p>Web performansını iyileştirmek için sistematik bir yaklaşım benimsenmelidir. İşte temel stratejiler:</p>
+
+<p><strong>1. Ağ optimizasyonu:</strong></p>
+<ul>
+  <li>HTTP isteklerini minimize edin</li>
+  <li>Dosyaları sıkıştırın (Gzip/Brotli)</li>
+  <li>CDN kullanın</li>
+  <li>HTTP/2 veya HTTP/3 protokolüne geçin</li>
+</ul>
+
+<p><strong>2. Render optimizasyonu:</strong></p>
+<ul>
+  <li>Critical CSS'i inline edin</li>
+  <li>JavaScript'i defer veya async ile yükleyin</li>
+  <li>DOM boyutunu küçük tutun</li>
+</ul>
+
+<p><strong>3. Asset optimizasyonu:</strong></p>
+<ul>
+  <li>Görselleri modern formatlarda (WebP, AVIF) sunun</li>
+  <li>Lazy loading uygulayın</li>
+  <li>Font yükleme stratejisi belirleyin</li>
+</ul>
+
+<h3>web-vitals Kütüphanesi ile Hızlı Entegrasyon</h3>
+
+<p>Google'ın resmi <code>web-vitals</code> kütüphanesi ile tüm metrikleri birkaç satır kodla ölçebilirsiniz:</p>
+
+<pre><code>import { onLCP, onINP, onCLS, onFCP, onTTFB } from 'web-vitals';
+
+function sendToAnalytics(metric) {
+  const body = JSON.stringify({
+    name: metric.name,
+    value: metric.value,
+    rating: metric.rating,  // 'good', 'needs-improvement', 'poor'
+    delta: metric.delta,
+    id: metric.id,
+    navigationType: metric.navigationType
+  });
+
+  // Beacon API ile veri kaybını önle
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon('/api/analytics', body);
+  } else {
+    fetch('/api/analytics', { body, method: 'POST', keepalive: true });
+  }
+}
+
+// Tüm Core Web Vitals metriklerini izle
+onLCP(sendToAnalytics);
+onINP(sendToAnalytics);
+onCLS(sendToAnalytics);
+onFCP(sendToAnalytics);
+onTTFB(sendToAnalytics);</code></pre>
+
+<h3>Performans Bütçesi Kavramı</h3>
+
+<p>Performans bütçesi, sayfanızın aşmaması gereken performans limitlerini tanımlar. Bu limitler ekip genelinde paylaşılır ve CI/CD pipeline'ına entegre edilir.</p>
+
+<table>
+  <tr>
+    <th>Metrik</th>
+    <th>İyi</th>
+    <th>İyileştirme Gerekli</th>
+    <th>Kötü</th>
+  </tr>
+  <tr>
+    <td>LCP</td>
+    <td>&le; 2.5s</td>
+    <td>2.5s - 4.0s</td>
+    <td>&gt; 4.0s</td>
+  </tr>
+  <tr>
+    <td>INP</td>
+    <td>&le; 200ms</td>
+    <td>200ms - 500ms</td>
+    <td>&gt; 500ms</td>
+  </tr>
+  <tr>
+    <td>CLS</td>
+    <td>&le; 0.1</td>
+    <td>0.1 - 0.25</td>
+    <td>&gt; 0.25</td>
+  </tr>
+  <tr>
+    <td>FCP</td>
+    <td>&le; 1.8s</td>
+    <td>1.8s - 3.0s</td>
+    <td>&gt; 3.0s</td>
+  </tr>
+  <tr>
+    <td>TTFB</td>
+    <td>&le; 800ms</td>
+    <td>800ms - 1800ms</td>
+    <td>&gt; 1800ms</td>
+  </tr>
+</table>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Performans optimizasyonu sürekli bir süreçtir, tek seferlik bir görev değildir. Yeni özellikler eklendikçe performans regresyonları oluşabilir. Otomatik performans testlerini CI/CD pipeline'ınıza entegre ederek sürekli izleme yapın.
+</div>
+
+<h3>Performans Kültürü Oluşturma</h3>
+
+<p>Teknik optimizasyonlar kadar önemli olan bir diğer konu da ekip genelinde performans bilincinin oluşturulmasıdır. Performans dashboardları oluşturun, sprint hedeflerine performans metriklerini ekleyin ve code review sürecinde performans etkisini değerlendirin. Her yeni özellik, performans bütçesi dahilinde değerlendirilmelidir.</p>
+
+<p>Performans iyileştirmesi iteratif bir süreçtir: Ölç, analiz et, optimize et ve tekrar ölç. Bu döngüyü sürekli tekrarlayarak kullanıcılarınıza en iyi deneyimi sunabilirsiniz.</p>
+
+<h3>Sonuç</h3>
+
+<p>Web performansı, kullanıcı deneyimi, SEO ve iş metrikleri üzerinde doğrudan etkiye sahip kritik bir konudur. Doğru metrikleri ölçmek, performans bütçesi belirlemek ve sistematik optimizasyon stratejileri uygulamak başarının anahtarıdır. Bu serinin devamında Core Web Vitals, Lighthouse analizi, görsel optimizasyon ve diğer ileri konuları detaylı olarak ele alacağız.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://web.dev/performance/" target="_blank" rel="noopener noreferrer">web.dev - Web Performance</a></li>
+  <li><a href="https://developer.chrome.com/docs/lighthouse/" target="_blank" rel="noopener noreferrer">Chrome Lighthouse Dokümantasyonu</a></li>
+  <li><a href="https://github.com/GoogleChrome/web-vitals" target="_blank" rel="noopener noreferrer">web-vitals GitHub Repository</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Performance_API" target="_blank" rel="noopener noreferrer">MDN - Performance API</a></li>
+</ul>

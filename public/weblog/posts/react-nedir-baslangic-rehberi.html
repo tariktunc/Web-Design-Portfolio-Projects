@@ -1,0 +1,256 @@
+<h2>React Nedir? Kapsamlı Başlangıç Rehberi</h2>
+
+<p>Modern web geliştirme dünyasında React, kullanıcı arayüzleri oluşturmak için en popüler JavaScript kütüphanelerinden biri haline geldi. Facebook (Meta) tarafından geliştirilen ve açık kaynak olarak sunulan React, bileşen tabanlı mimarisiyle karmaşık arayüzleri yönetilebilir parçalara böler. Bu rehberde React'in ne olduğunu, neden bu kadar popüler olduğunu ve ilk React uygulamanızı nasıl oluşturacağınızı adım adım öğreneceksiniz.</p>
+
+<h3>React'in Tanımı ve Tarihçesi</h3>
+
+<p>React, Facebook mühendisi Jordan Walke tarafından 2011 yılında geliştirilmeye başlanmış ve 2013 yılında açık kaynak olarak yayınlanmıştır. Temel amacı, büyük ölçekli ve veri odaklı uygulamalarda kullanıcı arayüzlerini verimli bir şekilde oluşturmak ve yönetmektir.</p>
+
+<blockquote>React bir framework değil, bir <strong>kütüphanedir</strong>. Bu, yalnızca görünüm (view) katmanına odaklandığı anlamına gelir. Routing, state management gibi ek özellikler için topluluk tarafından geliştirilen kütüphaneler kullanılır.</blockquote>
+
+<p>React'in temel özellikleri şunlardır:</p>
+
+<ul>
+  <li><strong>Virtual DOM:</strong> Gerçek DOM yerine sanal bir DOM kullanarak performansı artırır</li>
+  <li><strong>Bileşen Tabanlı Mimari:</strong> UI'ı yeniden kullanılabilir bileşenlere böler</li>
+  <li><strong>Tek Yönlü Veri Akışı:</strong> Veri üstten alta doğru akar, bu da hata ayıklamayı kolaylaştırır</li>
+  <li><strong>JSX:</strong> JavaScript içinde HTML benzeri sözdizimi kullanmayı sağlar</li>
+  <li><strong>Deklaratif Yaklaşım:</strong> UI'ın nasıl görünmesi gerektiğini tanımlarsınız, React güncellemeleri yönetir</li>
+</ul>
+
+<h3>Virtual DOM Nasıl Çalışır?</h3>
+
+<p>React'in en güçlü özelliklerinden biri Virtual DOM (Sanal DOM) mekanizmasıdır. Geleneksel DOM manipülasyonu yavaştır çünkü her değişiklik tarayıcının sayfayı yeniden render etmesine neden olur. React bu sorunu şu şekilde çözer:</p>
+
+<ol>
+  <li>React, bellekte gerçek DOM'un hafif bir kopyasını (Virtual DOM) tutar</li>
+  <li>State değiştiğinde yeni bir Virtual DOM ağacı oluşturulur</li>
+  <li><strong>Diffing algoritması</strong> ile eski ve yeni Virtual DOM karşılaştırılır</li>
+  <li>Yalnızca değişen kısımlar gerçek DOM'a uygulanır (reconciliation)</li>
+</ol>
+
+<div class="info">
+  <p><strong>Bilgi:</strong> React 18 ile birlikte gelen Concurrent Mode, render işlemlerini bölerek daha akıcı bir kullanıcı deneyimi sunar. Büyük güncellemeler küçük parçalara bölünür ve kullanıcı etkileşimleri önceliklendirilir.</p>
+</div>
+
+<h3>İlk React Projesini Oluşturma</h3>
+
+<p>React projesi oluşturmanın en modern yolu Vite kullanmaktır. Daha önce Create React App (CRA) popülerdi ancak artık resmi olarak önerilmemektedir.</p>
+
+<pre><code># Vite ile yeni bir React projesi oluşturma
+npm create vite@latest my-react-app -- --template react
+
+# Proje dizinine geçiş
+cd my-react-app
+
+# Bağımlılıkları yükleme
+npm install
+
+# Geliştirme sunucusunu başlatma
+npm run dev</code></pre>
+
+<p>Bu komutlar çalıştırıldığında tarayıcınızda <code>http://localhost:5173</code> adresinde React uygulamanız çalışmaya başlar.</p>
+
+<h3>React'in Temel Yapı Taşları</h3>
+
+<h4>1. Bileşenler (Components)</h4>
+
+<p>React'te her şey bileşenlerden oluşur. Bir bileşen, kendi mantığı ve görünümü olan bağımsız bir UI parçasıdır. Modern React'te fonksiyonel bileşenler standart olarak kullanılır:</p>
+
+<pre><code>// Basit bir fonksiyonel bileşen
+function Welcome({ name }) {
+  return (
+    &lt;div className="welcome-card"&gt;
+      &lt;h1&gt;Merhaba, {name}!&lt;/h1&gt;
+      &lt;p&gt;React dünyasına hoş geldiniz.&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+// Bileşeni kullanma
+function App() {
+  return (
+    &lt;div&gt;
+      &lt;Welcome name="Tarik" /&gt;
+      &lt;Welcome name="Ayşe" /&gt;
+      &lt;Welcome name="Mehmet" /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h4>2. JSX (JavaScript XML)</h4>
+
+<p>JSX, JavaScript içinde HTML benzeri sözdizimi kullanmamızı sağlar. Aslında JSX, <code>React.createElement()</code> çağrılarına dönüştürülür:</p>
+
+<pre><code>// JSX ile yazım
+const element = &lt;h1 className="title"&gt;Merhaba React!&lt;/h1&gt;;
+
+// Babel tarafından dönüştürülmüş hali
+const element = React.createElement(
+  'h1',
+  { className: 'title' },
+  'Merhaba React!'
+);</code></pre>
+
+<h4>3. Props ve State</h4>
+
+<p>React'te veri yönetiminin iki temel kavramı vardır:</p>
+
+<ul>
+  <li><strong>Props:</strong> Üst bileşenden alt bileşene aktarılan salt okunur verilerdir</li>
+  <li><strong>State:</strong> Bileşenin kendi içinde yönettiği, değişebilir verilerdir</li>
+</ul>
+
+<pre><code>import { useState } from 'react';
+
+function Counter() {
+  // useState ile state tanımlama
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Sayaç: {count}&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;
+        Artır
+      &lt;/button&gt;
+      &lt;button onClick={() =&gt; setCount(0)}&gt;
+        Sıfırla
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>React Ekosistemi</h3>
+
+<p>React tek başına bir kütüphane olsa da, zengin bir ekosisteme sahiptir. İşte en çok kullanılan araçlar:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Kategori</th>
+      <th>Araç</th>
+      <th>Açıklama</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Routing</td>
+      <td>React Router</td>
+      <td>Sayfa yönlendirme ve navigasyon</td>
+    </tr>
+    <tr>
+      <td>State Management</td>
+      <td>Redux, Zustand, Jotai</td>
+      <td>Global state yönetimi</td>
+    </tr>
+    <tr>
+      <td>Veri Çekme</td>
+      <td>TanStack Query, SWR</td>
+      <td>Sunucu state yönetimi ve caching</td>
+    </tr>
+    <tr>
+      <td>Stil</td>
+      <td>Tailwind CSS, styled-components</td>
+      <td>CSS çözümleri</td>
+    </tr>
+    <tr>
+      <td>Form</td>
+      <td>React Hook Form, Formik</td>
+      <td>Form yönetimi ve validasyon</td>
+    </tr>
+    <tr>
+      <td>Framework</td>
+      <td>Next.js, Remix</td>
+      <td>Full-stack React framework'leri</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Neden React Tercih Edilmeli?</h3>
+
+<p>React'i diğer alternatiflerden ayıran birçok avantaj vardır:</p>
+
+<ol>
+  <li><strong>Geniş Topluluk:</strong> Dünya genelinde milyonlarca geliştirici tarafından kullanılır. npm üzerinde binlerce React paketi mevcuttur</li>
+  <li><strong>İş Piyasası:</strong> React bilgisi, frontend geliştirme pozisyonlarında en çok aranan becerilerden biridir</li>
+  <li><strong>Öğrenme Eğrisi:</strong> JavaScript bilgisi olan geliştiriciler için nispeten kolay bir geçiş sağlar</li>
+  <li><strong>Esneklik:</strong> Küçük widget'lardan büyük kurumsal uygulamalara kadar her ölçekte kullanılabilir</li>
+  <li><strong>React Native:</strong> Aynı bilgiyle mobil uygulama geliştirme imkanı sunar</li>
+</ol>
+
+<div class="tip">
+  <p><strong>İpucu:</strong> React öğrenmeye başlamadan önce JavaScript'in temel kavramlarını (ES6+ sözdizimi, destructuring, arrow functions, promises, array methods) iyi kavramış olmanız öğrenme sürecinizi önemli ölçüde hızlandıracaktır.</p>
+</div>
+
+<h3>Basit Bir Uygulama Örneği: Yapılacaklar Listesi</h3>
+
+<p>React'in temel kavramlarını bir araya getiren basit bir yapılacaklar listesi uygulaması oluşturalım:</p>
+
+<pre><code>import { useState } from 'react';
+
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+
+  const addTodo = () =&gt; {
+    if (inputValue.trim() === '') return;
+    setTodos([...todos, { id: Date.now(), text: inputValue, done: false }]);
+    setInputValue('');
+  };
+
+  const toggleTodo = (id) =&gt; {
+    setTodos(todos.map(todo =&gt;
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    ));
+  };
+
+  const deleteTodo = (id) =&gt; {
+    setTodos(todos.filter(todo =&gt; todo.id !== id));
+  };
+
+  return (
+    &lt;div className="todo-app"&gt;
+      &lt;h2&gt;Yapılacaklar Listesi&lt;/h2&gt;
+      &lt;div className="input-group"&gt;
+        &lt;input
+          type="text"
+          value={inputValue}
+          onChange={(e) =&gt; setInputValue(e.target.value)}
+          onKeyDown={(e) =&gt; e.key === 'Enter' &amp;&amp; addTodo()}
+          placeholder="Yeni görev ekle..."
+        /&gt;
+        &lt;button onClick={addTodo}&gt;Ekle&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;ul&gt;
+        {todos.map(todo =&gt; (
+          &lt;li key={todo.id} style={{ textDecoration: todo.done ? 'line-through' : 'none' }}&gt;
+            &lt;span onClick={() =&gt; toggleTodo(todo.id)}&gt;{todo.text}&lt;/span&gt;
+            &lt;button onClick={() =&gt; deleteTodo(todo.id)}&gt;Sil&lt;/button&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+      &lt;p&gt;Toplam: {todos.length} | Tamamlanan: {todos.filter(t =&gt; t.done).length}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+export default TodoApp;</code></pre>
+
+<div class="warning">
+  <p><strong>Uyarı:</strong> Yukarıdaki örnekte <code>Date.now()</code> kullanarak benzersiz id oluşturuyoruz. Gerçek uygulamalarda UUID kütüphanesi veya backend tarafından oluşturulan id'ler tercih edilmelidir.</p>
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React, modern web geliştirmenin temel taşlarından biridir. Bileşen tabanlı mimarisi, Virtual DOM performansı ve geniş ekosistemi sayesinde her ölçekteki proje için güçlü bir seçenektir. Bu rehberde React'in temellerini, nasıl çalıştığını ve ilk uygulamanızı nasıl oluşturacağınızı öğrendiniz. Bir sonraki adımda React bileşen yapısını daha derinlemesine incelemenizi ve hooks sistemini öğrenmenizi öneririm.</p>
+
+<p>React yolculuğunuzda en önemli şey pratik yapmaktır. Küçük projeler oluşturarak başlayın, resmi dökümantasyonu takip edin ve topluluk kaynaklarından yararlanın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev" target="_blank" rel="noopener noreferrer">React Resmi Dökümantasyonu</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Client-side_JavaScript_frameworks/React_getting_started" target="_blank" rel="noopener noreferrer">MDN - React Başlangıç Rehberi</a></li>
+  <li><a href="https://vitejs.dev/guide/" target="_blank" rel="noopener noreferrer">Vite Resmi Dökümantasyonu</a></li>
+  <li><a href="https://legacy.reactjs.org/docs/reconciliation.html" target="_blank" rel="noopener noreferrer">React Reconciliation Algoritması</a></li>
+</ul>

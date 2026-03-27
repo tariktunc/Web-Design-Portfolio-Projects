@@ -1,0 +1,203 @@
+<h2>Sitemap.xml ve Robots.txt: Arama Motoru Yönlendirme</h2>
+
+<p>Sitemap.xml ve robots.txt, arama motorlarıyla iletişim kurmanın en temel yollarıdır. Sitemap, arama motorlarına sitenizde hangi sayfaların mevcut olduğunu bildirir; robots.txt ise hangi alanların taranması veya taranmaması gerektiğini belirler. Bu iki dosyayı doğru yapılandırmak, indeksleme verimliliğinizi ve crawl budget kullanımınızı doğrudan etkiler.</p>
+
+<h3>Robots.txt: Arama Motoru Erişim Kontrolü</h3>
+
+<p>Robots.txt, web sitenizin kök dizininde bulunan ve arama motoru botlarına (crawler) hangi URL'lere erişebileceklerini veya erişemeyeceklerini söyleyen düz metin bir dosyadır. Robots Exclusion Protocol standartına dayanır.</p>
+
+<h4>Robots.txt Temel Yapısı</h4>
+
+<pre><code># Tüm botlar için kurallar
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /*?sort=
+Disallow: /*?filter=
+
+# Google için özel kurallar
+User-agent: Googlebot
+Allow: /
+Disallow: /api/internal/
+
+# AI botlarını engelleme
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+# Crawl-delay (Googlebot bunu dikkate almaz)
+User-agent: Bingbot
+Crawl-delay: 5
+
+# Sitemap konumu
+Sitemap: https://tariktunc.com/sitemap.xml
+Sitemap: https://tariktunc.com/sitemap-blog.xml</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Robots.txt, sayfaların indekslenmesini engellemez. Bir sayfa robots.txt ile engellenmiş olsa bile, başka sitelerden link alıyorsa Google o sayfayı URL olarak indeksleyebilir. Gerçek indeks engelleme için <code>&lt;meta name="robots" content="noindex"&gt;</code> kullanın.
+</div>
+
+<h4>Pattern Matching Kuralları</h4>
+
+<p>Robots.txt'de wildcard (<code>*</code>) ve end-of-string (<code>$</code>) kullanılabilir:</p>
+
+<ul>
+  <li><code>Disallow: /admin/</code> - /admin/ ile başlayan tüm URL'ler</li>
+  <li><code>Disallow: /*.pdf$</code> - .pdf ile biten tüm URL'ler</li>
+  <li><code>Disallow: /*?</code> - Query string içeren tüm URL'ler</li>
+  <li><code>Allow: /api/public/</code> - Belirli bir alt dizine izin verme</li>
+</ul>
+
+<h3>Sitemap.xml: Site Haritası Oluşturma</h3>
+
+<p>XML Sitemap, sitenizde indekslenmesini istediğiniz tüm URL'lerin listesini arama motorlarına sunar. Her URL için son değişiklik tarihi, değişiklik sıklığı ve öncelik bilgisi eklenebilir.</p>
+
+<h4>Sitemap.xml Yapısı</h4>
+
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"&gt;
+
+  &lt;url&gt;
+    &lt;loc&gt;https://tariktunc.com/&lt;/loc&gt;
+    &lt;lastmod&gt;2025-08-10&lt;/lastmod&gt;
+    &lt;changefreq&gt;weekly&lt;/changefreq&gt;
+    &lt;priority&gt;1.0&lt;/priority&gt;
+  &lt;/url&gt;
+
+  &lt;url&gt;
+    &lt;loc&gt;https://tariktunc.com/blog&lt;/loc&gt;
+    &lt;lastmod&gt;2025-08-10&lt;/lastmod&gt;
+    &lt;changefreq&gt;daily&lt;/changefreq&gt;
+    &lt;priority&gt;0.9&lt;/priority&gt;
+  &lt;/url&gt;
+
+  &lt;url&gt;
+    &lt;loc&gt;https://tariktunc.com/blog/sitemap-robots-rehberi&lt;/loc&gt;
+    &lt;lastmod&gt;2025-08-10&lt;/lastmod&gt;
+    &lt;changefreq&gt;monthly&lt;/changefreq&gt;
+    &lt;priority&gt;0.8&lt;/priority&gt;
+    &lt;image:image&gt;
+      &lt;image:loc&gt;https://tariktunc.com/images/sitemap-robots.webp&lt;/image:loc&gt;
+      &lt;image:title&gt;Sitemap ve Robots.txt Rehberi&lt;/image:title&gt;
+    &lt;/image:image&gt;
+  &lt;/url&gt;
+
+&lt;/urlset&gt;</code></pre>
+
+<h4>Sitemap Index (Büyük Siteler İçin)</h4>
+
+<p>50.000'den fazla URL'niz varsa veya dosya boyutu 50MB'ı aşıyorsa, sitemap index kullanarak birden fazla sitemap dosyasını birleştirin:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"&gt;
+  &lt;sitemap&gt;
+    &lt;loc&gt;https://tariktunc.com/sitemap-pages.xml&lt;/loc&gt;
+    &lt;lastmod&gt;2025-08-10&lt;/lastmod&gt;
+  &lt;/sitemap&gt;
+  &lt;sitemap&gt;
+    &lt;loc&gt;https://tariktunc.com/sitemap-blog.xml&lt;/loc&gt;
+    &lt;lastmod&gt;2025-08-10&lt;/lastmod&gt;
+  &lt;/sitemap&gt;
+&lt;/sitemapindex&gt;</code></pre>
+
+<h3>Next.js ile Dinamik Sitemap Oluşturma</h3>
+
+<pre><code>// app/sitemap.ts
+import { MetadataRoute } from 'next';
+
+export default async function sitemap(): Promise&lt;MetadataRoute.Sitemap&gt; {
+  const baseUrl = 'https://tariktunc.com';
+
+  // Blog yazılarını çek
+  const posts = await getAllPosts();
+
+  const blogUrls = posts.map((post) =&gt; ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.updatedAt || post.date),
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }));
+
+  // Statik sayfalar
+  const staticPages = [
+    { url: baseUrl, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 1.0 },
+    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
+    { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+  ];
+
+  return [...staticPages, ...blogUrls];
+}
+
+// app/robots.ts
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/private/'],
+      },
+      {
+        userAgent: 'GPTBot',
+        disallow: '/',
+      },
+    ],
+    sitemap: 'https://tariktunc.com/sitemap.xml',
+  };
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Next.js'te <code>app/sitemap.ts</code> ve <code>app/robots.ts</code> dosyaları oluşturduğunuzda, framework otomatik olarak <code>/sitemap.xml</code> ve <code>/robots.txt</code> endpoint'lerini oluşturur. Manuel dosya yönetimi gerekmez.
+</div>
+
+<h3>Google Search Console ile Doğrulama</h3>
+
+<p>Sitemap'inizi Google Search Console'a göndererek indeksleme durumunu takip edebilirsiniz:</p>
+
+<ol>
+  <li>Google Search Console'a giriş yapın.</li>
+  <li>Sol menüden "Sitemaps" sekmesine tıklayın.</li>
+  <li>Sitemap URL'nizi girin ve "Submit" butonuna tıklayın.</li>
+  <li>"Submitted" ve "Discovered URLs" sayılarını kontrol edin.</li>
+  <li>Hata varsa detayları inceleyip düzeltin.</li>
+</ol>
+
+<div class="info">
+  <strong>Bilgi:</strong> Google, <code>changefreq</code> ve <code>priority</code> değerlerini büyük ölçüde göz ardı eder. Ancak <code>lastmod</code> değeri güncel ve doğru olduğunda, Google bu bilgiyi crawl planlamasında kullanır. Her zaman gerçek son değişiklik tarihini belirtin.
+</div>
+
+<h3>Best Practices</h3>
+
+<ul>
+  <li>Sitemap'te yalnızca canonical URL'leri listeleyin.</li>
+  <li>Noindex sayfaları sitemap'e eklemeyin.</li>
+  <li>301/302 yönlendirme yapan URL'leri sitemap'ten çıkarın.</li>
+  <li>Robots.txt dosyasını her zaman sitenizin kök dizininde tutun.</li>
+  <li>Robots.txt'te sitemap konumunu mutlaka belirtin.</li>
+  <li>Büyük sitelerde sitemap index yapısı kullanın.</li>
+  <li>Sitemap'i her yeni içerik eklediğinizde otomatik güncelleyin.</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Sitemap.xml ve robots.txt, arama motoru optimizasyonunun teknik temellerini oluşturur. Doğru yapılandırılmış bir robots.txt ile crawl budget'ınızı verimli kullanır, kapsamlı bir sitemap ile tüm önemli sayfalarınızın keşfedilmesini sağlarsınız. Next.js gibi modern framework'ler bu dosyaların otomatik oluşturulmasını kolaylaştırır. Düzenli olarak Google Search Console'dan indeksleme durumunuzu kontrol etmeyi unutmayın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview" target="_blank" rel="noopener noreferrer">Google - Sitemap Dokümantasyonu</a></li>
+  <li><a href="https://developers.google.com/search/docs/crawling-indexing/robots/intro" target="_blank" rel="noopener noreferrer">Google - Robots.txt Dokümantasyonu</a></li>
+  <li><a href="https://www.sitemaps.org/protocol.html" target="_blank" rel="noopener noreferrer">Sitemaps.org - Protokol Standartı</a></li>
+  <li><a href="https://www.robotstxt.org/" target="_blank" rel="noopener noreferrer">Robotstxt.org - Robots Exclusion Standard</a></li>
+</ul>

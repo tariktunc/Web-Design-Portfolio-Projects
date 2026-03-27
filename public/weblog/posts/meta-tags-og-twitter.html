@@ -1,0 +1,168 @@
+<h2>Meta Tags, Open Graph ve Twitter Cards: Sosyal Paylaşım Optimizasyonu</h2>
+
+<p>Web sayfalarınız sosyal medyada paylaşıldığında nasıl göründüğü, tıklama oranınızı doğrudan etkiler. Meta tag'ler, Open Graph protokolü ve Twitter Cards, hem arama motorları hem de sosyal platformlar için sayfanızın ön izleme bilgilerini kontrol etmenizi sağlar. Bu yazıda tüm bu standartları, doğru implementasyon yöntemlerini ve sık yapılan hataları detaylıca ele alacağız.</p>
+
+<h3>Meta Tags: Temelden İleri Seviyeye</h3>
+
+<p>HTML meta tag'leri, sayfanız hakkında metadata sağlayan <code>&lt;head&gt;</code> bölümündeki elementlerdir. Arama motorları ve sosyal platformlar bu bilgileri sayfanızı tanımlamak, indekslemek ve önizlemek için kullanır.</p>
+
+<h4>Temel SEO Meta Tag'leri</h4>
+
+<pre><code>&lt;head&gt;
+  &lt;!-- Zorunlu: Sayfa başlığı (50-60 karakter) --&gt;
+  &lt;title&gt;Meta Tags ve Open Graph Rehberi | Tarik Tunç&lt;/title&gt;
+
+  &lt;!-- Zorunlu: Sayfa açıklaması (150-160 karakter) --&gt;
+  &lt;meta name="description" content="Meta tags, Open Graph ve Twitter Cards ile sosyal paylaşım optimizasyonu. SEO ve sosyal medya için kapsamlı rehber."&gt;
+
+  &lt;!-- Robots direktifi --&gt;
+  &lt;meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"&gt;
+
+  &lt;!-- Canonical URL --&gt;
+  &lt;link rel="canonical" href="https://tariktunc.com/blog/meta-tags-og-twitter"&gt;
+
+  &lt;!-- Dil ve karakter seti --&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;meta http-equiv="content-language" content="tr"&gt;
+
+  &lt;!-- Favicon --&gt;
+  &lt;link rel="icon" href="/favicon.ico" sizes="any"&gt;
+  &lt;link rel="icon" href="/icon.svg" type="image/svg+xml"&gt;
+  &lt;link rel="apple-touch-icon" href="/apple-touch-icon.png"&gt;
+&lt;/head&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Title tag'ini 50-60 karakter, meta description'ı 150-160 karakter arasında tutun. Google bu sınırları aştığınızda metni keser ve <code>...</code> ile gösterir.
+</div>
+
+<h3>Open Graph Protokolü</h3>
+
+<p>Open Graph (OG), Facebook tarafından geliştirilen ve web sayfalarının sosyal medyada nasıl görüneceğini kontrol eden bir protokoldür. LinkedIn, WhatsApp, Telegram ve diğer birçok platform da OG tag'lerini destekler.</p>
+
+<pre><code>&lt;!-- Temel Open Graph Tag'leri --&gt;
+&lt;meta property="og:type" content="article"&gt;
+&lt;meta property="og:title" content="Meta Tags ve Open Graph Rehberi"&gt;
+&lt;meta property="og:description" content="Sosyal paylaşım optimizasyonu için kapsamlı rehber."&gt;
+&lt;meta property="og:image" content="https://tariktunc.com/images/og-meta-tags.webp"&gt;
+&lt;meta property="og:image:width" content="1200"&gt;
+&lt;meta property="og:image:height" content="630"&gt;
+&lt;meta property="og:image:alt" content="Meta Tags ve Open Graph Rehberi kapak görseli"&gt;
+&lt;meta property="og:url" content="https://tariktunc.com/blog/meta-tags-og-twitter"&gt;
+&lt;meta property="og:site_name" content="Tarik Tunç Blog"&gt;
+&lt;meta property="og:locale" content="tr_TR"&gt;
+
+&lt;!-- Article-specific OG tag'leri --&gt;
+&lt;meta property="article:published_time" content="2025-08-05T10:00:00+03:00"&gt;
+&lt;meta property="article:modified_time" content="2025-08-05T10:00:00+03:00"&gt;
+&lt;meta property="article:author" content="https://tariktunc.com"&gt;
+&lt;meta property="article:section" content="SEO"&gt;
+&lt;meta property="article:tag" content="meta tags"&gt;
+&lt;meta property="article:tag" content="open graph"&gt;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> OG image boyutu en az <strong>1200x630 piksel</strong> olmalıdır. Bu boyutun altındaki görseller bazı platformlarda küçük thumbnail olarak gösterilir veya hiç görüntülenmez. Dosya boyutu 8MB'ı geçmemelidir.
+</div>
+
+<h3>Twitter Cards</h3>
+
+<p>Twitter (X), kendi meta tag sistemini kullanır. İki ana kart tipi vardır: <code>summary</code> (küçük kare görsel) ve <code>summary_large_image</code> (geniş dikdörtgen görsel).</p>
+
+<pre><code>&lt;!-- Twitter Card Tag'leri --&gt;
+&lt;meta name="twitter:card" content="summary_large_image"&gt;
+&lt;meta name="twitter:site" content="@tarikisamettunc"&gt;
+&lt;meta name="twitter:creator" content="@tarikisamettunc"&gt;
+&lt;meta name="twitter:title" content="Meta Tags ve Open Graph Rehberi"&gt;
+&lt;meta name="twitter:description" content="Sosyal paylaşım optimizasyonu için kapsamlı rehber."&gt;
+&lt;meta name="twitter:image" content="https://tariktunc.com/images/twitter-meta-tags.webp"&gt;
+&lt;meta name="twitter:image:alt" content="Meta Tags ve Open Graph Rehberi kapak görseli"&gt;</code></pre>
+
+<h3>Next.js App Router ile Metadata API</h3>
+
+<p>Next.js 14+, Metadata API ile tüm meta tag'leri TypeScript güvenliğiyle yönetmenizi sağlar:</p>
+
+<pre><code>// app/blog/[slug]/page.tsx
+import { Metadata } from 'next';
+
+interface Props {
+  params: { slug: string };
+}
+
+export async function generateMetadata({ params }: Props): Promise&lt;Metadata&gt; {
+  const post = await getPost(params.slug);
+
+  return {
+    title: `${post.title} | Tarik Tunç`,
+    description: post.summary,
+    openGraph: {
+      type: 'article',
+      title: post.title,
+      description: post.summary,
+      images: [
+        {
+          url: post.image,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+      publishedTime: post.date,
+      authors: ['Tarik Tunç'],
+      tags: post.tags,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.summary,
+      images: [post.image],
+      creator: '@tarikisamettunc',
+    },
+    alternates: {
+      canonical: `https://tariktunc.com/blog/${params.slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+    },
+  };
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Twitter, Open Graph tag'lerini fallback olarak kullanır. Eğer <code>twitter:title</code> tanımlı değilse <code>og:title</code> kullanılır. Ancak en iyi sonuç için her iki seti de tanımlamanız önerilir.
+</div>
+
+<h3>Sosyal Paylaşım Önizleme Araçları</h3>
+
+<p>Sayfanızın sosyal medyada nasıl göründüğünü yayınlamadan önce test edin:</p>
+
+<ul>
+  <li><strong>Facebook Sharing Debugger:</strong> OG tag'lerini doğrular ve cache'i temizler.</li>
+  <li><strong>Twitter Card Validator:</strong> Twitter kart önizlemesi gösterir.</li>
+  <li><strong>LinkedIn Post Inspector:</strong> LinkedIn paylaşım görünümünü kontrol eder.</li>
+  <li><strong>opengraph.xyz:</strong> Tüm platformlar için birleşik önizleme aracı.</li>
+</ul>
+
+<h3>Sık Yapılan Hatalar</h3>
+
+<ul>
+  <li><strong>Eksik og:image:</strong> Görsel olmadan paylaşımlar düşük CTR alır.</li>
+  <li><strong>Yanlış image boyutu:</strong> 1200x630 idealdir; diğer boyutlar kırpılabilir.</li>
+  <li><strong>Relative URL kullanımı:</strong> OG ve Twitter tag'lerinde mutlaka absolute URL kullanın.</li>
+  <li><strong>Cache problemi:</strong> Sosyal platformlar meta bilgileri cache'ler. Güncelleme sonrası debugger araçlarıyla cache'i temizleyin.</li>
+  <li><strong>Duplicate meta tag'ler:</strong> Aynı meta tag'in birden fazla tanımlanması öngörülemeyen sonuçlara yol açar.</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Meta tag'ler, Open Graph ve Twitter Cards, web sayfalarınızın hem arama motorlarında hem de sosyal medyada nasıl temsil edildiğini kontrol eder. Doğru yapılandırılmış meta bilgiler, organik tıklama oranınızı ve sosyal paylaşım etkileşimlerinizi önemli ölçüde artırır. Her sayfanız için benzersiz ve açıklayıcı meta tag'ler oluşturun, görsellerinizi optimize edin ve değişikliklerinizi debugger araçlarıyla test edin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://ogp.me/" target="_blank" rel="noopener noreferrer">Open Graph Protocol - Resmi Dokümantasyon</a></li>
+  <li><a href="https://developer.twitter.com/en/docs/twitter-for-websites/cards" target="_blank" rel="noopener noreferrer">Twitter Cards Dokümantasyonu</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/optimizing/metadata" target="_blank" rel="noopener noreferrer">Next.js Metadata API</a></li>
+  <li><a href="https://developers.facebook.com/tools/debug/" target="_blank" rel="noopener noreferrer">Facebook Sharing Debugger</a></li>
+</ul>

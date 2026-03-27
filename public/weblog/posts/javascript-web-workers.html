@@ -1,0 +1,290 @@
+<h2>JavaScript Web Workers: Paralel İşlem Rehberi</h2>
+
+<p>JavaScript tek iş parçacıklı (single-threaded) çalışır ve ağır hesaplamalar ana thread'i bloklar, kullanıcı arayüzünü donuklaştırır. <strong>Web Workers</strong>, arka plan thread'lerinde JavaScript çalıştırarak ana thread'i serbest bırakır. Bu rehberde Dedicated Workers, Shared Workers, mesaj iletişimi, veri transfer yöntemleri ve performans optimizasyonlarını inceleyeceğiz.</p>
+
+<h3>Web Worker Türleri</h3>
+
+<ul>
+  <li><strong>Dedicated Worker:</strong> Tek bir script tarafından kullanılır. En yaygın kullanılan türdür</li>
+  <li><strong>Shared Worker:</strong> Birden fazla script/sekme tarafından paylaşılabilir</li>
+  <li><strong>Service Worker:</strong> Ağ isteklerini yakalayan proxy worker (ayrı bir konu)</li>
+</ul>
+
+<h3>Dedicated Worker Oluşturma</h3>
+
+<pre><code>// main.js (Ana thread)
+const worker = new Worker('worker.js');
+
+// Worker'a mesaj gönder
+worker.postMessage({
+  type: 'CALCULATE',
+  data: { numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+});
+
+// Worker'dan mesaj al
+worker.onmessage = (event) =&gt; {
+  console.log('Sonuç:', event.data);
+};
+
+// Hata yakalama
+worker.onerror = (error) =&gt; {
+  console.error('Worker hatası:', error.message);
+};
+
+// Worker'ı sonlandır
+// worker.terminate();
+
+// worker.js (Worker thread)
+self.onmessage = (event) =&gt; {
+  const { type, data } = event.data;
+
+  switch (type) {
+    case 'CALCULATE': {
+      // Ağır hesaplama (ana thread'i bloklamaz)
+      const result = data.numbers.reduce((sum, n) =&gt; {
+        // Simüle edilmiş ağır işlem
+        let val = n;
+        for (let i = 0; i &lt; 1000000; i++) {
+          val = Math.sqrt(val * val + i);
+        }
+        return sum + val;
+      }, 0);
+
+      self.postMessage({ type: 'RESULT', result });
+      break;
+    }
+  }
+};</code></pre>
+
+<h3>Inline Worker (Blob URL)</h3>
+
+<p>Ayrı dosya oluşturmadan worker tanımlamak için Blob URL kullanabilirsiniz:</p>
+
+<pre><code>function createInlineWorker(fn) {
+  const blob = new Blob(
+    [`self.onmessage = ${fn.toString()}`],
+    { type: 'application/javascript' }
+  );
+  const url = URL.createObjectURL(blob);
+  const worker = new Worker(url);
+
+  // Cleanup
+  worker.addEventListener('close', () =&gt; URL.revokeObjectURL(url));
+  return worker;
+}
+
+const sortWorker = createInlineWorker((event) =&gt; {
+  const { array } = event.data;
+  const sorted = array.sort((a, b) =&gt; a - b);
+  self.postMessage({ sorted });
+});
+
+sortWorker.postMessage({
+  array: Array.from({ length: 1000000 }, () =&gt; Math.random()),
+});
+
+sortWorker.onmessage = (event) =&gt; {
+  console.log('Sıralama tamamlandı:', event.data.sorted.length, 'eleman');
+};</code></pre>
+
+<h3>Transferable Objects</h3>
+
+<p>Büyük verileri kopyalamak yerine sahipliği transfer etmek çok daha performanslıdır:</p>
+
+<pre><code>// Kötü: Veri kopyalanır (yavaş, çift bellek kullanımı)
+const largeArray = new Float64Array(1000000);
+worker.postMessage({ data: largeArray });
+// largeArray hala ana thread'de kullanılabilir
+
+// İyi: Veri transfer edilir (hızlı, sıfır kopya)
+const buffer = new Float64Array(1000000);
+worker.postMessage({ data: buffer }, [buffer.buffer]);
+// buffer artık ana thread'de kullanılamaz (boş)
+console.log(buffer.byteLength); // 0
+
+// Worker tarafında
+self.onmessage = (event) =&gt; {
+  const data = event.data.data; // Float64Array, transfer edilmiş
+
+  // İşlem yap
+  for (let i = 0; i &lt; data.length; i++) {
+    data[i] = Math.sqrt(data[i]);
+  }
+
+  // Sonucu geri transfer et
+  self.postMessage({ result: data }, [data.buffer]);
+};</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Transferable Objects, veriyi kopyalamak yerine sahipliğini aktarır. Bu işlem O(1) sürede gerçekleşir ve büyük ArrayBuffer'lar için dramatik performans artışı sağlar.
+</div>
+
+<h3>SharedArrayBuffer ile Paylaşımlı Bellek</h3>
+
+<pre><code>// Ana thread
+const sharedBuffer = new SharedArrayBuffer(1024);
+const sharedArray = new Int32Array(sharedBuffer);
+
+// Worker'a paylaşımlı bellek gönder
+worker.postMessage({ buffer: sharedBuffer });
+
+// Atomics ile thread-safe okuma/yazma
+Atomics.store(sharedArray, 0, 42);
+console.log(Atomics.load(sharedArray, 0)); // 42
+
+// Worker tarafında
+self.onmessage = (event) =&gt; {
+  const sharedArray = new Int32Array(event.data.buffer);
+
+  // Atomics ile güvenli erişim
+  Atomics.add(sharedArray, 0, 10);
+  const value = Atomics.load(sharedArray, 0); // 52
+
+  // Bekleme ve bildirim
+  Atomics.wait(sharedArray, 1, 0); // index 1 = 0 olduğu sürece bekle
+  // Ana thread'den Atomics.notify(sharedArray, 1) çağrılınca devam eder
+};</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>SharedArrayBuffer</code> kullanmak için sunucu <code>Cross-Origin-Opener-Policy: same-origin</code> ve <code>Cross-Origin-Embedder-Policy: require-corp</code> başlıklarını göndermelidir.
+</div>
+
+<h3>Worker Pool Pattern</h3>
+
+<pre><code>// WorkerPool.js
+class WorkerPool {
+  constructor(workerScript, poolSize = navigator.hardwareConcurrency || 4) {
+    this.workers = [];
+    this.queue = [];
+    this.activeWorkers = new Set();
+
+    for (let i = 0; i &lt; poolSize; i++) {
+      const worker = new Worker(workerScript);
+      this.workers.push(worker);
+    }
+  }
+
+  exec(data) {
+    return new Promise((resolve, reject) =&gt; {
+      const task = { data, resolve, reject };
+
+      const availableWorker = this.workers.find(
+        (w) =&gt; !this.activeWorkers.has(w)
+      );
+
+      if (availableWorker) {
+        this._runTask(availableWorker, task);
+      } else {
+        this.queue.push(task);
+      }
+    });
+  }
+
+  _runTask(worker, task) {
+    this.activeWorkers.add(worker);
+
+    worker.onmessage = (event) =&gt; {
+      task.resolve(event.data);
+      this.activeWorkers.delete(worker);
+
+      // Kuyrukta bekleyen iş varsa çalıştır
+      if (this.queue.length &gt; 0) {
+        const nextTask = this.queue.shift();
+        this._runTask(worker, nextTask);
+      }
+    };
+
+    worker.onerror = (error) =&gt; {
+      task.reject(error);
+      this.activeWorkers.delete(worker);
+    };
+
+    worker.postMessage(task.data);
+  }
+
+  terminate() {
+    this.workers.forEach((w) =&gt; w.terminate());
+  }
+}
+
+// Kullanım
+const pool = new WorkerPool('compute-worker.js', 4);
+
+async function processImages(images) {
+  const results = await Promise.all(
+    images.map((img) =&gt; pool.exec({ type: 'RESIZE', image: img }))
+  );
+  return results;
+}</code></pre>
+
+<h3>Comlink ile Kolay Worker İletişimi</h3>
+
+<pre><code>// npm install comlink
+// worker.js
+import * as Comlink from 'comlink';
+
+const api = {
+  async fibonacci(n) {
+    if (n &lt;= 1) return n;
+    return api.fibonacci(n - 1) + api.fibonacci(n - 2);
+  },
+
+  async processData(items) {
+    return items.map((item) =&gt; ({
+      ...item,
+      processed: true,
+      hash: hashFunction(item.data),
+    }));
+  },
+};
+
+Comlink.expose(api);
+
+// main.js
+import * as Comlink from 'comlink';
+
+const worker = new Worker('worker.js');
+const api = Comlink.wrap(worker);
+
+// Doğrudan fonksiyon çağrısı gibi kullanılır
+const result = await api.fibonacci(40);
+console.log('Fibonacci(40):', result);</code></pre>
+
+<h3>Web Worker Kullanım Senaryoları</h3>
+
+<ol>
+  <li><strong>Resim işleme:</strong> Canvas manipülasyonu, filtre uygulama, boyutlandırma</li>
+  <li><strong>Veri sıralama/filtreleme:</strong> Büyük veri setlerinde arama ve sıralama</li>
+  <li><strong>Kriptografi:</strong> Hash hesaplama, şifreleme/çözme</li>
+  <li><strong>JSON parsing:</strong> Büyük JSON dosyalarının parse edilmesi</li>
+  <li><strong>Syntax highlighting:</strong> Kod editörlerinde sözdizimi renklendirme</li>
+  <li><strong>PDF/CSV oluşturma:</strong> Dosya üretimi</li>
+</ol>
+
+<h3>Web Worker Sınırlamaları</h3>
+
+<ul>
+  <li>DOM'a erişemez (<code>document</code>, <code>window</code> yok)</li>
+  <li><code>localStorage</code> ve <code>sessionStorage</code> erişimi yok</li>
+  <li>Ana thread ile iletişim sadece mesajlaşma yoluyla</li>
+  <li>Same-origin politikası geçerli</li>
+  <li><code>fetch</code>, <code>IndexedDB</code>, <code>WebSocket</code> kullanılabilir</li>
+</ul>
+
+<div class="tip">
+  <strong>İpucu:</strong> Worker'larda DOM manipülasyonu yapamadığınız için, hesaplama mantığını UI mantığından temiz şekilde ayırmak zorunda kalırsınız. Bu, doğal olarak daha iyi bir mimari tasarıma yol açar.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Web Workers, JavaScript'in tek thread sınırlamasını aşmanın ve kullanıcı deneyimini iyileştirmenin güçlü bir yoludur. Ağır hesaplamaları arka plan thread'lerine taşıyarak ana thread'in sorunsuz çalışmasını sağlayın. Transferable Objects ile veri aktarım performansını optimize edin, Worker Pool pattern ile kaynak kullanımını kontrol edin ve Comlink gibi kütüphanelerle geliştirici deneyimini artırın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API" target="_blank" rel="noopener noreferrer">MDN - Web Workers API</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects" target="_blank" rel="noopener noreferrer">MDN - Transferable Objects</a></li>
+  <li><a href="https://github.com/nicolo-ribaudo/comlink" target="_blank" rel="noopener noreferrer">Comlink - Web Workers Made Easy</a></li>
+  <li><a href="https://web.dev/articles/workers-basics" target="_blank" rel="noopener noreferrer">web.dev - Web Workers Basics</a></li>
+  <li><a href="https://surma.dev/things/is-postmessage-slow/" target="_blank" rel="noopener noreferrer">Surma - Is postMessage Slow?</a></li>
+</ul>

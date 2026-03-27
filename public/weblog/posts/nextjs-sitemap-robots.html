@@ -1,0 +1,252 @@
+<h2>Next.js Sitemap ve Robots.txt Oluşturma</h2>
+
+<p>Arama motorlarının sitenizi doğru ve verimli bir şekilde taraması için <strong>sitemap.xml</strong> ve <strong>robots.txt</strong> dosyaları kritik öneme sahiptir. Next.js App Router, bu dosyaları oluşturmak için yerleşik destek sunar. Bu yazıda statik ve dinamik sitemap oluşturmayı, robots.txt yapılandırmasını ve SEO en iyi pratiklerini adım adım inceleyeceğiz.</p>
+
+<h3>Robots.txt Nedir?</h3>
+
+<p>Robots.txt, arama motoru bot'larına sitenizin hangi bölümlerini tarayıp hangilerini atlayacağını bildiren bir dosyadır. Kök dizinde (<code>/robots.txt</code>) bulunmalıdır.</p>
+
+<h4>Statik robots.txt</h4>
+
+<pre><code># app/robots.txt (statik dosya)
+User-Agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+
+Sitemap: https://example.com/sitemap.xml</code></pre>
+
+<h4>Dinamik robots.txt</h4>
+
+<pre><code>// app/robots.js
+export default function robots() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/private/', '/_next/'],
+      },
+      {
+        userAgent: 'GPTBot',
+        disallow: '/',
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+        disallow: '/api/',
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+  };
+}</code></pre>
+
+<h3>Sitemap Nedir?</h3>
+
+<p>Sitemap, arama motorlarına sitenizin tüm sayfalarını, güncelleme sıklığını ve önceliğini bildiren XML dosyasıdır. Büyük sitelerde arama motorlarının tüm sayfaları keşfetmesini kolaylaştırır.</p>
+
+<h4>Statik Sitemap</h4>
+
+<pre><code>// app/sitemap.js
+export default function sitemap() {
+  const baseUrl = 'https://example.com';
+
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/hakkimizda`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/iletisim`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.5,
+    },
+  ];
+}</code></pre>
+
+<h4>Dinamik Sitemap (Veritabanından)</h4>
+
+<pre><code>// app/sitemap.js
+import { prisma } from '@/lib/prisma';
+
+export default async function sitemap() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  // Statik sayfalar
+  const staticPages = [
+    { url: baseUrl, lastModified: new Date(), priority: 1.0 },
+    { url: `${baseUrl}/hakkimizda`, lastModified: new Date(), priority: 0.8 },
+    { url: `${baseUrl}/iletisim`, lastModified: new Date(), priority: 0.5 },
+  ];
+
+  // Blog yazıları — veritabanından
+  const posts = await prisma.post.findMany({
+    where: { published: true },
+    select: { slug: true, updatedAt: true },
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  const blogPages = posts.map((post) =&gt; ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: post.updatedAt,
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
+  // Ürünler — veritabanından
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    select: { slug: true, updatedAt: true },
+  });
+
+  const productPages = products.map((product) =&gt; ({
+    url: `${baseUrl}/urunler/${product.slug}`,
+    lastModified: product.updatedAt,
+    changeFrequency: 'daily',
+    priority: 0.8,
+  }));
+
+  // Kategoriler
+  const categories = await prisma.category.findMany({
+    select: { slug: true },
+  });
+
+  const categoryPages = categories.map((cat) =&gt; ({
+    url: `${baseUrl}/kategori/${cat.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...blogPages, ...productPages, ...categoryPages];
+}</code></pre>
+
+<h3>Büyük Siteler İçin Sitemap Index</h3>
+
+<p>50.000'den fazla URL veya 50MB'dan büyük sitemap dosyaları için sitemap index kullanmalısınız:</p>
+
+<pre><code>// app/sitemap.js
+export async function generateSitemaps() {
+  const totalProducts = await prisma.product.count();
+  const sitemapCount = Math.ceil(totalProducts / 50000);
+
+  // Her biri 50.000 URL içeren sitemap'ler
+  return Array.from({ length: sitemapCount }, (_, i) =&gt; ({ id: i }));
+}
+
+export default async function sitemap({ id }) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const start = id * 50000;
+
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    select: { slug: true, updatedAt: true },
+    skip: start,
+    take: 50000,
+    orderBy: { id: 'asc' },
+  });
+
+  return products.map((product) =&gt; ({
+    url: `${baseUrl}/urunler/${product.slug}`,
+    lastModified: product.updatedAt,
+  }));
+}
+
+// Bu, aşağıdaki URL'leri oluşturur:
+// /sitemap/0.xml
+// /sitemap/1.xml
+// /sitemap/2.xml
+// ve bir sitemap index dosyası</code></pre>
+
+<h3>Çok Dilli Siteler İçin Sitemap</h3>
+
+<pre><code>// app/sitemap.js
+export default async function sitemap() {
+  const baseUrl = 'https://example.com';
+  const locales = ['tr', 'en', 'de'];
+
+  const posts = await getPosts();
+
+  const entries = posts.flatMap((post) =&gt;
+    locales.map((locale) =&gt; ({
+      url: `${baseUrl}/${locale}/blog/${post.slug}`,
+      lastModified: post.updatedAt,
+      alternates: {
+        languages: Object.fromEntries(
+          locales.map((l) =&gt; [l, `${baseUrl}/${l}/blog/${post.slug}`])
+        ),
+      },
+    }))
+  );
+
+  return entries;
+}</code></pre>
+
+<p>Bu yapılandırma, aşağıdaki XML çıktısını üretir:</p>
+
+<pre><code>&lt;url&gt;
+  &lt;loc&gt;https://example.com/tr/blog/react-rehberi&lt;/loc&gt;
+  &lt;xhtml:link rel="alternate" hreflang="tr" href="https://example.com/tr/blog/react-rehberi" /&gt;
+  &lt;xhtml:link rel="alternate" hreflang="en" href="https://example.com/en/blog/react-rehberi" /&gt;
+  &lt;xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/blog/react-rehberi" /&gt;
+&lt;/url&gt;</code></pre>
+
+<h3>Google Search Console'a Sitemap Gönderme</h3>
+
+<ol>
+  <li>Google Search Console'a giriş yapın</li>
+  <li>Sol menüden "Sitemaps" seçin</li>
+  <li>Sitemap URL'ini girin: <code>https://example.com/sitemap.xml</code></li>
+  <li>"Gönder" butonuna tıklayın</li>
+  <li>Durumun "Başarılı" olmasını bekleyin</li>
+</ol>
+
+<div class="tip">
+  <strong>İpucu:</strong> Sitemap'i Google Search Console'a gönderdikten sonra düzenli olarak kontrol edin. "Bulunamadı" veya "Okunamadı" hataları varsa, sitemap URL'inin doğru olduğundan ve robots.txt'in sitemap'i engellemediğinden emin olun.
+</div>
+
+<h3>Doğrulama ve Test</h3>
+
+<pre><code># Sitemap'i kontrol etme
+curl https://example.com/sitemap.xml
+
+# Robots.txt kontrol
+curl https://example.com/robots.txt
+
+# Google Search Console URL Denetim Aracı ile test
+# Lighthouse SEO denetimi ile kontrol</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Sitemap'te sadece canonical URL'leri listeleyin. Duplicate content, redirect edilen sayfalar, 404 dönen URL'ler veya noindex sayfalar sitemap'e dahil edilmemelidir. Bu, arama motoru bütçenizi (crawl budget) boşa harcar.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js App Router, sitemap.xml ve robots.txt oluşturmayı son derece kolaylaştırır. JavaScript fonksiyonları ile dinamik sitemap'ler oluşturabilir, veritabanından URL'leri çekebilir ve çok dilli siteler için hreflang desteği ekleyebilirsiniz. Büyük siteler için sitemap index yapısını kullanın, robots.txt ile crawl bütçenizi optimize edin ve Google Search Console ile sitemap'inizi takip edin. Bu adımlar, arama motorlarının sitenizi daha iyi anlamasını ve dizinlemesini sağlar.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap" target="_blank" rel="noopener noreferrer">Next.js Docs — Sitemap</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/file-conventions/metadata/robots" target="_blank" rel="noopener noreferrer">Next.js Docs — Robots</a></li>
+  <li><a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview" target="_blank" rel="noopener noreferrer">Google — Sitemaps Overview</a></li>
+  <li><a href="https://developers.google.com/search/docs/crawling-indexing/robots/intro" target="_blank" rel="noopener noreferrer">Google — Robots.txt Introduction</a></li>
+</ul>

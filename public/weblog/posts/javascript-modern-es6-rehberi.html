@@ -1,0 +1,224 @@
+<h2>Modern JavaScript (ES6+): Kapsamlı Başlangıç Rehberi</h2>
+
+<p>JavaScript, ECMAScript 2015 (ES6) ile birlikte devrim niteliğinde bir dönüşüm geçirdi. Arrow fonksiyonlar, template literal'lar, let/const, destructuring ve spread operatörü gibi yenilikler, dilin yazım gücünü ve okunabilirliğini büyük ölçüde artırdı. Bu rehberde ES6+ ile gelen en önemli özellikleri detaylı örneklerle inceliyoruz.</p>
+
+<h3>1. let, const ve Block Scoping</h3>
+
+<p>ES6 öncesinde değişken tanımlamak için yalnızca <code>var</code> anahtar kelimesi kullanılıyordu. <code>var</code> fonksiyon kapsamlıyken, <code>let</code> ve <code>const</code> blok kapsamlıdır. Bu fark, özellikle döngüler ve koşul blokları içinde büyük önem taşır.</p>
+
+<pre><code>// var ile hoisting sorunu
+console.log(x); // undefined (hoisting)
+var x = 10;
+
+// let ile hoisting koruması
+// console.log(y); // ReferenceError: Cannot access 'y' before initialization
+let y = 20;
+
+// const ile sabit referans
+const API_URL = "https://api.example.com";
+// API_URL = "başka"; // TypeError: Assignment to constant variable
+
+// Blok kapsam farkı
+for (let i = 0; i &lt; 3; i++) {
+  setTimeout(() => console.log(i), 100); // 0, 1, 2
+}
+
+for (var j = 0; j &lt; 3; j++) {
+  setTimeout(() => console.log(j), 100); // 3, 3, 3
+}</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Varsayılan olarak <code>const</code> kullanın. Yalnızca değerin değişeceği durumlarda <code>let</code> tercih edin. <code>var</code> kullanımından tamamen kaçının.
+</div>
+
+<h3>2. Arrow Fonksiyonlar</h3>
+
+<p>Arrow fonksiyonlar, daha kısa sözdizimi ve lexical <code>this</code> bağlamı sunar. Callback fonksiyonlarında ve fonksiyonel programlama pattern'lerinde oldukça kullanışlıdır.</p>
+
+<pre><code>// Geleneksel fonksiyon
+function toplam(a, b) {
+  return a + b;
+}
+
+// Arrow fonksiyon
+const toplam = (a, b) => a + b;
+
+// Tek parametre — parantez opsiyonel
+const karesi = x => x * x;
+
+// Obje döndürme — parantez içinde
+const kullaniciOlustur = (ad, yas) => ({ ad, yas, olusturma: Date.now() });
+
+// Lexical this bağlamı
+class Sayac {
+  constructor() {
+    this.deger = 0;
+  }
+  basla() {
+    // Arrow fonksiyon this'i dış kapsamdan alır
+    setInterval(() => {
+      this.deger++;
+      console.log(this.deger);
+    }, 1000);
+  }
+}</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> Arrow fonksiyonlar kendi <code>this</code> bağlamına sahip olmadığından, metot tanımlarında ve constructor fonksiyonlarda kullanılmamalıdır. Ayrıca <code>arguments</code> nesnesine erişimleri yoktur.
+</div>
+
+<h3>3. Template Literal ve Tagged Templates</h3>
+
+<p>Backtick (<code>`</code>) ile tanımlanan template literal'lar, string interpolation ve çok satırlı string oluşturmayı kolaylaştırır. Tagged template'ler ise string işleme için güçlü bir mekanizma sunar.</p>
+
+<pre><code>// String interpolation
+const ad = "Tarık";
+const mesaj = `Merhaba ${ad}, bugün ${new Date().toLocaleDateString('tr-TR')} tarihindeyiz.`;
+
+// Çok satırlı string
+const html = `
+  &lt;div class="card"&gt;
+    &lt;h3&gt;${ad}&lt;/h3&gt;
+    &lt;p&gt;Profil bilgileri&lt;/p&gt;
+  &lt;/div&gt;
+`;
+
+// Tagged template
+function vurgula(strings, ...values) {
+  return strings.reduce((sonuc, str, i) => {
+    const deger = values[i] ? `&lt;strong&gt;${values[i]}&lt;/strong&gt;` : '';
+    return sonuc + str + deger;
+  }, '');
+}
+
+const urun = "JavaScript";
+const fiyat = 0;
+const sonuc = vurgula`${urun} öğrenmek ${fiyat} TL'dir!`;
+// "&lt;strong&gt;JavaScript&lt;/strong&gt; öğrenmek &lt;strong&gt;0&lt;/strong&gt; TL'dir!"</code></pre>
+
+<h3>4. Spread ve Rest Operatörleri</h3>
+
+<p>Üç nokta (<code>...</code>) operatörü, kullanıldığı bağlama göre spread (yayma) veya rest (toplama) işlevi görür. Array ve obje manipülasyonunda vazgeçilmez bir araçtır.</p>
+
+<pre><code>// Spread — array kopyalama ve birleştirme
+const meyveler = ["elma", "armut"];
+const sebzeler = ["domates", "biber"];
+const hepsi = [...meyveler, ...sebzeler, "portakal"];
+
+// Spread — obje kopyalama ve güncelleme
+const varsayilan = { tema: "açık", dil: "tr", bildirim: true };
+const kullanici = { ...varsayilan, tema: "koyu", ad: "Tarık" };
+// { tema: "koyu", dil: "tr", bildirim: true, ad: "Tarık" }
+
+// Rest — fonksiyon parametreleri
+function log(seviye, ...mesajlar) {
+  mesajlar.forEach(m => console.log(`[${seviye}] ${m}`));
+}
+log("INFO", "Sunucu başlatıldı", "Port: 3000");
+
+// Rest — destructuring ile
+const [ilk, ikinci, ...kalanlar] = [1, 2, 3, 4, 5];
+console.log(kalanlar); // [3, 4, 5]</code></pre>
+
+<h3>5. Enhanced Object Literals</h3>
+
+<p>ES6, obje tanımlamalarını daha kısa ve okunabilir hale getiren birçok kısayol sunar: property shorthand, computed property names ve method shorthand bunların başlıcalarıdır.</p>
+
+<pre><code>const ad = "Tarık";
+const yas = 30;
+
+// Property shorthand
+const kisi = { ad, yas }; // { ad: "Tarık", yas: 30 }
+
+// Method shorthand
+const hesaplama = {
+  toplam(a, b) { return a + b; },
+  fark(a, b) { return a - b; }
+};
+
+// Computed property names
+const alan = "email";
+const form = {
+  [alan]: "ornek@test.com",
+  [`${alan}Dogrulandi`]: true
+};
+// { email: "ornek@test.com", emailDogrulandi: true }</code></pre>
+
+<h3>6. Default Parametreler ve Optional Chaining</h3>
+
+<p>Fonksiyon parametrelerine varsayılan değer atama ve derin iç içe objelere güvenli erişim, ES6+ ile çok daha temiz bir şekilde yapılabilir.</p>
+
+<pre><code>// Default parametreler
+function selamla(ad = "Misafir", dil = "tr") {
+  const mesajlar = { tr: "Merhaba", en: "Hello" };
+  return `${mesajlar[dil]} ${ad}!`;
+}
+selamla(); // "Merhaba Misafir!"
+
+// Optional chaining (?.)
+const kullanici = { profil: { adres: { sehir: "İstanbul" } } };
+const sehir = kullanici?.profil?.adres?.sehir; // "İstanbul"
+const ulke = kullanici?.profil?.adres?.ulke; // undefined (hata yok)
+
+// Nullish coalescing (??)
+const port = process.env.PORT ?? 3000;
+const baslik = null ?? "Varsayılan Başlık"; // "Varsayılan Başlık"
+const sifir = 0 ?? 42; // 0 (|| ile 42 olurdu)</code></pre>
+
+<div class="info">
+<strong>Bilgi:</strong> Optional chaining (<code>?.</code>) ve nullish coalescing (<code>??</code>) ES2020 ile gelmiştir. <code>||</code> operatöründen farklı olarak <code>??</code>, yalnızca <code>null</code> ve <code>undefined</code> değerlerinde varsayılan değeri döner; <code>0</code>, <code>""</code> ve <code>false</code> geçerli değer olarak kabul edilir.
+</div>
+
+<h3>7. for...of Döngüsü ve Symbol.iterator</h3>
+
+<p>ES6 ile gelen <code>for...of</code> döngüsü, iterable nesneler üzerinde temiz ve güvenli iterasyon sağlar. Array, String, Map, Set ve generator fonksiyonları varsayılan olarak iterable'dır.</p>
+
+<pre><code>// Array iterasyonu
+const diller = ["JavaScript", "TypeScript", "Python"];
+for (const dil of diller) {
+  console.log(dil);
+}
+
+// String iterasyonu (Unicode desteği)
+for (const karakter of "Merhaba 🌍") {
+  console.log(karakter); // Emoji'yi doğru işler
+}
+
+// Map iterasyonu
+const harita = new Map([["ad", "Tarık"], ["yas", 30]]);
+for (const [anahtar, deger] of harita) {
+  console.log(`${anahtar}: ${deger}`);
+}
+
+// Özel iterable
+const aralik = {
+  baslangic: 1,
+  bitis: 5,
+  [Symbol.iterator]() {
+    let current = this.baslangic;
+    const son = this.bitis;
+    return {
+      next() {
+        return current &lt;= son
+          ? { value: current++, done: false }
+          : { done: true };
+      }
+    };
+  }
+};
+
+for (const sayi of aralik) {
+  console.log(sayi); // 1, 2, 3, 4, 5
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>ES6+ özellikleri, JavaScript'i modern ve güçlü bir dil haline getirmiştir. <code>let</code>/<code>const</code> ile güvenli değişken tanımlama, arrow fonksiyonlar ile kısa sözdizimi, template literal'lar ile kolay string işleme, destructuring ile veri ayrıştırma ve spread/rest operatörleri ile esnek veri manipülasyonu günlük geliştirme sürecinizi büyük ölçüde iyileştirir. Bu özellikleri projelerinizde aktif olarak kullanarak daha okunabilir, bakımı kolay ve hata oranı düşük kod yazabilirsiniz.</p>
+
+<h4>Kaynaklar</h4>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide" target="_blank" rel="noopener noreferrer">MDN Web Docs — JavaScript Guide</a></li>
+  <li><a href="https://exploringjs.com/es6/" target="_blank" rel="noopener noreferrer">Exploring ES6 — Dr. Axel Rauschmayer</a></li>
+  <li><a href="https://javascript.info/first-steps" target="_blank" rel="noopener noreferrer">JavaScript.info — The Modern JavaScript Tutorial</a></li>
+  <li><a href="https://tc39.es/ecma262/" target="_blank" rel="noopener noreferrer">ECMAScript Language Specification</a></li>
+</ul>

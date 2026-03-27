@@ -1,0 +1,332 @@
+<h2>TypeScript Error Handling: Tip Güvenli Hata Yönetimi</h2>
+
+<p>Hata yönetimi, güvenilir uygulamaların temel taşıdır. TypeScript'in tip sistemi, hataları derleme zamanında yakalamamızı sağlar; ancak runtime hataları için de tip güvenli yaklaşımlar geliştirmek kritik önem taşır. Bu rehberde TypeScript'te hata yönetiminin en iyi pratiklerini, Result pattern'ı, custom error sınıflarını ve tip güvenli error handling stratejilerini inceleyeceğiz.</p>
+
+<h3>Try-Catch'in Tip Güvenliği Sorunu</h3>
+
+<p>JavaScript'in <code>try-catch</code> mekanizmasında yakalanan hata her zaman <code>unknown</code> tipindedir:</p>
+
+<pre><code>try {
+  const data = JSON.parse(userInput);
+} catch (error) {
+  // error tipi: unknown (TypeScript 4.4+)
+  // TypeScript 4.0 öncesi: any
+
+  // Tip güvenli kullanım için kontrol gerekir
+  if (error instanceof SyntaxError) {
+    console.error('JSON parse hatası:', error.message);
+  } else if (error instanceof Error) {
+    console.error('Genel hata:', error.message);
+  } else {
+    console.error('Bilinmeyen hata:', String(error));
+  }
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> TypeScript 4.4'ten itibaren <code>catch</code> bloğundaki hata parametresi varsayılan olarak <code>unknown</code> tipindedir. Bu, <code>tsconfig.json</code>'da <code>"useUnknownInCatchVariables": true</code> (strict modda otomatik aktif) ile kontrol edilir.
+</div>
+
+<h3>Custom Error Sınıfları</h3>
+
+<p>Tip güvenli hata yönetiminin ilk adımı, özelleştirilmiş hata sınıfları oluşturmaktır:</p>
+
+<pre><code>// errors/base.ts
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly statusCode: number = 500,
+    public readonly isOperational: boolean = true
+  ) {
+    super(message);
+    this.name = this.constructor.name;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(
+    message: string,
+    public readonly fields: Record&lt;string, string[]&gt;
+  ) {
+    super(message, 'VALIDATION_ERROR', 400);
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(resource: string, id: string | number) {
+    super(`${resource} bulunamadı: ${id}`, 'NOT_FOUND', 404);
+  }
+}
+
+export class AuthenticationError extends AppError {
+  constructor(message = 'Kimlik doğrulama başarısız') {
+    super(message, 'AUTHENTICATION_ERROR', 401, true);
+  }
+}
+
+export class AuthorizationError extends AppError {
+  constructor(message = 'Bu işlem için yetkiniz yok') {
+    super(message, 'AUTHORIZATION_ERROR', 403, true);
+  }
+}</code></pre>
+
+<h3>Result Pattern (Either Monad)</h3>
+
+<p>Exception fırlatmak yerine, fonksiyonların başarı veya hata döndürmesini sağlayan Result pattern, fonksiyonel programlama yaklaşımıdır:</p>
+
+<pre><code>// lib/result.ts
+type Success&lt;T&gt; = {
+  ok: true;
+  value: T;
+};
+
+type Failure&lt;E&gt; = {
+  ok: false;
+  error: E;
+};
+
+type Result&lt;T, E = Error&gt; = Success&lt;T&gt; | Failure&lt;E&gt;;
+
+// Yardımcı fonksiyonlar
+function ok&lt;T&gt;(value: T): Success&lt;T&gt; {
+  return { ok: true, value };
+}
+
+function err&lt;E&gt;(error: E): Failure&lt;E&gt; {
+  return { ok: false, error };
+}
+
+export { Result, ok, err };</code></pre>
+
+<h4>Result Pattern Kullanımı</h4>
+
+<pre><code>import { Result, ok, err } from './lib/result';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+type CreateUserError =
+  | { type: 'VALIDATION'; fields: Record&lt;string, string&gt; }
+  | { type: 'DUPLICATE_EMAIL'; email: string }
+  | { type: 'DATABASE'; message: string };
+
+async function createUser(
+  input: { email: string; name: string }
+): Promise&lt;Result&lt;User, CreateUserError&gt;&gt; {
+  // Validasyon
+  if (!input.email.includes('@')) {
+    return err({
+      type: 'VALIDATION',
+      fields: { email: 'Geçerli bir email adresi giriniz' },
+    });
+  }
+
+  // Duplicate kontrol
+  const existing = await db.user.findByEmail(input.email);
+  if (existing) {
+    return err({
+      type: 'DUPLICATE_EMAIL',
+      email: input.email,
+    });
+  }
+
+  try {
+    const user = await db.user.create({ data: input });
+    return ok(user);
+  } catch (e) {
+    return err({
+      type: 'DATABASE',
+      message: e instanceof Error ? e.message : 'Bilinmeyen hata',
+    });
+  }
+}
+
+// Kullanım
+async function handleCreateUser() {
+  const result = await createUser({
+    email: 'test@example.com',
+    name: 'Test',
+  });
+
+  if (!result.ok) {
+    switch (result.error.type) {
+      case 'VALIDATION':
+        console.log('Validasyon hatası:', result.error.fields);
+        break;
+      case 'DUPLICATE_EMAIL':
+        console.log('Bu email zaten kayıtlı:', result.error.email);
+        break;
+      case 'DATABASE':
+        console.log('Veritabanı hatası:', result.error.message);
+        break;
+    }
+    return;
+  }
+
+  console.log('Kullanıcı oluşturuldu:', result.value.id);
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Result pattern, hata yönetimini fonksiyon imzasının bir parçası haline getirir. Bu sayede çağıran taraf hangi hataların olabileceğini derleme zamanında bilir ve hepsini handle etmek zorundadır.
+</div>
+
+<h3>Zod ile Validasyon ve Hata Yönetimi</h3>
+
+<pre><code>import { z } from 'zod';
+import { Result, ok, err } from './lib/result';
+
+const UserSchema = z.object({
+  email: z.string().email('Geçerli email giriniz'),
+  name: z.string().min(2, 'İsim en az 2 karakter olmalı'),
+  age: z.number().min(18, '18 yaşından büyük olmalısınız'),
+});
+
+type UserInput = z.infer&lt;typeof UserSchema&gt;;
+
+interface ValidationFailure {
+  type: 'VALIDATION';
+  errors: Record&lt;string, string[]&gt;;
+}
+
+function validateUser(
+  input: unknown
+): Result&lt;UserInput, ValidationFailure&gt; {
+  const parsed = UserSchema.safeParse(input);
+
+  if (!parsed.success) {
+    const errors: Record&lt;string, string[]&gt; = {};
+    parsed.error.issues.forEach((issue) =&gt; {
+      const path = issue.path.join('.');
+      if (!errors[path]) errors[path] = [];
+      errors[path].push(issue.message);
+    });
+    return err({ type: 'VALIDATION', errors });
+  }
+
+  return ok(parsed.data);
+}</code></pre>
+
+<h3>Tip Güvenli Error Boundary (React)</h3>
+
+<pre><code>// components/ErrorBoundary.tsx
+import { Component, ErrorInfo, ReactNode } from 'react';
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback: (error: Error, reset: () =&gt; void) =&gt; ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) =&gt; void;
+}
+
+export class ErrorBoundary extends Component&lt;
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+&gt; {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    this.props.onError?.(error, errorInfo);
+  }
+
+  reset = () =&gt; {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError &amp;&amp; this.state.error) {
+      return this.props.fallback(this.state.error, this.reset);
+    }
+    return this.props.children;
+  }
+}</code></pre>
+
+<h3>Exhaustive Error Handling</h3>
+
+<p>TypeScript'in <code>never</code> tipi ile tüm hata durumlarının ele alındığından emin olabilirsiniz:</p>
+
+<pre><code>type ApiError =
+  | { code: 'NOT_FOUND'; resource: string }
+  | { code: 'UNAUTHORIZED' }
+  | { code: 'RATE_LIMITED'; retryAfter: number }
+  | { code: 'SERVER_ERROR'; message: string };
+
+function assertNever(value: never): never {
+  throw new Error(`Beklenmeyen değer: ${JSON.stringify(value)}`);
+}
+
+function handleApiError(error: ApiError): string {
+  switch (error.code) {
+    case 'NOT_FOUND':
+      return `${error.resource} bulunamadı`;
+    case 'UNAUTHORIZED':
+      return 'Lütfen giriş yapın';
+    case 'RATE_LIMITED':
+      return `Çok fazla istek. ${error.retryAfter}s sonra tekrar deneyin`;
+    case 'SERVER_ERROR':
+      return `Sunucu hatası: ${error.message}`;
+    default:
+      return assertNever(error);
+      // Yeni bir hata türü eklendiğinde TypeScript burada hata verir
+  }
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>assertNever</code> kontrolü, discriminated union'a yeni bir varyant eklendiğinde derleme hatası vererek tüm switch-case'lerin güncellenmesini zorunlu kılar. Bu pattern'ı kullanmak, hataların gözden kaçmasını önler.
+</div>
+
+<h3>Async Hata Yönetimi Wrapper</h3>
+
+<pre><code>// lib/tryCatch.ts
+async function tryCatch&lt;T&gt;(
+  promise: Promise&lt;T&gt;
+): Promise&lt;Result&lt;T, Error&gt;&gt; {
+  try {
+    const value = await promise;
+    return ok(value);
+  } catch (error) {
+    return err(error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
+// Kullanım
+async function fetchUserData(userId: string) {
+  const result = await tryCatch(
+    fetch(`/api/users/${userId}`).then((r) =&gt; {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json() as Promise&lt;User&gt;;
+    })
+  );
+
+  if (!result.ok) {
+    console.error('Veri çekme hatası:', result.error.message);
+    return null;
+  }
+
+  return result.value;
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript'te tip güvenli hata yönetimi, uygulamanızın güvenilirliğini büyük ölçüde artırır. Custom error sınıfları ile hata türlerini kategorize edin, Result pattern ile hataları fonksiyon imzalarının parçası yapın, exhaustive checking ile tüm hata durumlarının ele alındığından emin olun. Exception'lar beklenmeyen durumlar için, Result pattern ise beklenen hata senaryoları için kullanılmalıdır.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html" target="_blank" rel="noopener noreferrer">TypeScript Handbook - Narrowing</a></li>
+  <li><a href="https://zod.dev" target="_blank" rel="noopener noreferrer">Zod - TypeScript-first Schema Validation</a></li>
+  <li><a href="https://effect.website/" target="_blank" rel="noopener noreferrer">Effect-TS - Functional Error Handling</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error" target="_blank" rel="noopener noreferrer">MDN - Error</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking" target="_blank" rel="noopener noreferrer">TypeScript - Exhaustiveness Checking</a></li>
+</ul>

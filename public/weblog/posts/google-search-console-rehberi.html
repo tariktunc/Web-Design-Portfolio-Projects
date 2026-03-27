@@ -1,0 +1,171 @@
+<h2>Google Search Console: Kapsamlı Kullanım Rehberi</h2>
+
+<p>Google Search Console (GSC), web sitenizin Google arama sonuçlarındaki performansını izlemenize, indeksleme sorunlarını tespit etmenize ve arama görünürlüğünüzü optimize etmenize yardımcı olan ücretsiz bir Google aracıdır. Her web geliştiricisi ve SEO uzmanı için vazgeçilmez olan GSC'nin tüm özelliklerini bu kapsamlı rehberde ele alıyoruz.</p>
+
+<h3>Google Search Console'a Başlarken</h3>
+
+<p>GSC'yi kullanmaya başlamak için önce sitenizin sahipliğini doğrulamanız gerekir. Dört doğrulama yöntemi mevcuttur:</p>
+
+<h4>1. DNS Doğrulaması (Önerilen)</h4>
+
+<p>Domain mülkiyeti (property) oluşturmak için DNS doğrulaması en kapsamlı yöntemdir. Tüm alt alan adlarını ve protokolleri (HTTP/HTTPS) kapsar.</p>
+
+<h4>2. HTML Tag Doğrulaması</h4>
+
+<pre><code>&lt;!-- Ana sayfanızın &lt;head&gt; bölümüne ekleyin --&gt;
+&lt;meta name="google-site-verification" content="DOGRULAMA_KODU_BURAYA"&gt;
+
+&lt;!-- Next.js App Router ile --&gt;
+// app/layout.tsx
+export const metadata: Metadata = {
+  verification: {
+    google: 'DOGRULAMA_KODU_BURAYA',
+  },
+};</code></pre>
+
+<h4>3. HTML Dosyası Yükleme</h4>
+
+<p>Google'ın verdiği HTML dosyasını sitenizin kök dizinine yükleyin.</p>
+
+<h4>4. Google Analytics veya Tag Manager</h4>
+
+<p>Zaten Google Analytics veya Tag Manager kullanıyorsanız, bu araçlar üzerinden otomatik doğrulama yapabilirsiniz.</p>
+
+<div class="tip">
+  <strong>İpucu:</strong> Domain mülkiyeti (domain property) oluşturmak, URL prefix mülkiyetinden daha avantajlıdır. Domain property, tüm alt alan adlarını (www, blog, m. vb.) ve her iki protokolü (HTTP/HTTPS) tek bir mülk altında toplar.
+</div>
+
+<h3>Performance Raporu</h3>
+
+<p>Performance raporu, sitenizin Google arama sonuçlarındaki performansını detaylı olarak gösterir. Dört temel metrik sunar:</p>
+
+<ul>
+  <li><strong>Total Clicks:</strong> Arama sonuçlarından sitenize yapılan toplam tıklama sayısı.</li>
+  <li><strong>Total Impressions:</strong> Sayfalarınızın arama sonuçlarında görüntülenme sayısı.</li>
+  <li><strong>Average CTR:</strong> Tıklama oranı (Clicks / Impressions).</li>
+  <li><strong>Average Position:</strong> Arama sonuçlarındaki ortalama sıralama konumu.</li>
+</ul>
+
+<h4>Performance Verilerini API ile Çekme</h4>
+
+<pre><code>// Google Search Console API kullanımı
+async function getSearchAnalytics(siteUrl: string, startDate: string, endDate: string) {
+  const response = await fetch(
+    `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        startDate,
+        endDate,
+        dimensions: ['query', 'page'],
+        rowLimit: 100,
+        dimensionFilterGroups: [{
+          filters: [{
+            dimension: 'country',
+            expression: 'tur',
+          }],
+        }],
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  return data.rows?.map(row =&gt; ({
+    query: row.keys[0],
+    page: row.keys[1],
+    clicks: row.clicks,
+    impressions: row.impressions,
+    ctr: (row.ctr * 100).toFixed(2) + '%',
+    position: row.position.toFixed(1),
+  }));
+}</code></pre>
+
+<h3>Page Indexing Raporu</h3>
+
+<p>Page Indexing raporu, Google'ın sitenizi nasıl indekslediğini gösterir. Sayfalarınızın indekslenme durumunu, hata ve uyarıları takip edebilirsiniz.</p>
+
+<p>Yaygın indeksleme durumları:</p>
+
+<ul>
+  <li><strong>Indexed:</strong> Sayfa başarıyla indekslenmiş.</li>
+  <li><strong>Discovered - currently not indexed:</strong> Keşfedilmiş ama henüz indekslenmemiş.</li>
+  <li><strong>Crawled - currently not indexed:</strong> Taranmış ama indekslenmemiş (kalite sorunu olabilir).</li>
+  <li><strong>Excluded by 'noindex' tag:</strong> Noindex meta tag'i nedeniyle hariç tutulmuş.</li>
+  <li><strong>Redirect:</strong> Sayfa yönlendirme yapıyor.</li>
+  <li><strong>Duplicate without user-selected canonical:</strong> Canonical belirtilmemiş duplicate sayfa.</li>
+</ul>
+
+<div class="warning">
+  <strong>Uyarı:</strong> "Crawled - currently not indexed" durumu, Google'ın sayfanızı indekslemeye değer bulmadığı anlamına gelebilir. Bu durumda içerik kalitesini artırın, internal linking'i güçlendirin ve sayfanın benzersiz değer sunduğundan emin olun.
+</div>
+
+<h3>URL Inspection Aracı</h3>
+
+<p>Tek bir URL'nin Google'daki durumunu detaylı olarak incelemenize olanak tanır. Crawling, indexing, mobile usability ve rich results bilgilerini gösterir. Ayrıca bir URL'nin yeniden taranmasını talep edebilirsiniz (Request Indexing).</p>
+
+<h3>Sitemap Yönetimi</h3>
+
+<p>GSC üzerinden sitemap'lerinizi gönderebilir ve durumlarını izleyebilirsiniz:</p>
+
+<ol>
+  <li>Sol menüden "Sitemaps" sekmesine gidin.</li>
+  <li>Sitemap URL'nizi girin (örn. <code>sitemap.xml</code>).</li>
+  <li>"Submit" butonuna tıklayın.</li>
+  <li>Status, Discovered URLs ve Last Read bilgilerini takip edin.</li>
+</ol>
+
+<h3>Core Web Vitals Raporu</h3>
+
+<p>Core Web Vitals raporu, sitenizin sayfa deneyimi performansını gerçek kullanıcı verilerine (CrUX data) dayanarak gösterir. LCP, INP ve CLS metriklerini mobil ve masaüstü için ayrı ayrı raporlar.</p>
+
+<pre><code>// Core Web Vitals izleme (web-vitals kütüphanesi)
+import { onLCP, onINP, onCLS } from 'web-vitals';
+
+function sendToAnalytics(metric) {
+  const body = JSON.stringify({
+    name: metric.name,
+    value: metric.value,
+    rating: metric.rating, // 'good', 'needs-improvement', 'poor'
+    delta: metric.delta,
+    id: metric.id,
+    page: window.location.pathname,
+  });
+
+  // Beacon API ile gönder (sayfa kapanırken bile çalışır)
+  navigator.sendBeacon('/api/analytics/vitals', body);
+}
+
+onLCP(sendToAnalytics);
+onINP(sendToAnalytics);
+onCLS(sendToAnalytics);</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> GSC'deki Core Web Vitals verileri 28 günlük bir kayan pencere (rolling window) kullanır. Yaptığınız iyileştirmeler raporda görünene kadar en az 28 gün beklemeniz gerekir. Anlık test için Lighthouse veya PageSpeed Insights kullanın.
+</div>
+
+<h3>Düzenli GSC Kontrol Rutini</h3>
+
+<ul>
+  <li><strong>Günlük:</strong> Performance raporunda beklenmedik düşüş var mı kontrol edin.</li>
+  <li><strong>Haftalık:</strong> Page Indexing raporunu inceleyin, yeni hataları düzeltin.</li>
+  <li><strong>Aylık:</strong> Core Web Vitals, Manual Actions ve Security Issues kontrol edin.</li>
+  <li><strong>Çeyreklik:</strong> Search Analytics verilerini indirip trend analizi yapın.</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Google Search Console, web sitenizin Google'daki performansını ve sağlığını izlemek için en önemli araçtır. Performance raporu ile arama görünürlüğünüzü, Page Indexing ile indeksleme durumunuzu, Core Web Vitals ile sayfa deneyiminizi takip edebilirsiniz. GSC'yi düzenli olarak kontrol etmek, sorunları erken tespit etmenizi ve organik trafiğinizi sürdürülebilir şekilde artırmanızı sağlar.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">Google Search Console</a></li>
+  <li><a href="https://developers.google.com/search/docs/monitor-debug" target="_blank" rel="noopener noreferrer">Google - Search Console Dokümantasyonu</a></li>
+  <li><a href="https://web.dev/articles/vitals" target="_blank" rel="noopener noreferrer">web.dev - Core Web Vitals</a></li>
+  <li><a href="https://developers.google.com/webmaster-tools/v1/how-tos/search_analytics" target="_blank" rel="noopener noreferrer">Search Console API Dokümantasyonu</a></li>
+</ul>

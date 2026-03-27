@@ -1,0 +1,277 @@
+<h2>React Streaming SSR: Aşamalı Render</h2>
+
+<p>Geleneksel Server-Side Rendering (SSR), sayfanın tamamını sunucuda render edip tek seferde istemciye gönderir. Bu yaklaşımda yavaş veri kaynakları tüm sayfanın yüklenmesini geciktirebilir. <strong>React Streaming SSR</strong>, sayfayı parça parça göndererek kullanıcıya daha hızlı bir ilk görüntüleme deneyimi sunar. Bu yazıda Streaming SSR'ın çalışma prensibini, Suspense entegrasyonunu ve pratik uygulama yöntemlerini inceleyeceğiz.</p>
+
+<h3>Geleneksel SSR'ın Sorunları</h3>
+
+<p>Klasik SSR sürecinde dört adım sıralı olarak gerçekleşir:</p>
+
+<ol>
+  <li>Sunucuda tüm veriler fetch edilir (waterfall)</li>
+  <li>Sunucuda tüm HTML render edilir</li>
+  <li>HTML ve JavaScript istemciye gönderilir</li>
+  <li>Hydration ile sayfa interaktif hale gelir</li>
+</ol>
+
+<p>Bu süreçte en yavaş veri kaynağı, tüm sayfanın Time to First Byte (TTFB) değerini belirler. Streaming SSR bu sorunu çözer.</p>
+
+<h3>Streaming SSR Nasıl Çalışır?</h3>
+
+<p>Streaming SSR, HTTP chunked transfer encoding kullanarak HTML'i parça parça gönderir. React 18 ile gelen <code>renderToPipeableStream</code> API'si bu işlevi sağlar.</p>
+
+<pre><code>import { renderToPipeableStream } from 'react-dom/server';
+import express from 'express';
+
+const app = express();
+
+app.get('/', (req, res) =&gt; {
+  const { pipe, abort } = renderToPipeableStream(
+    &lt;App /&gt;,
+    {
+      bootstrapScripts: ['/static/client.js'],
+
+      onShellReady() {
+        // Shell (Suspense boundary dışındaki kısım) hazır
+        res.setHeader('Content-Type', 'text/html');
+        pipe(res);
+      },
+
+      onShellError(error) {
+        // Shell render edilemedi — fallback gönder
+        res.statusCode = 500;
+        res.send('&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;body&gt;&lt;p&gt;Bir hata oluştu&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;');
+      },
+
+      onAllReady() {
+        // Tüm içerik (Suspense dahil) hazır
+        // Crawler/bot'lar için tüm içeriği beklemek isteyebilirsiniz
+      },
+
+      onError(error) {
+        console.error('SSR Hatası:', error);
+      },
+    }
+  );
+
+  // Timeout — 10 saniye sonra abort et
+  setTimeout(() =&gt; abort(), 10000);
+});</code></pre>
+
+<h3>Suspense ile Streaming</h3>
+
+<p>Streaming SSR'ın gücü, <code>Suspense</code> bileşenleriyle birleştiğinde ortaya çıkar. Suspense boundary'leri, hangi bölümlerin streaming ile gönderileceğini belirler.</p>
+
+<pre><code>function App() {
+  return (
+    &lt;html&gt;
+      &lt;head&gt;&lt;title&gt;Uygulamam&lt;/title&gt;&lt;/head&gt;
+      &lt;body&gt;
+        &lt;Header /&gt;  {/* Anında gönderilir */}
+        &lt;Navigation /&gt;  {/* Anında gönderilir */}
+
+        &lt;main&gt;
+          &lt;Suspense fallback={&lt;HeroSkeleton /&gt;}&gt;
+            &lt;HeroSection /&gt;  {/* Veri hazır olunca stream edilir */}
+          &lt;/Suspense&gt;
+
+          &lt;Suspense fallback={&lt;ProductsSkeleton /&gt;}&gt;
+            &lt;ProductList /&gt;  {/* Bağımsız olarak stream edilir */}
+          &lt;/Suspense&gt;
+
+          &lt;Suspense fallback={&lt;ReviewsSkeleton /&gt;}&gt;
+            &lt;Reviews /&gt;  {/* En son yüklenebilir */}
+          &lt;/Suspense&gt;
+        &lt;/main&gt;
+
+        &lt;Footer /&gt;  {/* Anında gönderilir */}
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Streaming sırasında React, önce Suspense fallback'lerini içeren shell'i gönderir. Ardından her Suspense boundary'deki veri hazır oldukça, gerçek içeriği inline <code>&lt;script&gt;</code> tag'leri aracılığıyla gönderir. İstemci tarafındaki React, bu parçaları otomatik olarak DOM'a yerleştirir.
+</div>
+
+<h3>Shell ve Content Kavramları</h3>
+
+<p>Streaming SSR'da iki önemli kavram vardır:</p>
+
+<ul>
+  <li><strong>Shell:</strong> Suspense boundary'leri dışındaki, anında render edilen bölüm. Header, navigation, layout yapısı ve skeleton'lar shell'in parçasıdır.</li>
+  <li><strong>Content:</strong> Suspense boundary'leri içindeki, asenkron veri gerektiren bölümler. Bunlar hazır oldukça stream edilir.</li>
+</ul>
+
+<pre><code>// Shell: Anında gönderilen yapı
+// &lt;html&gt;
+//   &lt;head&gt;...&lt;/head&gt;
+//   &lt;body&gt;
+//     &lt;header&gt;Logo | Nav&lt;/header&gt;
+//     &lt;main&gt;
+//       &lt;!-- Suspense fallback --&gt;
+//       &lt;div class="skeleton"&gt;Yükleniyor...&lt;/div&gt;
+//     &lt;/main&gt;
+//     &lt;footer&gt;...&lt;/footer&gt;
+//   &lt;/body&gt;
+// &lt;/html&gt;
+
+// Daha sonra stream edilen içerik (inline script ile)
+// &lt;script&gt;
+//   $RC("B:0", "S:0")  // Suspense boundary'yi gerçek içerikle değiştir
+// &lt;/script&gt;</code></pre>
+
+<h3>Selective Hydration</h3>
+
+<p>React 18'in bir diğer önemli özelliği <strong>Selective Hydration</strong>'dır. Streaming ile birlikte çalışarak, sayfanın farklı bölümlerini bağımsız olarak hydrate eder.</p>
+
+<pre><code>// Kullanıcı henüz hydrate olmamış bir bölüme tıklarsa,
+// React o bölümü öncelikli olarak hydrate eder.
+function App() {
+  return (
+    &lt;Layout&gt;
+      &lt;Suspense fallback={&lt;NavSkeleton /&gt;}&gt;
+        &lt;NavBar /&gt;  {/* Öncelikli hydrate */}
+      &lt;/Suspense&gt;
+
+      &lt;Suspense fallback={&lt;SidebarSkeleton /&gt;}&gt;
+        &lt;Sidebar /&gt;  {/* Bağımsız hydrate */}
+      &lt;/Suspense&gt;
+
+      &lt;Suspense fallback={&lt;ContentSkeleton /&gt;}&gt;
+        &lt;MainContent /&gt;  {/* Bağımsız hydrate */}
+      &lt;/Suspense&gt;
+
+      &lt;Suspense fallback={&lt;CommentsSkeleton /&gt;}&gt;
+        &lt;Comments /&gt;  {/* Son hydrate */}
+      &lt;/Suspense&gt;
+    &lt;/Layout&gt;
+  );
+}</code></pre>
+
+<h3>Node.js Streams ile Entegrasyon</h3>
+
+<pre><code>import { renderToPipeableStream } from 'react-dom/server';
+import { Transform } from 'stream';
+
+app.get('/', (req, res) =&gt; {
+  // Özel transform stream ile HTML'i modifiye edebilirsiniz
+  const transformStream = new Transform({
+    transform(chunk, encoding, callback) {
+      // HTML chunk'ını manipüle et
+      const html = chunk.toString();
+      // Örn: CSP nonce ekle
+      const modified = html.replace(
+        /&lt;script/g,
+        '&lt;script nonce="abc123"'
+      );
+      callback(null, modified);
+    },
+  });
+
+  const { pipe } = renderToPipeableStream(&lt;App /&gt;, {
+    bootstrapScripts: ['/client.js'],
+    onShellReady() {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      pipe(transformStream).pipe(res);
+    },
+  });
+});</code></pre>
+
+<h3>Web Streams API (Edge Runtime)</h3>
+
+<p>Edge runtime ortamlarında (Cloudflare Workers, Vercel Edge) Web Streams API kullanılır:</p>
+
+<pre><code>import { renderToReadableStream } from 'react-dom/server';
+
+export default async function handler(request) {
+  const stream = await renderToReadableStream(
+    &lt;App /&gt;,
+    {
+      bootstrapScripts: ['/client.js'],
+      signal: AbortSignal.timeout(10000),
+    }
+  );
+
+  // Bot'lar için tüm içeriği bekle
+  const userAgent = request.headers.get('User-Agent') || '';
+  const isBot = /bot|crawl|spider/i.test(userAgent);
+
+  if (isBot) {
+    await stream.allReady;
+  }
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> SEO açısından, arama motoru bot'ları için <code>onAllReady</code> (Node.js) veya <code>stream.allReady</code> (Web Streams) kullanarak tüm içeriğin hazır olmasını beklemek iyi bir pratiktir. Normal kullanıcılar için ise streaming ile daha hızlı bir deneyim sunabilirsiniz.
+</div>
+
+<h3>Performans Karşılaştırması</h3>
+
+<table>
+  <tr>
+    <th>Metrik</th>
+    <th>Geleneksel SSR</th>
+    <th>Streaming SSR</th>
+  </tr>
+  <tr>
+    <td>TTFB</td>
+    <td>Yavaş (tüm veri beklenir)</td>
+    <td>Hızlı (shell anında gönderilir)</td>
+  </tr>
+  <tr>
+    <td>FCP</td>
+    <td>Geç (HTML tamamlandıktan sonra)</td>
+    <td>Erken (shell ile birlikte)</td>
+  </tr>
+  <tr>
+    <td>TTI</td>
+    <td>Geç (tüm sayfa hydrate)</td>
+    <td>Aşamalı (selective hydration)</td>
+  </tr>
+  <tr>
+    <td>LCP</td>
+    <td>En yavaş veri kaynağına bağlı</td>
+    <td>Kritik içeriğin hızına bağlı</td>
+  </tr>
+</table>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Streaming SSR, reverse proxy ve CDN yapılandırmasını etkileyebilir. Bazı proxy'ler chunked response'u buffer'layabilir. Nginx'te <code>proxy_buffering off</code> veya <code>X-Accel-Buffering: no</code> header'ı gerekebilir.
+</div>
+
+<h3>Hata Yönetimi</h3>
+
+<pre><code>const { pipe } = renderToPipeableStream(&lt;App /&gt;, {
+  onShellReady() {
+    // Shell başarıyla render edildi
+    res.statusCode = 200;
+    pipe(res);
+  },
+  onShellError(error) {
+    // Shell render edilemedi — statik hata sayfası gönder
+    res.statusCode = 500;
+    res.send(fallbackHTML);
+  },
+  onError(error) {
+    // Suspense boundary içindeki hata
+    // Error Boundary fallback'i gösterilir
+    logError(error);
+  },
+});</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>React Streaming SSR, modern web uygulamalarında performansı önemli ölçüde iyileştiren bir tekniktir. Suspense boundary'leri ile sayfanın hangi bölümlerinin streaming ile gönderileceğini kontrol edebilir, selective hydration ile kullanıcı etkileşimlerine öncelik verebilirsiniz. TTFB ve FCP metriklerinde belirgin iyileşmeler sağlar. Next.js App Router bu teknolojileri yerleşik olarak desteklediğinden, framework kullanıyorsanız ek yapılandırmaya gerek kalmadan streaming SSR'dan faydalanabilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/reference/react-dom/server/renderToPipeableStream" target="_blank" rel="noopener noreferrer">React Docs — renderToPipeableStream</a></li>
+  <li><a href="https://react.dev/reference/react-dom/server/renderToReadableStream" target="_blank" rel="noopener noreferrer">React Docs — renderToReadableStream</a></li>
+  <li><a href="https://github.com/reactwg/react-18/discussions/37" target="_blank" rel="noopener noreferrer">React 18 — New Suspense SSR Architecture</a></li>
+  <li><a href="https://web.dev/articles/rendering-on-the-web" target="_blank" rel="noopener noreferrer">web.dev — Rendering on the Web</a></li>
+</ul>

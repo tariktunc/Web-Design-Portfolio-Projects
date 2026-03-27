@@ -1,0 +1,264 @@
+<h2>Web Vitals Ölçüm Araçları: RUM vs Lab Data</h2>
+
+<p>Web performansını doğru ölçmek, iyileştirmenin ilk ve en kritik adımıdır. Ancak ölçüm yöntemleri arasındaki farkları anlamak çoğu zaman gözden kaçar. Lab (laboratuvar) verileri kontrollü ortamda tekrarlanabilir sonuçlar üretirken, RUM (Real User Monitoring - Gerçek Kullanıcı İzleme) verileri sahada gerçek kullanıcı deneyimini yansıtır. Bu rehberde her iki yaklaşımın güçlü ve zayıf yönlerini, temel ölçüm araçlarını ve etkili bir monitoring stratejisi oluşturmayı detaylı olarak inceleyeceğiz.</p>
+
+<h3>Lab Data vs Field Data (RUM)</h3>
+
+<p>İki ölçüm yaklaşımı birbirini tamamlar, biri diğerinin yerini tutmaz:</p>
+
+<table>
+  <tr>
+    <th>Özellik</th>
+    <th>Lab Data</th>
+    <th>Field Data (RUM)</th>
+  </tr>
+  <tr>
+    <td>Ortam</td>
+    <td>Kontrollü, simüle edilmiş</td>
+    <td>Gerçek kullanıcı cihaz ve ağları</td>
+  </tr>
+  <tr>
+    <td>Tekrarlanabilirlik</td>
+    <td>Yüksek</td>
+    <td>Düşük (doğal varyasyon)</td>
+  </tr>
+  <tr>
+    <td>Kullanıcı çeşitliliği</td>
+    <td>Tek profil</td>
+    <td>Tüm kullanıcı segmentleri</td>
+  </tr>
+  <tr>
+    <td>Debug kolaylığı</td>
+    <td>Kolay (tekrarlanabilir)</td>
+    <td>Zor (birçok faktör)</td>
+  </tr>
+  <tr>
+    <td>INP ölçümü</td>
+    <td>TBT ile tahmin</td>
+    <td>Gerçek etkileşim verisi</td>
+  </tr>
+  <tr>
+    <td>Araçlar</td>
+    <td>Lighthouse, WebPageTest</td>
+    <td>CrUX, web-vitals, custom RUM</td>
+  </tr>
+</table>
+
+<div class="info">
+  <strong>Bilgi:</strong> Google, arama sıralamasında field data kullanır (CrUX - Chrome User Experience Report). Lab verileri geliştirme sürecinde faydalıdır ancak gerçek sıralama etkisi CrUX verilerine dayanır.
+</div>
+
+<h3>Lab Araçları</h3>
+
+<p>Lab araçları kontrollü ortamda tutarlı ölçümler sağlar:</p>
+
+<ul>
+  <li><strong>Lighthouse:</strong> Chrome DevTools veya CLI ile kapsamlı audit. Performans skoru ve öneriler sunar.</li>
+  <li><strong>WebPageTest:</strong> Farklı lokasyon, cihaz ve ağ koşullarında detaylı waterfall analizi. Film strip ve video karşılaştırma.</li>
+  <li><strong>PageSpeed Insights:</strong> Lab (Lighthouse) + Field (CrUX) verilerini birleştirir. Hızlı kontrol için ideal.</li>
+  <li><strong>Chrome DevTools Performance Panel:</strong> CPU profiling, flame chart, main thread analizi.</li>
+</ul>
+
+<h3>RUM Implementasyonu</h3>
+
+<p>Gerçek kullanıcı verilerini toplamak için web-vitals kütüphanesi en yaygın çözümdür:</p>
+
+<pre><code>// Kapsamlı RUM implementasyonu
+import { onLCP, onINP, onCLS, onFCP, onTTFB } from 'web-vitals';
+
+class RUMCollector {
+  constructor(endpoint) {
+    this.endpoint = endpoint;
+    this.metrics = {};
+    this.metadata = this.collectMetadata();
+    this.init();
+  }
+
+  collectMetadata() {
+    return {
+      url: window.location.href,
+      path: window.location.pathname,
+      referrer: document.referrer,
+      userAgent: navigator.userAgent,
+      connection: navigator.connection?.effectiveType || 'unknown',
+      deviceMemory: navigator.deviceMemory || 'unknown',
+      hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+      viewport: `${window.innerWidth}x${window.innerHeight}`,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  init() {
+    // Tüm Core Web Vitals metriklerini topla
+    onLCP(metric => this.handleMetric(metric));
+    onINP(metric => this.handleMetric(metric));
+    onCLS(metric => this.handleMetric(metric));
+    onFCP(metric => this.handleMetric(metric));
+    onTTFB(metric => this.handleMetric(metric));
+
+    // Sayfa kapanırken gönder
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        this.flush();
+      }
+    });
+  }
+
+  handleMetric(metric) {
+    this.metrics[metric.name] = {
+      value: metric.value,
+      rating: metric.rating,
+      delta: metric.delta,
+      id: metric.id,
+      navigationType: metric.navigationType,
+      entries: metric.entries.map(e => ({
+        name: e.name,
+        startTime: e.startTime,
+        duration: e.duration
+      }))
+    };
+  }
+
+  flush() {
+    if (Object.keys(this.metrics).length === 0) return;
+
+    const payload = {
+      ...this.metadata,
+      metrics: this.metrics
+    };
+
+    // Beacon API - sayfa kapansa bile veri gönderilir
+    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    navigator.sendBeacon(this.endpoint, blob);
+  }
+}
+
+// Kullanım
+new RUMCollector('/api/rum');</code></pre>
+
+<h3>CrUX (Chrome User Experience Report)</h3>
+
+<p>CrUX, Chrome kullanıcılarından toplanan gerçek performans verilerini sunan Google'ın resmi field data kaynağıdır:</p>
+
+<pre><code>// CrUX API ile performans verisi çekme
+async function getCrUXData(url) {
+  const apiKey = 'YOUR_API_KEY';  // Google Cloud Console'dan alın
+  const endpoint = 'https://chromeuxreport.googleapis.com/v1/records:queryRecord';
+
+  const response = await fetch(`${endpoint}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url: url,
+      formFactor: 'PHONE',  // PHONE, DESKTOP, ALL_FORM_FACTORS
+      metrics: [
+        'largest_contentful_paint',
+        'interaction_to_next_paint',
+        'cumulative_layout_shift',
+        'first_contentful_paint',
+        'experimental_time_to_first_byte'
+      ]
+    })
+  });
+
+  const data = await response.json();
+
+  // Sonuçları yorumla
+  if (data.record) {
+    const lcp = data.record.metrics.largest_contentful_paint;
+    console.log('LCP P75:', lcp.percentiles.p75, 'ms');
+    console.log('LCP Dağılım:', {
+      good: lcp.histogram[0].density,     // ≤ 2500ms
+      needsWork: lcp.histogram[1].density, // 2500-4000ms
+      poor: lcp.histogram[2].density       // > 4000ms
+    });
+  }
+
+  return data;
+}
+
+getCrUXData('https://example.com');</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> CrUX verileri 28 günlük hareketli ortalamadır. Yaptığınız iyileştirmeler CrUX'a 28 güne kadar gecikmeli yansıyabilir. Ani değişiklikleri görmek için kendi RUM verilerinizi kullanın.
+</div>
+
+<h3>Performans Dashboard Oluşturma</h3>
+
+<p>Toplanan RUM verilerini görselleştirmek için bir dashboard oluşturabilirsiniz:</p>
+
+<pre><code>// Basit bir performans dashboard - Express.js backend
+const express = require('express');
+const app = express();
+
+const metricsStore = [];
+
+app.post('/api/rum', express.json(), (req, res) => {
+  metricsStore.push({
+    ...req.body,
+    receivedAt: new Date().toISOString()
+  });
+  res.status(204).end();
+});
+
+// P75 hesaplama endpoint
+app.get('/api/dashboard', (req, res) => {
+  const last24h = metricsStore.filter(m =>
+    new Date(m.timestamp) > new Date(Date.now() - 86400000)
+  );
+
+  const calculateP75 = (metricName) => {
+    const values = last24h
+      .filter(m => m.metrics[metricName])
+      .map(m => m.metrics[metricName].value)
+      .sort((a, b) => a - b);
+
+    if (values.length === 0) return null;
+    return values[Math.floor(values.length * 0.75)];
+  };
+
+  res.json({
+    sampleSize: last24h.length,
+    p75: {
+      LCP: calculateP75('LCP'),
+      INP: calculateP75('INP'),
+      CLS: calculateP75('CLS'),
+      FCP: calculateP75('FCP'),
+      TTFB: calculateP75('TTFB')
+    },
+    // Segment bazlı analiz
+    byDevice: {
+      mobile: last24h.filter(m => m.viewport.split('x')[0] < 768).length,
+      desktop: last24h.filter(m => m.viewport.split('x')[0] >= 768).length
+    }
+  });
+});
+
+app.listen(3001);</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> RUM verileri kişisel bilgi içerebilir (IP, user agent, sayfa URL'leri). GDPR ve KVKK uyumluluğu için verileri anonimleştirin, saklama süresini sınırlayın ve kullanıcı onayı alın. Analytics araçlarınızın gizlilik politikalarını inceleyin.
+</div>
+
+<h3>Monitoring Stratejisi</h3>
+
+<ul>
+  <li><strong>CI/CD'de lab test:</strong> Her PR'da Lighthouse CI ile regresyon tespiti</li>
+  <li><strong>Staging'de detaylı lab analiz:</strong> WebPageTest ile waterfall ve film strip analizi</li>
+  <li><strong>Production'da RUM:</strong> web-vitals ile gerçek kullanıcı verisi toplama</li>
+  <li><strong>Alerting:</strong> P75 metrikler eşik değeri aştığında bildirim</li>
+  <li><strong>Trend analizi:</strong> Haftalık/aylık performans trendlerini takip</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Etkili bir performans monitoring stratejisi hem lab hem de field verilerini kapsamalıdır. Lab verileri geliştirme sürecinde hızlı feedback ve debug kolaylığı sağlarken, RUM verileri gerçek kullanıcı deneyimini yansıtır. CrUX, PageSpeed Insights, Lighthouse CI ve custom RUM çözümlerini birlikte kullanarak performansı her açıdan izleyin ve sürekli iyileştirin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://web.dev/articles/lab-and-field-data-differences" target="_blank" rel="noopener noreferrer">web.dev - Lab and Field Data Differences</a></li>
+  <li><a href="https://developer.chrome.com/docs/crux/" target="_blank" rel="noopener noreferrer">Chrome UX Report (CrUX)</a></li>
+  <li><a href="https://github.com/GoogleChrome/web-vitals" target="_blank" rel="noopener noreferrer">web-vitals Library</a></li>
+  <li><a href="https://www.webpagetest.org/" target="_blank" rel="noopener noreferrer">WebPageTest</a></li>
+</ul>

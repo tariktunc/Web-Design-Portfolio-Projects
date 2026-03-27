@@ -1,0 +1,390 @@
+<h2>TypeScript Test Stratejileri: Vitest ve Jest</h2>
+
+<p>Test yazmak, sürdürülebilir yazılım geliştirmenin temel taşıdır. TypeScript projelerinde tip güvenliği ile test kalitesini birleştirmek, hataları hem derleme hem de runtime aşamasında yakalamanızı sağlar. Bu rehberde Vitest ve Jest kullanarak TypeScript projeleriniz için etkili test stratejileri, konfigürasyon, mock'lama ve en iyi uygulamaları inceleyeceğiz.</p>
+
+<h3>Vitest vs Jest: Hangisini Seçmeli?</h3>
+
+<table>
+  <tr><th>Özellik</th><th>Vitest</th><th>Jest</th></tr>
+  <tr><td>Hız</td><td>Çok hızlı (Vite tabanlı)</td><td>Orta</td></tr>
+  <tr><td>TypeScript desteği</td><td>Yerleşik (SWC/esbuild)</td><td>ts-jest veya @swc/jest gerekir</td></tr>
+  <tr><td>ESM desteği</td><td>Doğal</td><td>Konfigürasyon gerektirir</td></tr>
+  <tr><td>Watch modu</td><td>Çok hızlı HMR</td><td>İyi</td></tr>
+  <tr><td>Jest uyumluluğu</td><td>Büyük ölçüde uyumlu</td><td>-</td></tr>
+  <tr><td>Ekosistem</td><td>Büyüyen</td><td>Çok geniş</td></tr>
+</table>
+
+<h3>Vitest Kurulumu</h3>
+
+<pre><code># Kurulum
+npm install -D vitest @vitest/coverage-v8 @vitest/ui
+
+# React projeleri için
+npm install -D @testing-library/react @testing-library/jest-dom jsdom</code></pre>
+
+<pre><code>// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
+    include: ['**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts', 'src/**/*.test.{ts,tsx}'],
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});</code></pre>
+
+<pre><code>// tests/setup.ts
+import '@testing-library/jest-dom/vitest';
+
+// Global mock'lar
+vi.mock('next/navigation', () =&gt; ({
+  useRouter: () =&gt; ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+  }),
+  usePathname: () =&gt; '/',
+  useSearchParams: () =&gt; new URLSearchParams(),
+}));</code></pre>
+
+<h3>Jest ile TypeScript Kurulumu</h3>
+
+<pre><code># Kurulum
+npm install -D jest ts-jest @types/jest
+# veya SWC ile (daha hızlı)
+npm install -D jest @swc/jest @types/jest</code></pre>
+
+<pre><code>// jest.config.ts
+import type { Config } from 'jest';
+
+const config: Config = {
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom',
+  setupFilesAfterSetup: ['./tests/setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '&lt;rootDir&gt;/src/$1',
+  },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+    }],
+  },
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+  ],
+};
+
+export default config;</code></pre>
+
+<h3>Unit Test Yazma</h3>
+
+<pre><code>// utils/formatters.ts
+export function formatCurrency(
+  amount: number,
+  currency: string = 'TRY',
+  locale: string = 'tr-TR'
+): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+  }).format(amount);
+}
+
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// utils/formatters.test.ts
+import { describe, it, expect } from 'vitest';
+import { formatCurrency, slugify } from './formatters';
+
+describe('formatCurrency', () =&gt; {
+  it('TRY para birimini doğru formatlar', () =&gt; {
+    expect(formatCurrency(1234.56)).toBe('₺1.234,56');
+  });
+
+  it('USD para birimini doğru formatlar', () =&gt; {
+    const result = formatCurrency(1000, 'USD', 'en-US');
+    expect(result).toBe('$1,000.00');
+  });
+
+  it('negatif değerleri formatlar', () =&gt; {
+    const result = formatCurrency(-500);
+    expect(result).toContain('500');
+  });
+});
+
+describe('slugify', () =&gt; {
+  it('Türkçe karakterleri dönüştürür', () =&gt; {
+    expect(slugify('Türkçe Başlık')).toBe('turkce-baslik');
+  });
+
+  it('boşlukları tire ile değiştirir', () =&gt; {
+    expect(slugify('merhaba dünya')).toBe('merhaba-dunya');
+  });
+
+  it('özel karakterleri kaldırır', () =&gt; {
+    expect(slugify('test!@#$%abc')).toBe('test-abc');
+  });
+
+  it('baş ve sondaki tireleri kaldırır', () =&gt; {
+    expect(slugify('--test--')).toBe('test');
+  });
+});</code></pre>
+
+<h3>Async Fonksiyon Testleri</h3>
+
+<pre><code>// services/userService.ts
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface UserRepository {
+  findById(id: string): Promise&lt;User | null&gt;;
+  create(data: Omit&lt;User, 'id'&gt;): Promise&lt;User&gt;;
+}
+
+export class UserService {
+  constructor(private repo: UserRepository) {}
+
+  async getUser(id: string): Promise&lt;User&gt; {
+    const user = await this.repo.findById(id);
+    if (!user) {
+      throw new Error(`User not found: ${id}`);
+    }
+    return user;
+  }
+
+  async createUser(email: string, name: string): Promise&lt;User&gt; {
+    if (!email.includes('@')) {
+      throw new Error('Geçersiz email');
+    }
+    return this.repo.create({ email, name });
+  }
+}
+
+// services/userService.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { UserService } from './userService';
+
+describe('UserService', () =&gt; {
+  const mockRepo = {
+    findById: vi.fn(),
+    create: vi.fn(),
+  };
+  let service: UserService;
+
+  beforeEach(() =&gt; {
+    vi.clearAllMocks();
+    service = new UserService(mockRepo);
+  });
+
+  describe('getUser', () =&gt; {
+    it('kullanıcıyı ID ile döndürür', async () =&gt; {
+      const mockUser = { id: '1', email: 'a@b.com', name: 'Test' };
+      mockRepo.findById.mockResolvedValue(mockUser);
+
+      const user = await service.getUser('1');
+
+      expect(user).toEqual(mockUser);
+      expect(mockRepo.findById).toHaveBeenCalledWith('1');
+    });
+
+    it('kullanıcı bulunamazsa hata fırlatır', async () =&gt; {
+      mockRepo.findById.mockResolvedValue(null);
+
+      await expect(service.getUser('999'))
+        .rejects.toThrow('User not found: 999');
+    });
+  });
+
+  describe('createUser', () =&gt; {
+    it('geçersiz email ile hata fırlatır', async () =&gt; {
+      await expect(service.createUser('invalid', 'Test'))
+        .rejects.toThrow('Geçersiz email');
+    });
+
+    it('geçerli bilgilerle kullanıcı oluşturur', async () =&gt; {
+      const mockUser = { id: '1', email: 'a@b.com', name: 'Test' };
+      mockRepo.create.mockResolvedValue(mockUser);
+
+      const result = await service.createUser('a@b.com', 'Test');
+
+      expect(result).toEqual(mockUser);
+      expect(mockRepo.create).toHaveBeenCalledWith({
+        email: 'a@b.com',
+        name: 'Test',
+      });
+    });
+  });
+});</code></pre>
+
+<h3>React Component Testleri</h3>
+
+<pre><code>// components/SearchInput.tsx
+'use client';
+import { useState, useCallback } from 'react';
+
+interface SearchInputProps {
+  onSearch: (query: string) =&gt; void;
+  placeholder?: string;
+}
+
+export function SearchInput({ onSearch, placeholder = 'Ara...' }: SearchInputProps) {
+  const [value, setValue] = useState('');
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) =&gt; {
+      e.preventDefault();
+      if (value.trim()) onSearch(value.trim());
+    },
+    [value, onSearch]
+  );
+
+  return (
+    &lt;form onSubmit={handleSubmit} role="search"&gt;
+      &lt;input
+        type="text"
+        value={value}
+        onChange={(e) =&gt; setValue(e.target.value)}
+        placeholder={placeholder}
+        aria-label="Arama"
+      /&gt;
+      &lt;button type="submit"&gt;Ara&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}
+
+// components/SearchInput.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi } from 'vitest';
+import { SearchInput } from './SearchInput';
+
+describe('SearchInput', () =&gt; {
+  it('placeholder gösterir', () =&gt; {
+    render(&lt;SearchInput onSearch={vi.fn()} placeholder="Ürün ara..." /&gt;);
+    expect(screen.getByPlaceholderText('Ürün ara...')).toBeInTheDocument();
+  });
+
+  it('form submit edildiğinde onSearch çağrılır', async () =&gt; {
+    const onSearch = vi.fn();
+    const user = userEvent.setup();
+
+    render(&lt;SearchInput onSearch={onSearch} /&gt;);
+
+    await user.type(screen.getByRole('textbox'), 'typescript');
+    await user.click(screen.getByRole('button', { name: 'Ara' }));
+
+    expect(onSearch).toHaveBeenCalledWith('typescript');
+  });
+
+  it('boş değerle arama yapmaz', async () =&gt; {
+    const onSearch = vi.fn();
+    const user = userEvent.setup();
+
+    render(&lt;SearchInput onSearch={onSearch} /&gt;);
+
+    await user.click(screen.getByRole('button', { name: 'Ara' }));
+
+    expect(onSearch).not.toHaveBeenCalled();
+  });
+});</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>@testing-library/user-event</code> kütüphanesi, gerçek kullanıcı etkileşimlerini simüle eder ve <code>fireEvent</code>'e göre daha güvenilir testler yazmanızı sağlar.
+</div>
+
+<h3>Tip Testleri</h3>
+
+<p>TypeScript tiplerinin doğru çalıştığını test etmek için <code>expect-type</code> kütüphanesini kullanabilirsiniz:</p>
+
+<pre><code>// npm install -D expect-type
+import { expectTypeOf, describe, it } from 'vitest';
+import { createUser, type User } from './userService';
+
+describe('Tip testleri', () =&gt; {
+  it('createUser doğru tipi döndürür', () =&gt; {
+    expectTypeOf(createUser).returns.resolves.toEqualTypeOf&lt;User&gt;();
+  });
+
+  it('User tipi doğru alanları içerir', () =&gt; {
+    expectTypeOf&lt;User&gt;().toHaveProperty('id');
+    expectTypeOf&lt;User&gt;().toHaveProperty('email');
+  });
+});</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Tip testleri derleme zamanında çalışır ve runtime'da bir etkisi yoktur. Ancak refactoring sırasında tip uyumluluğunun korunmasını garantiler.
+</div>
+
+<h3>Coverage ve CI Entegrasyonu</h3>
+
+<pre><code>// package.json scripts
+{
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
+  }
+}
+
+# GitHub Actions
+# .github/workflows/test.yml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - run: npm run test:coverage
+      - uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript projelerinde etkili test stratejileri, tip güvenliği ile runtime güvenliğini birleştirir. Vitest modern projeler için hız ve kullanım kolaylığı sunarken, Jest geniş ekosistemi ile güçlü bir alternatiftir. Unit testler ile fonksiyon mantığını, integration testler ile servis etkileşimlerini, component testler ile UI davranışını doğrulayın. Coverage hedeflerinizi belirleyin ama sadece anlamlı testler yazın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://vitest.dev/" target="_blank" rel="noopener noreferrer">Vitest Documentation</a></li>
+  <li><a href="https://jestjs.io/docs/getting-started" target="_blank" rel="noopener noreferrer">Jest Documentation</a></li>
+  <li><a href="https://testing-library.com/docs/react-testing-library/intro/" target="_blank" rel="noopener noreferrer">React Testing Library</a></li>
+  <li><a href="https://github.com/mmkal/expect-type" target="_blank" rel="noopener noreferrer">expect-type - TypeScript Type Testing</a></li>
+  <li><a href="https://kentcdodds.com/blog/write-tests" target="_blank" rel="noopener noreferrer">Kent C. Dodds - Write Tests</a></li>
+</ul>

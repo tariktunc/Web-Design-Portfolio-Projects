@@ -1,0 +1,338 @@
+<h2>JavaScript Service Workers ve Offline Destek</h2>
+
+<p>Service Worker'lar, tarayıcı ile ağ arasına oturan programlanabilir proxy'lerdir. Ağ isteklerini yakalama, cache stratejileri uygulama ve çevrimdışı çalışma gibi yetenekleriyle Progressive Web App (PWA) mimarisinin temelini oluştururlar. Bu rehberde Service Worker yaşam döngüsünü, cache stratejilerini, push notification entegrasyonunu ve offline-first uygulama geliştirmeyi adım adım inceleyeceğiz.</p>
+
+<h3>Service Worker Yaşam Döngüsü</h3>
+
+<ol>
+  <li><strong>Registration (Kayıt):</strong> Ana script, Service Worker'ı kaydeder</li>
+  <li><strong>Installation (Kurulum):</strong> Dosyalar cache'lenir</li>
+  <li><strong>Activation (Etkinleştirme):</strong> Eski cache temizlenir, kontrol alınır</li>
+  <li><strong>Fetch (Yakalama):</strong> Ağ istekleri yakalanır ve yanıtlanır</li>
+</ol>
+
+<h3>Service Worker Kaydı</h3>
+
+<pre><code>// app.js (Ana script)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () =&gt; {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+      });
+
+      console.log('SW kayıtlı, scope:', registration.scope);
+
+      // Güncelleme kontrolü
+      registration.addEventListener('updatefound', () =&gt; {
+        const newWorker = registration.installing;
+        console.log('Yeni SW bulundu, state:', newWorker.state);
+
+        newWorker.addEventListener('statechange', () =&gt; {
+          if (newWorker.state === 'activated') {
+            // Kullanıcıya güncelleme bildirimi göster
+            showUpdateNotification();
+          }
+        });
+      });
+    } catch (error) {
+      console.error('SW kayıt hatası:', error);
+    }
+  });
+}</code></pre>
+
+<h3>Install ve Activate Olayları</h3>
+
+<pre><code>// sw.js (Service Worker)
+const CACHE_NAME = 'app-cache-v1';
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/styles/main.css',
+  '/scripts/app.js',
+  '/images/logo.png',
+  '/offline.html',
+];
+
+// Install: Statik dosyaları cache'le
+self.addEventListener('install', (event) =&gt; {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =&gt; {
+      console.log('Statik dosyalar cache\'leniyor');
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
+  // Bekleme aşamasını atla
+  self.skipWaiting();
+});
+
+// Activate: Eski cache'leri temizle
+self.addEventListener('activate', (event) =&gt; {
+  event.waitUntil(
+    caches.keys().then((cacheNames) =&gt; {
+      return Promise.all(
+        cacheNames
+          .filter((name) =&gt; name !== CACHE_NAME)
+          .map((name) =&gt; {
+            console.log('Eski cache siliniyor:', name);
+            return caches.delete(name);
+          })
+      );
+    })
+  );
+  // Tüm açık sekmelerin kontrolünü al
+  self.clients.claim();
+});</code></pre>
+
+<h3>Cache Stratejileri</h3>
+
+<h4>1. Cache First (Offline First)</h4>
+
+<pre><code>// Önce cache'e bak, yoksa ağa git
+self.addEventListener('fetch', (event) =&gt; {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) =&gt; {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).then((networkResponse) =&gt; {
+        // Yanıtı cache'e de ekle
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) =&gt; {
+          cache.put(event.request, responseClone);
+        });
+        return networkResponse;
+      });
+    })
+  );
+});</code></pre>
+
+<h4>2. Network First</h4>
+
+<pre><code>// Önce ağa git, başarısızsa cache'den sun
+function networkFirst(request) {
+  return fetch(request)
+    .then((response) =&gt; {
+      const responseClone = response.clone();
+      caches.open(CACHE_NAME).then((cache) =&gt; {
+        cache.put(request, responseClone);
+      });
+      return response;
+    })
+    .catch(() =&gt; {
+      return caches.match(request);
+    });
+}</code></pre>
+
+<h4>3. Stale While Revalidate</h4>
+
+<pre><code>// Cache'den hemen sun, arka planda güncelle
+function staleWhileRevalidate(request) {
+  return caches.open(CACHE_NAME).then((cache) =&gt; {
+    return cache.match(request).then((cachedResponse) =&gt; {
+      const fetchPromise = fetch(request).then((networkResponse) =&gt; {
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+      });
+
+      return cachedResponse || fetchPromise;
+    });
+  });
+}</code></pre>
+
+<h4>Strateji Seçimi</h4>
+
+<pre><code>self.addEventListener('fetch', (event) =&gt; {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // API istekleri: Network First
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Statik varlıklar: Cache First
+  if (request.destination === 'image' ||
+      request.destination === 'font' ||
+      request.destination === 'style') {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // HTML sayfalar: Stale While Revalidate
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      staleWhileRevalidate(request).catch(() =&gt; {
+        return caches.match('/offline.html');
+      })
+    );
+    return;
+  }
+
+  // Varsayılan: Network First
+  event.respondWith(networkFirst(request));
+});</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Her strateji farklı senaryolar için uygundur. Sık güncellenmeyen varlıklar için Cache First, güncel veri gerektiren API'ler için Network First, dengeli yaklaşım için Stale While Revalidate kullanın.
+</div>
+
+<h3>Offline Sayfası</h3>
+
+<pre><code>&lt;!-- offline.html --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="tr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;Çevrimdışı&lt;/title&gt;
+  &lt;style&gt;
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: system-ui;
+      text-align: center;
+      background: #f5f5f5;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;h1&gt;Çevrimdışısınız&lt;/h1&gt;
+    &lt;p&gt;İnternet bağlantınızı kontrol edip tekrar deneyin.&lt;/p&gt;
+    &lt;button onclick="window.location.reload()"&gt;Tekrar Dene&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h3>Background Sync</h3>
+
+<p>Çevrimdışıyken yapılan işlemleri bağlantı geldiğinde otomatik senkronize edin:</p>
+
+<pre><code>// Ana script: Sync kaydı
+async function submitForm(data) {
+  try {
+    await fetch('/api/submit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    // Çevrimdışı: IndexedDB'ye kaydet ve sync planla
+    await saveToIndexedDB('pending-submissions', data);
+    const registration = await navigator.serviceWorker.ready;
+    await registration.sync.register('submit-form');
+  }
+}
+
+// sw.js: Sync olayını işle
+self.addEventListener('sync', (event) =&gt; {
+  if (event.tag === 'submit-form') {
+    event.waitUntil(
+      getFromIndexedDB('pending-submissions').then((items) =&gt; {
+        return Promise.all(
+          items.map((item) =&gt;
+            fetch('/api/submit', {
+              method: 'POST',
+              body: JSON.stringify(item),
+            }).then(() =&gt; removeFromIndexedDB('pending-submissions', item.id))
+          )
+        );
+      })
+    );
+  }
+});</code></pre>
+
+<h3>Push Notifications</h3>
+
+<pre><code>// Ana script: Push aboneliği
+async function subscribeToPush() {
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+  });
+
+  // Aboneliği sunucuya gönder
+  await fetch('/api/push/subscribe', {
+    method: 'POST',
+    body: JSON.stringify(subscription),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// sw.js: Push olayını işle
+self.addEventListener('push', (event) =&gt; {
+  const data = event.data?.json() || {};
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Bildirim', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge-72.png',
+      data: { url: data.url || '/' },
+      actions: [
+        { action: 'open', title: 'Aç' },
+        { action: 'dismiss', title: 'Kapat' },
+      ],
+    })
+  );
+});
+
+// Bildirime tıklama
+self.addEventListener('notificationclick', (event) =&gt; {
+  event.notification.close();
+
+  if (event.action === 'open' || !event.action) {
+    event.waitUntil(
+      clients.openWindow(event.notification.data.url)
+    );
+  }
+});</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Service Worker'lar yalnızca HTTPS üzerinde çalışır (localhost hariç). Push notification'lar için VAPID anahtarları gereklidir ve kullanıcıdan izin alınmalıdır.
+</div>
+
+<h3>Next.js ile Service Worker</h3>
+
+<pre><code>// next.config.js (next-pwa ile)
+// npm install @ducanh2912/next-pwa
+const withPWA = require('@ducanh2912/next-pwa')({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/api\.example\.com\/.*/i,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'api-cache',
+        expiration: { maxEntries: 50, maxAgeSeconds: 300 },
+      },
+    },
+  ],
+});
+
+module.exports = withPWA({
+  // next.config.js ayarları
+});</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Service Worker güncellemelerinde kullanıcıya bildirim gösterin ve sayfayı yenilemelerini isteyin. <code>skipWaiting()</code> kullanmak beklenmedik davranışlara yol açabilir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Service Worker'lar, web uygulamalarına çevrimdışı çalışma, arka plan senkronizasyon ve push notification yetenekleri kazandırır. Doğru cache stratejisi seçimi kritik önem taşır: statik varlıklar için Cache First, dinamik veriler için Network First, dengeli yaklaşım için Stale While Revalidate kullanın. Background Sync ile çevrimdışı işlemleri senkronize edin ve kullanıcılara her koşulda çalışan bir deneyim sunun.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API" target="_blank" rel="noopener noreferrer">MDN - Service Worker API</a></li>
+  <li><a href="https://web.dev/learn/pwa/service-workers" target="_blank" rel="noopener noreferrer">web.dev - Service Workers</a></li>
+  <li><a href="https://developer.chrome.com/docs/workbox/" target="_blank" rel="noopener noreferrer">Workbox - Service Worker Library</a></li>
+  <li><a href="https://web.dev/articles/push-notifications-overview" target="_blank" rel="noopener noreferrer">web.dev - Push Notifications</a></li>
+  <li><a href="https://jakearchibald.com/2014/offline-cookbook/" target="_blank" rel="noopener noreferrer">Jake Archibald - The Offline Cookbook</a></li>
+</ul>

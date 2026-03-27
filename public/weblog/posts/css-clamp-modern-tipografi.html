@@ -1,0 +1,211 @@
+<h2>CSS clamp() ile Modern Responsive Tipografi</h2>
+
+<p>CSS <code>clamp()</code> fonksiyonu, responsive tasarımda devrim yaratan bir araçtır. Minimum, tercih edilen ve maksimum değer arasında dinamik bir hesaplama yaparak, media query'ler olmadan akıcı (fluid) tipografi ve spacing oluşturmanızı sağlar. Bu rehberde clamp() fonksiyonunun derinlemesine kullanımını, type scale oluşturmayı ve gerçek dünya uygulamalarını ele alacağız.</p>
+
+<h3>1. clamp() Fonksiyonu Temelleri</h3>
+
+<p><code>clamp(MIN, PREFERRED, MAX)</code> üç parametre alır: minimum değer, tercih edilen (ideal) değer ve maksimum değer. Tercih edilen değer genellikle viewport birimleri (vw) ile tanımlanır ve tarayıcı bu değeri min-max aralığında tutar.</p>
+
+<pre><code>/* clamp() söz dizimi */
+/* clamp(minimum, tercih edilen, maksimum) */
+
+/* Temel font-size kullanımı */
+h1 {
+  font-size: clamp(2rem, 5vw + 1rem, 4rem);
+  /* 320px viewport: 2rem (minimum) */
+  /* 768px viewport: ~3rem (hesaplanan) */
+  /* 1440px viewport: 4rem (maksimum) */
+}
+
+/* Nasıl çalışır? */
+/* clamp(2rem, 5vw + 1rem, 4rem) eşdeğeri: */
+/* max(2rem, min(5vw + 1rem, 4rem)) */
+
+/* Paragraf metni */
+p {
+  font-size: clamp(1rem, 0.5vw + 0.875rem, 1.25rem);
+  line-height: clamp(1.5, 1.2 + 0.5vw, 1.8);
+}
+
+/* Container genişliği */
+.container {
+  width: clamp(320px, 90vw, 1200px);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+}
+
+/* Gap ve spacing */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: clamp(1rem, 2vw, 2.5rem);
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>clamp()</code> fonksiyonunda tercih edilen değer olarak sadece <code>vw</code> yerine <code>vw + rem</code> kombinasyonu kullanın. Saf <code>vw</code> kullanıldığında, kullanıcı tarayıcıda font boyutunu değiştirdiğinde metin boyutu değişmez — bu erişilebilirlik sorununa yol açar.
+</div>
+
+<h3>2. Fluid Type Scale Oluşturma</h3>
+
+<p>Type scale, başlık ve metin boyutları arasında harmonik bir oran sistemidir. <code>clamp()</code> ile bu oranı hem küçük hem büyük ekranlarda otomatik olarak koruyabilirsiniz. İşte popüler 1.25 (Major Third) oranıyla bir type scale:</p>
+
+<pre><code>/* Fluid Type Scale — Major Third (1.25) */
+:root {
+  /* Base: 16px (320px) → 20px (1440px) */
+  --step--2: clamp(0.64rem, 0.05vw + 0.63rem, 0.67rem);
+  --step--1: clamp(0.80rem, 0.14vw + 0.77rem, 0.89rem);
+  --step-0:  clamp(1.00rem, 0.27vw + 0.93rem, 1.19rem);
+  --step-1:  clamp(1.25rem, 0.45vw + 1.14rem, 1.58rem);
+  --step-2:  clamp(1.56rem, 0.71vw + 1.38rem, 2.11rem);
+  --step-3:  clamp(1.95rem, 1.07vw + 1.68rem, 2.81rem);
+  --step-4:  clamp(2.44rem, 1.58vw + 2.05rem, 3.75rem);
+  --step-5:  clamp(3.05rem, 2.29vw + 2.48rem, 5.00rem);
+}
+
+/* Kullanım */
+.text-xs  { font-size: var(--step--2); }
+.text-sm  { font-size: var(--step--1); }
+.text-base { font-size: var(--step-0); }
+h4        { font-size: var(--step-1); }
+h3        { font-size: var(--step-2); }
+h2        { font-size: var(--step-3); }
+h1        { font-size: var(--step-4); }
+.display  { font-size: var(--step-5); }
+
+/* Fluid Spacing Scale — Tipografiyle uyumlu */
+:root {
+  --space-3xs: clamp(0.25rem, 0.1vw + 0.23rem, 0.31rem);
+  --space-2xs: clamp(0.50rem, 0.14vw + 0.47rem, 0.59rem);
+  --space-xs:  clamp(0.75rem, 0.24vw + 0.7rem, 0.91rem);
+  --space-s:   clamp(1.00rem, 0.27vw + 0.93rem, 1.19rem);
+  --space-m:   clamp(1.50rem, 0.41vw + 1.4rem, 1.78rem);
+  --space-l:   clamp(2.00rem, 0.54vw + 1.86rem, 2.38rem);
+  --space-xl:  clamp(3.00rem, 0.82vw + 2.8rem, 3.56rem);
+  --space-2xl: clamp(4.00rem, 1.09vw + 3.73rem, 4.75rem);
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Type scale değerlerini elle hesaplamak yerine <a href="https://utopia.fyi/type/calculator/" target="_blank">utopia.fyi</a> aracını kullanın. Minimum ve maksimum viewport genişliği ile font boyutu oranını girin, clamp() değerlerini otomatik oluşturur.
+</div>
+
+<h3>3. clamp() ile Responsive Layout Teknikleri</h3>
+
+<p>clamp() sadece tipografi için değil, spacing, width, padding ve diğer boyut özellikleri için de kullanılabilir. Media query'lere olan bağımlılığı büyük ölçüde azaltır.</p>
+
+<pre><code>/* Responsive Hero Section */
+.hero {
+  padding: clamp(3rem, 8vw, 8rem) clamp(1rem, 3vw, 2rem);
+}
+
+.hero-title {
+  font-size: clamp(2rem, 5vw + 1rem, 5rem);
+  line-height: 1.1;
+  max-width: clamp(20ch, 50vw, 35ch);
+}
+
+.hero-subtitle {
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+  max-width: 60ch;
+  margin-top: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+/* Responsive Sidebar Layout */
+.sidebar {
+  width: clamp(200px, 25vw, 350px);
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+/* Responsive Card */
+.card {
+  padding: clamp(1rem, 3vw, 2.5rem);
+  border-radius: clamp(8px, 1vw, 16px);
+}
+
+.card-title {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  margin-bottom: clamp(0.5rem, 1vw, 1rem);
+}
+
+/* Responsive Avatar */
+.avatar {
+  width: clamp(32px, 5vw, 64px);
+  height: clamp(32px, 5vw, 64px);
+  border-radius: 50%;
+}
+
+/* max() ve min() ile birlikte */
+.content-area {
+  width: min(90vw, 1200px);
+  margin-inline: auto;
+  padding: max(1rem, 2vw);
+}</code></pre>
+
+<h3>4. Hesaplama Formülü ve İpuçları</h3>
+
+<p>clamp() değerlerini doğru hesaplamak, istediğiniz viewport aralığında sorunsuz geçiş sağlamak için önemlidir. İşte formül ve pratik ipuçları:</p>
+
+<pre><code>/*
+  HESAPLAMA FORMÜLÜ:
+
+  Hedef: 320px'de 16px, 1440px'de 24px olsun
+
+  Adım 1: Farkı hesapla
+  Fark = (24 - 16) / (1440 - 320) = 8 / 1120 = 0.00714
+
+  Adım 2: vw değerini bul
+  vw = 0.00714 * 100 = 0.714vw
+
+  Adım 3: rem offset'i hesapla
+  offset = 16px - (0.00714 * 320) = 16 - 2.286 = 13.714px ≈ 0.857rem
+
+  Sonuç: clamp(1rem, 0.714vw + 0.857rem, 1.5rem)
+*/
+
+/* Yaygın kullanım desenleri */
+
+/* 1. Heading — geniş aralık */
+.heading {
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 3.5rem);
+}
+
+/* 2. Body text — dar aralık */
+.body {
+  font-size: clamp(1rem, 0.25vw + 0.95rem, 1.125rem);
+}
+
+/* 3. Section padding — geniş aralık */
+.section {
+  padding-block: clamp(2rem, 6vw, 6rem);
+}
+
+/* 4. Border radius — subtle */
+.rounded {
+  border-radius: clamp(4px, 0.5vw, 12px);
+}
+
+/* calc() ile clamp() kombine */
+.dynamic-grid {
+  --columns: 3;
+  gap: clamp(0.5rem, 1.5vw, 2rem);
+  grid-template-columns: repeat(
+    var(--columns),
+    calc((100% - (var(--columns) - 1) * clamp(0.5rem, 1.5vw, 2rem)) / var(--columns))
+  );
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> clamp() içinde sadece <code>vw</code> birimi kullanmak (rem olmadan) erişilebilirlik sorunlarına yol açar. Kullanıcı tarayıcıda font boyutunu büyüttüğünde metin boyutu değişmez. Her zaman <code>vw + rem</code> kombinasyonu kullanın: <code>clamp(1rem, 0.5vw + 0.9rem, 1.25rem)</code>.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>CSS <code>clamp()</code> fonksiyonu, responsive tasarımda media query'lere olan bağımlılığı büyük ölçüde azaltan güçlü bir araçtır. Fluid tipografi, spacing ve layout değerleri oluşturarak kırılma noktaları yerine sürekli ve akıcı geçişler elde edersiniz. Type scale ve spacing scale'leri custom property'ler olarak tanımlayarak tutarlı bir design system kurabilirsiniz. Erişilebilirlik için vw+rem kombinasyonunu unutmayın ve hesaplama kolaylığı için utopia.fyi gibi araçları kullanın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/clamp" target="_blank">MDN: clamp()</a></li>
+  <li><a href="https://utopia.fyi/" target="_blank">Utopia — Fluid Type & Space Calculator</a></li>
+  <li><a href="https://www.smashingmagazine.com/2022/01/modern-fluid-typography-css-clamp/" target="_blank">Smashing Magazine: Modern Fluid Typography</a></li>
+  <li><a href="https://www.joshwcomeau.com/css/fluid-typography/" target="_blank">Josh W. Comeau: Fluid Typography</a></li>
+</ul>

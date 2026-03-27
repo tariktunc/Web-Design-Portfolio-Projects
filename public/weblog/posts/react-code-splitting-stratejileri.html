@@ -1,0 +1,237 @@
+<h2>React Code Splitting Stratejileri</h2>
+
+<p>Modern React uygulamaları büyüdükçe, JavaScript bundle boyutu da artar ve sayfa yüklenme süreleri uzar. Code splitting, uygulamanızı daha küçük parçalara bölerek sadece ihtiyaç duyulan kodu yüklemenizi sağlar. Bu rehberde, React'te code splitting'in farklı stratejilerini, Webpack ve Vite yapılandırmalarını ve gerçek dünya optimizasyon tekniklerini adım adım ele alacağız.</p>
+
+<h3>Code Splitting Nedir?</h3>
+
+<p>Code splitting, tek bir büyük JavaScript dosyası yerine birden fazla küçük dosya (chunk) oluşturma tekniğidir. Kullanıcı uygulamaya girdiğinde yalnızca o anda gerekli olan chunk yüklenir, geri kalanı ihtiyaç duyulduğunda lazy olarak çekilir. Bu, özellikle Time to Interactive (TTI) ve Largest Contentful Paint (LCP) metriklerini iyileştirir.</p>
+
+<h3>1. Route Bazlı Code Splitting</h3>
+
+<p>En yaygın ve etkili strateji, her route'u ayrı bir chunk'a ayırmaktır. Kullanıcı bir sayfaya ilk kez gittiğinde o sayfanın kodu yüklenir.</p>
+
+<pre><code>import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+
+// Her route ayrı bir chunk olarak yüklenir
+const Home = lazy(() => import(/* webpackChunkName: "home" */ './pages/Home'));
+const Products = lazy(() => import(/* webpackChunkName: "products" */ './pages/Products'));
+const ProductDetail = lazy(() => import(/* webpackChunkName: "product-detail" */ './pages/ProductDetail'));
+const Cart = lazy(() => import(/* webpackChunkName: "cart" */ './pages/Cart'));
+const Checkout = lazy(() => import(/* webpackChunkName: "checkout" */ './pages/Checkout'));
+const Admin = lazy(() => import(/* webpackChunkName: "admin" */ './pages/Admin'));
+
+// Route bazlı loading component
+function RouteLoader() {
+  return (
+    &lt;div className="flex items-center justify-center min-h-[400px]"&gt;
+      &lt;div className="text-center"&gt;
+        &lt;div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" /&gt;
+        &lt;p className="mt-3 text-gray-500"&gt;Sayfa yükleniyor...&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;nav className="bg-white shadow p-4"&gt;
+        &lt;Link to="/" className="mr-4"&gt;Ana Sayfa&lt;/Link&gt;
+        &lt;Link to="/products" className="mr-4"&gt;Ürünler&lt;/Link&gt;
+        &lt;Link to="/cart" className="mr-4"&gt;Sepet&lt;/Link&gt;
+      &lt;/nav&gt;
+
+      &lt;Suspense fallback={&lt;RouteLoader /&gt;}&gt;
+        &lt;Routes&gt;
+          &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+          &lt;Route path="/products" element={&lt;Products /&gt;} /&gt;
+          &lt;Route path="/products/:id" element={&lt;ProductDetail /&gt;} /&gt;
+          &lt;Route path="/cart" element={&lt;Cart /&gt;} /&gt;
+          &lt;Route path="/checkout" element={&lt;Checkout /&gt;} /&gt;
+          &lt;Route path="/admin/*" element={&lt;Admin /&gt;} /&gt;
+        &lt;/Routes&gt;
+      &lt;/Suspense&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+
+<h3>2. Component Bazlı Code Splitting</h3>
+
+<p>Ağır componentler (editörler, grafikler, haritalar) için component seviyesinde lazy loading uygulayabilirsiniz.</p>
+
+<pre><code>import { lazy, Suspense, useState } from 'react';
+
+// Ağır kütüphaneler sadece gerektiğinde yüklenir
+const RichTextEditor = lazy(() => import('./components/RichTextEditor'));
+const ChartDashboard = lazy(() => import('./components/ChartDashboard'));
+const MapView = lazy(() => import('./components/MapView'));
+
+function ProductPage() {
+  const [showEditor, setShowEditor] = useState(false);
+  const [activeTab, setActiveTab] = useState&lt;'info' | 'chart' | 'map'&gt;('info');
+
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Ürün Detayları&lt;/h1&gt;
+
+      {/* Editör sadece butona tıklanınca yüklenir */}
+      &lt;button onClick={() => setShowEditor(true)}&gt;Açıklamayı Düzenle&lt;/button&gt;
+      {showEditor && (
+        &lt;Suspense fallback={&lt;div className="h-64 bg-gray-100 animate-pulse rounded" /&gt;}&gt;
+          &lt;RichTextEditor /&gt;
+        &lt;/Suspense&gt;
+      )}
+
+      {/* Tab bazlı lazy loading */}
+      &lt;div className="flex gap-2 mt-6"&gt;
+        &lt;button onClick={() => setActiveTab('info')}&gt;Bilgi&lt;/button&gt;
+        &lt;button onClick={() => setActiveTab('chart')}&gt;Grafikler&lt;/button&gt;
+        &lt;button onClick={() => setActiveTab('map')}&gt;Harita&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;Suspense fallback={&lt;div className="h-96 bg-gray-100 animate-pulse rounded mt-4" /&gt;}&gt;
+        {activeTab === 'chart' && &lt;ChartDashboard /&gt;}
+        {activeTab === 'map' && &lt;MapView /&gt;}
+      &lt;/Suspense&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Webpack magic comments ile chunk isimlerini belirleyebilirsiniz: <code>import(/* webpackChunkName: "editor" */ './Editor')</code>. Bu, DevTools Network sekmesinde hangi chunk'ın yüklendiğini kolayca görmenizi sağlar.
+</div>
+
+<h3>3. Prefetch ve Preload Stratejileri</h3>
+
+<pre><code>import { lazy, Suspense, useCallback } from 'react';
+
+// Lazy component tanımları
+const CheckoutPage = lazy(() => import('./pages/Checkout'));
+const AdminPage = lazy(() => import('./pages/Admin'));
+
+// Prefetch fonksiyonu — idle zamanında yükle
+function prefetchComponent(importFn: () => Promise&lt;any&gt;) {
+  // requestIdleCallback ile tarayıcı boştayken yükle
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => importFn());
+  } else {
+    setTimeout(() => importFn(), 200);
+  }
+}
+
+function CartSummary() {
+  // Kullanıcı sepeti görüntülüyorsa, muhtemelen checkout'a gidecektir
+  // Bu nedenle checkout sayfasını önceden yükle
+  const handleMouseEnter = useCallback(() => {
+    prefetchComponent(() => import('./pages/Checkout'));
+  }, []);
+
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;Sepet Özeti&lt;/h2&gt;
+      &lt;p&gt;Toplam: 450 TL&lt;/p&gt;
+      &lt;a
+        href="/checkout"
+        onMouseEnter={handleMouseEnter}
+        onFocus={handleMouseEnter}
+        className="bg-green-600 text-white px-6 py-3 rounded inline-block"
+      &gt;
+        Ödemeye Geç
+      &lt;/a&gt;
+    &lt;/div&gt;
+  );
+}
+
+// Vite ile prefetch: link tag'ı ekleme
+function addPrefetchLink(href: string) {
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.href = href;
+  document.head.appendChild(link);
+}</code></pre>
+
+<h3>4. Bundle Analizi</h3>
+
+<pre><code>// Vite için bundle analizi
+// npm install -D rollup-plugin-visualizer
+
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    visualizer({
+      filename: './dist/stats.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunk'ları ayır
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          'ui': ['framer-motion', '@radix-ui/react-dialog'],
+          'query': ['@tanstack/react-query'],
+        },
+      },
+    },
+  },
+});</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Aşırı code splitting yapmaktan kaçının. Her chunk bir HTTP isteği gerektirir. Çok küçük chunk'lar (5KB altı), HTTP overhead nedeniyle performansı iyileştirmek yerine kötüleştirebilir. Dengeli bir yaklaşım benimseyin.
+</div>
+
+<h3>Performans Metrikleri</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metrik</th>
+      <th>Code Splitting Öncesi</th>
+      <th>Code Splitting Sonrası</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>İlk Bundle Boyutu</td>
+      <td>~500 KB</td>
+      <td>~120 KB</td>
+    </tr>
+    <tr>
+      <td>Time to Interactive</td>
+      <td>~4.5s</td>
+      <td>~1.8s</td>
+    </tr>
+    <tr>
+      <td>LCP</td>
+      <td>~3.2s</td>
+      <td>~1.5s</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="info">
+  <strong>Bilgi:</strong> HTTP/2 multiplexing sayesinde, birden fazla küçük dosyayı paralel olarak yüklemek artık performans sorunu değildir. Ancak yine de chunk sayısını makul tutmak önemlidir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Code splitting, React uygulamalarının performansını iyileştirmenin en etkili yollarından biridir. Route bazlı splitting ile başlayın, ağır componentler için component bazlı splitting uygulayın, prefetch ile kullanıcı deneyimini optimize edin ve bundle analizi ile sonuçları ölçün. Unutmayın: Ölçemediğinizi optimize edemezsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/reference/react/lazy" target="_blank">React Docs: React.lazy</a></li>
+  <li><a href="https://vitejs.dev/guide/features.html#async-chunk-loading-optimization" target="_blank">Vite: Async Chunk Loading</a></li>
+  <li><a href="https://webpack.js.org/guides/code-splitting/" target="_blank">Webpack: Code Splitting</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/Performance" target="_blank">MDN: Web Performance</a></li>
+</ul>

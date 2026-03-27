@@ -1,0 +1,279 @@
+<h2>React Lifecycle ve Hooks Karşılaştırması</h2>
+
+<p>React bileşenlerinin bir yaşam döngüsü vardır: oluşturulur (mount), güncellenir (update) ve kaldırılır (unmount). Class component'lerde bu aşamalar açık lifecycle metotları ile yönetilirken, fonksiyonel component'lerde Hooks bu görevi üstlenmiştir. Bu yazıda her iki yaklaşımı karşılaştıracak, lifecycle metotlarının hook karşılıklarını gösterecek ve modern React'te yaşam döngüsü yönetiminin en iyi uygulamalarını ele alacağız.</p>
+
+<h3>Class Component Lifecycle Metotları</h3>
+
+<p>Class component'ler üç ana aşamada çalışan lifecycle metotlarına sahiptir:</p>
+
+<h4>Mounting (Oluşturma) Aşaması</h4>
+
+<ol>
+  <li><code>constructor()</code> - State başlatma, bind işlemleri</li>
+  <li><code>static getDerivedStateFromProps()</code> - Props'tan state türetme (nadiren kullanılır)</li>
+  <li><code>render()</code> - JSX döndürme</li>
+  <li><code>componentDidMount()</code> - DOM erişimi, API çağrıları, abonelikler</li>
+</ol>
+
+<h4>Updating (Güncelleme) Aşaması</h4>
+
+<ol>
+  <li><code>static getDerivedStateFromProps()</code></li>
+  <li><code>shouldComponentUpdate()</code> - Render optimizasyonu</li>
+  <li><code>render()</code></li>
+  <li><code>getSnapshotBeforeUpdate()</code> - DOM güncellenmeden önce bilgi yakalama</li>
+  <li><code>componentDidUpdate()</code> - Güncelleme sonrası işlemler</li>
+</ol>
+
+<h4>Unmounting (Kaldırma) Aşaması</h4>
+
+<ol>
+  <li><code>componentWillUnmount()</code> - Temizleme işlemleri</li>
+</ol>
+
+<pre><code>import React, { Component } from 'react';
+
+class DataFetcher extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      data: null,
+      loading: true,
+      error: null
+    };
+    this.controller = new AbortController();
+  }
+
+  componentDidMount() {
+    // Bileşen DOM'a eklendikten sonra veri çek
+    this.fetchData();
+  }
+
+  componentDidUpdate(prevProps) {
+    // Props değiştiyse veriyi yeniden çek
+    if (prevProps.url !== this.props.url) {
+      this.controller.abort();
+      this.controller = new AbortController();
+      this.fetchData();
+    }
+  }
+
+  componentWillUnmount() {
+    // Bileşen kaldırılmadan önce temizlik yap
+    this.controller.abort();
+  }
+
+  async fetchData() {
+    try {
+      this.setState({ loading: true });
+      const response = await fetch(this.props.url, {
+        signal: this.controller.signal
+      });
+      const data = await response.json();
+      this.setState({ data, loading: false });
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        this.setState({ error: error.message, loading: false });
+      }
+    }
+  }
+
+  render() {
+    const { data, loading, error } = this.state;
+    if (loading) return &lt;p&gt;Yükleniyor...&lt;/p&gt;;
+    if (error) return &lt;p&gt;Hata: {error}&lt;/p&gt;;
+    return &lt;pre&gt;{JSON.stringify(data, null, 2)}&lt;/pre&gt;;
+  }
+}</code></pre>
+
+<h3>Hooks ile Aynı Davranış</h3>
+
+<pre><code>import { useState, useEffect } from 'react';
+
+function DataFetcher({ url }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() =&gt; {
+    const controller = new AbortController();
+
+    const fetchData = async () =&gt; {
+      try {
+        setLoading(true);
+        const response = await fetch(url, { signal: controller.signal });
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError(err.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    // Cleanup: componentWillUnmount + önceki effect temizliği
+    return () =&gt; controller.abort();
+  }, [url]); // url değiştiğinde yeniden çalış
+
+  if (loading) return &lt;p&gt;Yükleniyor...&lt;/p&gt;;
+  if (error) return &lt;p&gt;Hata: {error}&lt;/p&gt;;
+  return &lt;pre&gt;{JSON.stringify(data, null, 2)}&lt;/pre&gt;;
+}</code></pre>
+
+<h3>Birebir Karşılık Tablosu</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Lifecycle Metodu</th>
+      <th>Hook Karşılığı</th>
+      <th>Açıklama</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>constructor</td>
+      <td>useState(initialValue)</td>
+      <td>State başlatma</td>
+    </tr>
+    <tr>
+      <td>componentDidMount</td>
+      <td>useEffect(() =&gt; {}, [])</td>
+      <td>Mount sonrası çalışma</td>
+    </tr>
+    <tr>
+      <td>componentDidUpdate</td>
+      <td>useEffect(() =&gt; {}, [deps])</td>
+      <td>Güncelleme sonrası çalışma</td>
+    </tr>
+    <tr>
+      <td>componentWillUnmount</td>
+      <td>useEffect return fonksiyonu</td>
+      <td>Temizleme işlemleri</td>
+    </tr>
+    <tr>
+      <td>shouldComponentUpdate</td>
+      <td>React.memo + useMemo</td>
+      <td>Render optimizasyonu</td>
+    </tr>
+    <tr>
+      <td>getDerivedStateFromProps</td>
+      <td>Render sırasında hesaplama</td>
+      <td>Props'tan türetilen değerler</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>Hooks ile lifecycle arasındaki karşılıklar birebir değildir. useEffect, lifecycle metotlarının doğrudan bir yerine geçmesi olarak tasarlanmamıştır. Bunun yerine "yan etkilerin senkronizasyonu" zihinsel modeliyle çalışır.</blockquote>
+
+<h3>Önemli Fark: Zihinsel Model</h3>
+
+<pre><code>// Class: "Mount olduğunda X yap, update olduğunda Y yap, unmount olduğunda Z yap"
+// 3 farklı lifecycle metodu, 3 farklı mantık yeri
+
+// Hooks: "Bu değerler değiştiğinde, bu effect'i senkronize et"
+// İlişkili mantık tek bir yerde
+useEffect(() =&gt; {
+  // Setup: Bağlantı kur
+  const connection = createConnection(roomId);
+  connection.connect();
+
+  // Cleanup: Bağlantıyı kapat
+  return () =&gt; connection.disconnect();
+}, [roomId]); // roomId değiştiğinde yeniden senkronize et</code></pre>
+
+<div class="info">
+  <p><strong>Bilgi:</strong> Class component'lerde ilişkili mantık farklı lifecycle metotlarına dağılır (örneğin componentDidMount'ta subscribe, componentWillUnmount'ta unsubscribe). Hooks'ta ise ilişkili mantık aynı useEffect içinde tutularak kod tutarlılığı artar.</p>
+</div>
+
+<h3>shouldComponentUpdate vs React.memo</h3>
+
+<pre><code>// Class: shouldComponentUpdate
+class ExpensiveList extends Component {
+  shouldComponentUpdate(nextProps) {
+    return nextProps.items !== this.props.items;
+  }
+  render() {
+    return this.props.items.map(item =&gt; &lt;div key={item.id}&gt;{item.name}&lt;/div&gt;);
+  }
+}
+
+// Hooks: React.memo
+const ExpensiveList = memo(function ExpensiveList({ items }) {
+  return items.map(item =&gt; &lt;div key={item.id}&gt;{item.name}&lt;/div&gt;);
+});
+
+// Özel karşılaştırma fonksiyonu ile
+const ExpensiveList = memo(function ExpensiveList({ items, onSelect }) {
+  return items.map(item =&gt; (
+    &lt;div key={item.id} onClick={() =&gt; onSelect(item.id)}&gt;{item.name}&lt;/div&gt;
+  ));
+}, (prevProps, nextProps) =&gt; {
+  // true döndürmek = re-render YAPMA
+  return prevProps.items === nextProps.items;
+});</code></pre>
+
+<h3>getSnapshotBeforeUpdate: Hook Karşılığı Var mı?</h3>
+
+<pre><code>// Class: getSnapshotBeforeUpdate - DOM güncellenmeden önce bilgi yakalar
+class ChatLog extends Component {
+  getSnapshotBeforeUpdate(prevProps) {
+    if (prevProps.messages.length &lt; this.props.messages.length) {
+      const container = this.containerRef.current;
+      return container.scrollHeight - container.scrollTop;
+    }
+    return null;
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (snapshot !== null) {
+      const container = this.containerRef.current;
+      container.scrollTop = container.scrollHeight - snapshot;
+    }
+  }
+}
+
+// Hooks'ta doğrudan karşılığı yoktur
+// useLayoutEffect ile benzer sonuç elde edilebilir
+function ChatLog({ messages }) {
+  const containerRef = useRef(null);
+  const prevScrollHeightRef = useRef(0);
+
+  useLayoutEffect(() =&gt; {
+    const container = containerRef.current;
+    if (container) {
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight &lt; 50;
+      if (isNearBottom) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+  }, [messages]);
+
+  return (
+    &lt;div ref={containerRef} style={{ overflowY: 'auto', maxHeight: '300px' }}&gt;
+      {messages.map(msg =&gt; &lt;p key={msg.id}&gt;{msg.text}&lt;/p&gt;)}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <p><strong>Uyarı:</strong> <code>useLayoutEffect</code>, DOM güncellemesi tarayıcıya yansıtılmadan önce senkron olarak çalışır. Bu, scroll pozisyonu düzeltme gibi görsel tutarsızlıkları önlemek için gereklidir, ancak kötüye kullanımı performansı olumsuz etkiler. Çoğu durumda <code>useEffect</code> yeterlidir.</p>
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React'in lifecycle metotlarından Hooks'a geçişi, sadece bir sözdizimi değişikliği değil, düşünce modelinde bir paradigma değişikliğidir. Lifecycle metotları "ne zaman" sorusuna odaklanırken, Hooks "neyle senkronize et" sorusuna odaklanır. Her iki sistemi de anlamak, eski kod tabanlarında çalışırken ve modern React geliştirmede size avantaj sağlar. Yeni projelerde Hooks kullanmayı tercih edin, ancak Error Boundary gibi henüz hook karşılığı olmayan özellikler için class component'leri bilmek hala önemlidir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/learn/lifecycle-of-reactive-effects" target="_blank" rel="noopener noreferrer">React Docs - Lifecycle of Reactive Effects</a></li>
+  <li><a href="https://react.dev/reference/react/Component" target="_blank" rel="noopener noreferrer">React Docs - Component Lifecycle Reference</a></li>
+  <li><a href="https://react.dev/reference/react/useLayoutEffect" target="_blank" rel="noopener noreferrer">React Docs - useLayoutEffect</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank" rel="noopener noreferrer">MDN - MutationObserver</a></li>
+</ul>

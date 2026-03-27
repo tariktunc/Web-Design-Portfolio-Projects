@@ -1,0 +1,232 @@
+<h2>useMemo ve useCallback: Performans Optimizasyonu Rehberi</h2>
+
+<p>React bileşenleri her render'da fonksiyon gövdesini baştan çalıştırır. Bu, hesaplama maliyetli işlemlerin ve fonksiyon referanslarının gereksiz yere yeniden oluşturulması anlamına gelir. <code>useMemo</code> ve <code>useCallback</code> hook'ları, bu durumları optimize etmenizi sağlayan memoization araçlarıdır. Bu rehberde her iki hook'un doğru kullanımını, ne zaman kullanılması gerektiğini ve yaygın yanlış kullanımları inceleyeceğiz.</p>
+
+<h3>Memoization Nedir?</h3>
+
+<p>Memoization, bir fonksiyonun sonucunu önbelleğe alarak aynı girdilerle tekrar çağrıldığında hesaplamayı tekrarlamamasını sağlayan optimizasyon tekniğidir. React'te bu kavram iki hook ile uygulanır:</p>
+
+<ul>
+  <li><strong>useMemo:</strong> Hesaplanmış bir <em>değeri</em> memoize eder</li>
+  <li><strong>useCallback:</strong> Bir <em>fonksiyon referansını</em> memoize eder</li>
+</ul>
+
+<blockquote><code>useCallback(fn, deps)</code> aslında <code>useMemo(() =&gt; fn, deps)</code> ile eşdeğerdir. useCallback, fonksiyon memoizasyonu için daha okunabilir bir kısayoldur.</blockquote>
+
+<h3>useMemo: Hesaplanmış Değerleri Önbelleğe Alma</h3>
+
+<pre><code>import { useMemo, useState } from 'react';
+
+function ProductFilter({ products }) {
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [minPrice, setMinPrice] = useState(0);
+
+  // Maliyetli hesaplama - useMemo ile optimize edilmiş
+  const filteredAndSortedProducts = useMemo(() =&gt; {
+    console.log('Filtreleme ve sıralama çalışıyor...');
+
+    return products
+      .filter(product =&gt;
+        product.name.toLowerCase().includes(search.toLowerCase()) &amp;&amp;
+        product.price &gt;= minPrice
+      )
+      .sort((a, b) =&gt; {
+        if (sortBy === 'name') return a.name.localeCompare(b.name, 'tr');
+        if (sortBy === 'price') return a.price - b.price;
+        if (sortBy === 'rating') return b.rating - a.rating;
+        return 0;
+      });
+  }, [products, search, sortBy, minPrice]);
+
+  // Derived values - useMemo ile
+  const stats = useMemo(() =&gt; ({
+    total: filteredAndSortedProducts.length,
+    avgPrice: filteredAndSortedProducts.length &gt; 0
+      ? filteredAndSortedProducts.reduce((sum, p) =&gt; sum + p.price, 0) / filteredAndSortedProducts.length
+      : 0,
+    maxPrice: Math.max(...filteredAndSortedProducts.map(p =&gt; p.price), 0)
+  }), [filteredAndSortedProducts]);
+
+  return (
+    &lt;div&gt;
+      &lt;input value={search} onChange={(e) =&gt; setSearch(e.target.value)} placeholder="Ara..." /&gt;
+      &lt;select value={sortBy} onChange={(e) =&gt; setSortBy(e.target.value)}&gt;
+        &lt;option value="name"&gt;Ada Göre&lt;/option&gt;
+        &lt;option value="price"&gt;Fiyata Göre&lt;/option&gt;
+        &lt;option value="rating"&gt;Puana Göre&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;p&gt;{stats.total} ürün | Ort. Fiyat: {stats.avgPrice.toFixed(2)} TL&lt;/p&gt;
+      {filteredAndSortedProducts.map(product =&gt; (
+        &lt;div key={product.id}&gt;{product.name} - {product.price} TL&lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>useCallback: Fonksiyon Referanslarını Koruma</h3>
+
+<p>useCallback, bir fonksiyonun referansını bağımlılıklar değişmediği sürece sabit tutar. Bu özellikle <code>React.memo</code> ile sarılmış alt bileşenlere fonksiyon prop'u geçerken önemlidir:</p>
+
+<pre><code>import { useCallback, useState, memo } from 'react';
+
+// React.memo ile sarılmış alt bileşen
+const TodoItem = memo(function TodoItem({ todo, onToggle, onDelete }) {
+  console.log(`TodoItem render: ${todo.text}`);
+  return (
+    &lt;li&gt;
+      &lt;input
+        type="checkbox"
+        checked={todo.done}
+        onChange={() =&gt; onToggle(todo.id)}
+      /&gt;
+      &lt;span&gt;{todo.text}&lt;/span&gt;
+      &lt;button onClick={() =&gt; onDelete(todo.id)}&gt;Sil&lt;/button&gt;
+    &lt;/li&gt;
+  );
+});
+
+function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+
+  // useCallback ile fonksiyon referansı korunur
+  const handleToggle = useCallback((id) =&gt; {
+    setTodos(prev =&gt;
+      prev.map(todo =&gt;
+        todo.id === id ? { ...todo, done: !todo.done } : todo
+      )
+    );
+  }, []);
+
+  const handleDelete = useCallback((id) =&gt; {
+    setTodos(prev =&gt; prev.filter(todo =&gt; todo.id !== id));
+  }, []);
+
+  const handleAdd = useCallback(() =&gt; {
+    if (!input.trim()) return;
+    setTodos(prev =&gt; [...prev, { id: Date.now(), text: input, done: false }]);
+    setInput('');
+  }, [input]);
+
+  return (
+    &lt;div&gt;
+      &lt;input value={input} onChange={(e) =&gt; setInput(e.target.value)} /&gt;
+      &lt;button onClick={handleAdd}&gt;Ekle&lt;/button&gt;
+      &lt;ul&gt;
+        {todos.map(todo =&gt; (
+          &lt;TodoItem
+            key={todo.id}
+            todo={todo}
+            onToggle={handleToggle}
+            onDelete={handleDelete}
+          /&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <p><strong>İpucu:</strong> useCallback, <code>React.memo</code> ile birlikte kullanılmadığında genellikle fayda sağlamaz. Alt bileşen memo ile sarılmamışsa, useCallback gereksiz bir overhead yaratır. Önce profiling yapın, sonra optimize edin.</p>
+</div>
+
+<h3>Ne Zaman Kullanmalı, Ne Zaman Kullanmamalı?</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Kullanın</th>
+      <th>Kullanmayın</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Büyük liste filtreleme/sıralama</td>
+      <td>Basit hesaplamalar (a + b)</td>
+    </tr>
+    <tr>
+      <td>Karmaşık matematiksel işlemler</td>
+      <td>Primitive değer oluşturma</td>
+    </tr>
+    <tr>
+      <td>React.memo ile birlikte callback aktarma</td>
+      <td>Memo olmadan callback aktarma</td>
+    </tr>
+    <tr>
+      <td>useEffect dependency olarak kullanılan değerler</td>
+      <td>Her fonksiyon ve değeri sarmak</td>
+    </tr>
+    <tr>
+      <td>Custom hook'lardan döndürülen fonksiyonlar</td>
+      <td>Erken optimizasyon</td>
+    </tr>
+  </tbody>
+</table>
+
+<pre><code>function Example() {
+  const [count, setCount] = useState(0);
+
+  // GEREKSIZ useMemo - basit hesaplama
+  const doubled = useMemo(() =&gt; count * 2, [count]); // Buna gerek yok
+  const doubled = count * 2; // Bu yeterli
+
+  // GEREKSIZ useCallback - memo olmayan bileşene aktarma
+  const handleClick = useCallback(() =&gt; {
+    setCount(prev =&gt; prev + 1);
+  }, []); // Alt bileşen memo değilse faydasız
+
+  // FAYDALI useMemo - pahalı hesaplama
+  const expensiveResult = useMemo(() =&gt; {
+    return heavyComputation(largeDataSet);
+  }, [largeDataSet]);
+
+  return &lt;div&gt;{/* ... */}&lt;/div&gt;;
+}</code></pre>
+
+<div class="warning">
+  <p><strong>Uyarı:</strong> useMemo ve useCallback'in kendileri de bir maliyet taşır: dependency karşılaştırması, bellek kullanımı ve kod karmaşıklığı. Her yerde kullanmak, hiç kullanmamaktan daha kötü olabilir. React Profiler ile gerçek performans sorunlarını tespit edip, yalnızca ihtiyaç duyulan yerlerde kullanın.</p>
+</div>
+
+<h3>React.memo ile Birlikte Kullanım</h3>
+
+<pre><code>// Pahalı render'a sahip bileşen
+const ExpensiveChart = memo(function ExpensiveChart({ data, onDataPointClick }) {
+  // Karmaşık grafik render işlemi
+  return &lt;canvas&gt;{/* chart */}&lt;/canvas&gt;;
+});
+
+function Dashboard() {
+  const [rawData, setRawData] = useState([]);
+  const [selectedRange, setSelectedRange] = useState('week');
+
+  // useMemo: data her render'da yeni referans olmasın
+  const chartData = useMemo(() =&gt; {
+    return processDataForChart(rawData, selectedRange);
+  }, [rawData, selectedRange]);
+
+  // useCallback: fonksiyon referansı değişmesin
+  const handleDataPointClick = useCallback((point) =&gt; {
+    console.log('Veri noktası:', point);
+  }, []);
+
+  return (
+    &lt;div&gt;
+      {/* Bu bileşen yalnızca chartData veya handleDataPointClick değiştiğinde render olur */}
+      &lt;ExpensiveChart data={chartData} onDataPointClick={handleDataPointClick} /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>useMemo ve useCallback, React performans optimizasyonunun önemli araçlarıdır, ancak her derde deva değildir. "Ölç, sonra optimize et" prensibini takip edin. React DevTools Profiler ile gerçek darboğazları tespit edin ve yalnızca anlamlı iyileştirme sağlayacak yerlerde bu hook'ları kullanın. React.memo ile birlikte kullanıldığında gereksiz re-render'ları etkili bir şekilde önleyebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/reference/react/useMemo" target="_blank" rel="noopener noreferrer">React Docs - useMemo</a></li>
+  <li><a href="https://react.dev/reference/react/useCallback" target="_blank" rel="noopener noreferrer">React Docs - useCallback</a></li>
+  <li><a href="https://react.dev/reference/react/memo" target="_blank" rel="noopener noreferrer">React Docs - memo</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Performance" target="_blank" rel="noopener noreferrer">MDN - Performance API</a></li>
+</ul>

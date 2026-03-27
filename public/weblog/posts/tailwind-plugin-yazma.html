@@ -1,0 +1,343 @@
+<h2>Tailwind CSS Plugin Yazma Rehberi</h2>
+
+<p>Tailwind CSS'in güçlü plugin sistemi, framework'ü özelleştirmenin ve yeniden kullanılabilir bileşenler oluşturmanın en etkili yoludur. Plugin'ler sayesinde kendi utility sınıflarınızı, bileşenlerinizi, base stillerinizi ve hatta variant'larınızı ekleyebilirsiniz. Bu rehberde sıfırdan Tailwind plugin yazma sürecini adım adım inceleyeceğiz.</p>
+
+<h3>1. Plugin Sistemi Temelleri</h3>
+
+<p>Tailwind plugin'leri, <code>plugin</code> fonksiyonu ile oluşturulur ve yapılandırma dosyasında kaydedilir. Plugin API'si dört ana fonksiyon sunar:</p>
+
+<ul>
+<li><strong>addUtilities()</strong> — Yeni utility sınıfları ekler</li>
+<li><strong>addComponents()</strong> — Yeni bileşen sınıfları ekler</li>
+<li><strong>addBase()</strong> — Base (reset/normalize) stilleri ekler</li>
+<li><strong>addVariant()</strong> — Yeni variant'lar tanımlar</li>
+</ul>
+
+<pre><code>// Temel plugin yapısı
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin(function({ addUtilities, addComponents, addBase, addVariant, theme, e }) {
+  // Plugin mantığı buraya
+});</code></pre>
+
+<h3>2. Utility Plugin Yazma</h3>
+
+<p>Utility'ler, Tailwind'in en temel yapı taşlarıdır. Kendi utility sınıflarınızı eklemek oldukça kolaydır.</p>
+
+<pre><code>// plugins/text-shadow.js
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin(function({ addUtilities, theme, e }) {
+  const textShadows = {
+    '.text-shadow-sm': {
+      textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+    },
+    '.text-shadow': {
+      textShadow: '0 2px 4px rgba(0, 0, 0, 0.15)',
+    },
+    '.text-shadow-md': {
+      textShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    },
+    '.text-shadow-lg': {
+      textShadow: '0 8px 16px rgba(0, 0, 0, 0.25)',
+    },
+    '.text-shadow-none': {
+      textShadow: 'none',
+    },
+  };
+
+  addUtilities(textShadows);
+});</code></pre>
+
+<pre><code>// tailwind.config.js'de kullanım
+module.exports = {
+  plugins: [
+    require('./plugins/text-shadow'),
+  ],
+};</code></pre>
+
+<h3>3. Theme Değerlerini Kullanma</h3>
+
+<p>Plugin'ler, Tailwind theme yapılandırmasından değerleri dinamik olarak okuyabilir. Bu sayede tutarlı ve yapılandırılabilir plugin'ler yazabilirsiniz.</p>
+
+<pre><code>// plugins/gradient-text.js
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin(function({ addUtilities, theme, e }) {
+  const colors = theme('colors');
+  const gradientUtilities = {};
+
+  // Her renk çifti için gradient text utility oluştur
+  Object.entries(colors).forEach(([colorName, colorValue]) => {
+    if (typeof colorValue === 'object') {
+      gradientUtilities[`.text-gradient-${e(colorName)}`] = {
+        backgroundImage: `linear-gradient(135deg, ${colorValue[400]}, ${colorValue[600]})`,
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+      };
+    }
+  });
+
+  addUtilities(gradientUtilities);
+});</code></pre>
+
+<pre><code>&lt;!-- Kullanım --&gt;
+&lt;h1 class="text-gradient-blue text-4xl font-bold"&gt;
+  Gradient Başlık
+&lt;/h1&gt;</code></pre>
+
+<h3>4. Component Plugin Yazma</h3>
+
+<p>Component'ler, utility'lerden farklı olarak daha yapısal sınıflardır. Butonlar, kartlar, badge'ler gibi UI bileşenleri component olarak tanımlanır.</p>
+
+<pre><code>// plugins/buttons.js
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin(function({ addComponents, theme }) {
+  const buttons = {
+    '.btn': {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: `${theme('spacing.2')} ${theme('spacing.4')}`,
+      fontSize: theme('fontSize.sm'),
+      fontWeight: theme('fontWeight.semibold'),
+      borderRadius: theme('borderRadius.lg'),
+      transition: 'all 200ms ease-in-out',
+      cursor: 'pointer',
+      '&:focus': {
+        outline: 'none',
+        boxShadow: `0 0 0 3px ${theme('colors.blue.300')}`,
+      },
+      '&:disabled': {
+        opacity: '0.5',
+        cursor: 'not-allowed',
+      },
+    },
+    '.btn-primary': {
+      backgroundColor: theme('colors.blue.600'),
+      color: theme('colors.white'),
+      '&:hover': {
+        backgroundColor: theme('colors.blue.700'),
+      },
+    },
+    '.btn-secondary': {
+      backgroundColor: theme('colors.gray.200'),
+      color: theme('colors.gray.800'),
+      '&:hover': {
+        backgroundColor: theme('colors.gray.300'),
+      },
+    },
+    '.btn-outline': {
+      backgroundColor: 'transparent',
+      border: `2px solid ${theme('colors.blue.600')}`,
+      color: theme('colors.blue.600'),
+      '&:hover': {
+        backgroundColor: theme('colors.blue.600'),
+        color: theme('colors.white'),
+      },
+    },
+  };
+
+  addComponents(buttons);
+});</code></pre>
+
+<h3>5. Base Stilleri Ekleme</h3>
+
+<p>Base stilleri, HTML elementlerinin varsayılan görünümünü değiştirmek için kullanılır.</p>
+
+<pre><code>// plugins/typography-base.js
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin(function({ addBase, theme }) {
+  addBase({
+    'h1': {
+      fontSize: theme('fontSize.3xl'),
+      fontWeight: theme('fontWeight.bold'),
+      lineHeight: theme('lineHeight.tight'),
+      marginBottom: theme('spacing.4'),
+    },
+    'h2': {
+      fontSize: theme('fontSize.2xl'),
+      fontWeight: theme('fontWeight.semibold'),
+      lineHeight: theme('lineHeight.tight'),
+      marginBottom: theme('spacing.3'),
+    },
+    'a': {
+      color: theme('colors.blue.600'),
+      textDecoration: 'underline',
+      '&:hover': {
+        color: theme('colors.blue.800'),
+      },
+    },
+    'code': {
+      backgroundColor: theme('colors.gray.100'),
+      padding: `${theme('spacing.0.5')} ${theme('spacing.1')}`,
+      borderRadius: theme('borderRadius.sm'),
+      fontSize: theme('fontSize.sm'),
+    },
+  });
+});</code></pre>
+
+<h3>6. Custom Variant Ekleme</h3>
+
+<p>Variant'lar, Tailwind'in <code>hover:</code>, <code>focus:</code> gibi modifier'larını genişletmenizi sağlar.</p>
+
+<pre><code>// plugins/custom-variants.js
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin(function({ addVariant }) {
+  // Grup açık olduğunda
+  addVariant('group-open', ':merge(.group).open &');
+
+  // Belirli bir data attribute'a göre
+  addVariant('data-active', '&[data-active="true"]');
+
+  // Üçüncü çocuk ve sonrası
+  addVariant('nth-3', '&:nth-child(n+3)');
+
+  // Sayfa yüklendiğinde
+  addVariant('loaded', '.loaded &');
+
+  // Sidebar açıkken
+  addVariant('sidebar-open', '.sidebar-open &');
+
+  // Birden fazla seçici
+  addVariant('hocus', ['&:hover', '&:focus']);
+});</code></pre>
+
+<pre><code>&lt;!-- Variant kullanımı --&gt;
+&lt;div data-active="true" class="data-active:bg-blue-500 data-active:text-white"&gt;
+  Aktif element
+&lt;/div&gt;
+
+&lt;button class="hocus:bg-blue-600 hocus:text-white"&gt;
+  Hover veya Focus
+&lt;/button&gt;</code></pre>
+
+<h3>7. Yapılandırılabilir Plugin (withOptions)</h3>
+
+<p>Plugin'lerinize dışarıdan seçenek geçirmek için <code>plugin.withOptions</code> kullanılır.</p>
+
+<pre><code>// plugins/scrollbar.js
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin.withOptions(
+  function(options = {}) {
+    const width = options.width || '8px';
+    const trackColor = options.trackColor || '#f1f1f1';
+    const thumbColor = options.thumbColor || '#888';
+
+    return function({ addBase }) {
+      addBase({
+        '::-webkit-scrollbar': {
+          width: width,
+        },
+        '::-webkit-scrollbar-track': {
+          backgroundColor: trackColor,
+          borderRadius: '4px',
+        },
+        '::-webkit-scrollbar-thumb': {
+          backgroundColor: thumbColor,
+          borderRadius: '4px',
+          '&:hover': {
+            backgroundColor: '#555',
+          },
+        },
+      });
+    };
+  },
+  function(options = {}) {
+    return {
+      theme: {
+        extend: {
+          scrollbar: {
+            width: options.width || '8px',
+          },
+        },
+      },
+    };
+  }
+);
+
+// tailwind.config.js
+module.exports = {
+  plugins: [
+    require('./plugins/scrollbar')({
+      width: '6px',
+      trackColor: '#e2e8f0',
+      thumbColor: '#94a3b8',
+    }),
+  ],
+};</code></pre>
+
+<h3>8. Tailwind v4 ile Plugin Yazma</h3>
+
+<p>Tailwind v4, CSS-first yapılandırma ile birlikte plugin kullanımını da güncellemiştir.</p>
+
+<pre><code>/* Tailwind v4 — CSS içinde plugin benzeri tanımlamalar */
+@import "tailwindcss";
+
+/* Custom utility'ler */
+@utility text-shadow-sm {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@utility text-shadow-md {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom variant'lar */
+@variant hocus (&:hover, &:focus);
+@variant group-open (:merge(.group).open &);
+
+/* Theme genişletme */
+@theme {
+  --color-brand: #4f46e5;
+  --color-brand-light: #818cf8;
+  --color-brand-dark: #3730a3;
+}</code></pre>
+
+<div class="info">
+<strong>Bilgi:</strong> Tailwind v4'te basit utility ve variant tanımlamaları doğrudan CSS dosyasında yapılabilir. Karmaşık mantık gerektiren plugin'ler için hala JavaScript plugin sistemi geçerlidir.
+</div>
+
+<h3>9. Plugin Yayınlama</h3>
+
+<p>Yazdığınız plugin'i npm'de yayınlayarak toplulukla paylaşabilirsiniz.</p>
+
+<pre><code>// package.json
+{
+  "name": "tailwindcss-text-shadow",
+  "version": "1.0.0",
+  "description": "Text shadow utilities for Tailwind CSS",
+  "main": "index.js",
+  "peerDependencies": {
+    "tailwindcss": ">=3.0.0"
+  },
+  "keywords": ["tailwindcss", "plugin", "text-shadow"]
+}
+
+// index.js
+const plugin = require('tailwindcss/plugin');
+
+module.exports = plugin(function({ addUtilities }) {
+  // Plugin kodu
+});
+
+// Yayınlama
+// npm login
+// npm publish</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Tailwind CSS plugin sistemi, framework'ün genişletilebilirliğinin temelini oluşturur. Utility, component, base ve variant ekleme fonksiyonları ile projenize özel çözümler üretebilir, bunları takımınız veya toplulukla paylaşabilirsiniz. <code>plugin.withOptions</code> ile yapılandırılabilir plugin'ler yazarak esnekliği artırabilirsiniz. Tailwind v4'ün CSS-first yaklaşımı basit durumlar için daha da kolay bir yol sunarken, JavaScript plugin'leri karmaşık senaryolar için güçlü bir seçenek olarak kalmaya devam etmektedir.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://tailwindcss.com/docs/plugins" target="_blank">Tailwind CSS Plugin Docs</a></li>
+<li><a href="https://tailwindcss.com/docs/adding-custom-styles" target="_blank">Tailwind CSS Custom Styles</a></li>
+<li><a href="https://github.com/aniftyco/awesome-tailwindcss" target="_blank">Awesome Tailwind CSS — Plugin Listesi</a></li>
+<li><a href="https://www.npmjs.com/search?q=tailwindcss%20plugin" target="_blank">npm — Tailwind CSS Plugin'leri</a></li>
+</ul>

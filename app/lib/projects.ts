@@ -38,6 +38,10 @@ export interface BlogPost {
   summary: string;
   fullSummary: string;
   link: string;
+  content?: string;
+  readingTime?: string;
+  tags?: string[];
+  author?: string;
 }
 
 function readJson<T>(relativePath: string): T {
@@ -65,5 +69,26 @@ export function getAllBlogPosts(): BlogPost[] {
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
-  return getAllBlogPosts().find((p) => p.slug === slug);
+  const post = getAllBlogPosts().find((p) => p.slug === slug);
+  if (!post) return undefined;
+
+  // Try loading rich content from individual file
+  if (!post.content) {
+    try {
+      const contentPath = path.join(
+        process.cwd(),
+        "public",
+        "weblog",
+        "posts",
+        `${slug}.html`
+      );
+      if (fs.existsSync(contentPath)) {
+        post.content = fs.readFileSync(contentPath, "utf-8");
+      }
+    } catch {
+      // No individual content file — fallback to fullSummary
+    }
+  }
+
+  return post;
 }

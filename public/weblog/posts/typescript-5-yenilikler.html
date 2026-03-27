@@ -1,0 +1,292 @@
+<h2>TypeScript 5.x Yenilikleri: Kapsamlı İnceleme</h2>
+
+<p>TypeScript 5 serisi, performans iyileştirmeleri, yeni tip özellikleri ve geliştirici deneyimini artıran birçok yenilik getirdi. Decorator'lerin standartlaşması, <code>const</code> type parametreleri, modül çözümleme geliştirmeleri ve daha fazlası ile TypeScript daha güçlü ve kullanışlı hale geldi. Bu yazıda TypeScript 5.0'dan 5.7'ye kadar olan tüm önemli yenilikleri inceleyeceğiz.</p>
+
+<h3>TypeScript 5.0: Decorator'ler (Stage 3)</h3>
+
+<p>TC39 Stage 3 standartlarına uygun yeni decorator sözdizimi:</p>
+
+<pre><code>// Yeni standart decorator
+function logged(
+  target: Function,
+  context: ClassMethodDecoratorContext
+) {
+  const methodName = String(context.name);
+
+  function replacementMethod(this: any, ...args: any[]) {
+    console.log(`${methodName} çağrıldı:`, args);
+    const result = target.call(this, ...args);
+    console.log(`${methodName} sonuç:`, result);
+    return result;
+  }
+
+  return replacementMethod;
+}
+
+function sealed(target: Function, context: ClassDecoratorContext) {
+  Object.seal(target);
+  Object.seal(target.prototype);
+}
+
+@sealed
+class UserService {
+  @logged
+  getUser(id: string) {
+    return { id, name: 'Test User' };
+  }
+
+  @logged
+  deleteUser(id: string) {
+    return true;
+  }
+}</code></pre>
+
+<h4>Auto-Accessor</h4>
+
+<pre><code>class Person {
+  // auto-accessor: otomatik getter/setter oluşturur
+  accessor name: string;
+  accessor age: number;
+
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+}
+
+// Decorator ile birlikte kullanım
+function clamp(min: number, max: number) {
+  return function (
+    target: ClassAccessorDecoratorTarget&lt;any, number&gt;,
+    context: ClassAccessorDecoratorContext
+  ) {
+    return {
+      set(value: number) {
+        target.set.call(this, Math.min(max, Math.max(min, value)));
+      },
+      get() {
+        return target.get.call(this);
+      },
+    };
+  };
+}
+
+class Config {
+  @clamp(0, 100)
+  accessor volume: number = 50;
+}</code></pre>
+
+<h3>TypeScript 5.0: Const Type Parameters</h3>
+
+<pre><code>// const type parameter: Literal tip çıkarımı zorlar
+function createRoute&lt;const T extends readonly string[]&gt;(paths: T) {
+  return paths;
+}
+
+// const olmadan: string[]
+const routes1 = createRoute(['home', 'about', 'contact']);
+// const ile: readonly ["home", "about", "contact"]
+const routes2 = createRoute(['home', 'about', 'contact']);
+
+// Pratik kullanım: Config builder
+function defineConfig&lt;const T extends Record&lt;string, unknown&gt;&gt;(config: T): T {
+  return config;
+}
+
+const config = defineConfig({
+  theme: 'dark',
+  lang: 'tr',
+  features: ['auth', 'i18n'] as const,
+});
+// typeof config.theme = "dark" (string değil)</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>const</code> type parameter, <code>as const</code> assertion'ı fonksiyon çağrısı tarafına taşır. Bu sayede çağıran taraf <code>as const</code> yazmak zorunda kalmaz.
+</div>
+
+<h3>TypeScript 5.1-5.2 Yenilikleri</h3>
+
+<h4>Unrelated Types for Return (5.1)</h4>
+
+<pre><code>// 5.1: undefined döndüren fonksiyonlar explicit return gerektirmez
+function logMessage(msg: string): undefined {
+  console.log(msg);
+  // return undefined; artık gerekli değil
+}
+
+// Getter/setter farklı tipler
+class Box {
+  #value: number = 0;
+
+  // setter number alır
+  set value(val: number) {
+    this.#value = val;
+  }
+
+  // getter string döner
+  get value(): string {
+    return `Değer: ${this.#value}`;
+  }
+}</code></pre>
+
+<h4>Using Declarations (5.2)</h4>
+
+<pre><code>// Explicit Resource Management (using keyword)
+class DatabaseConnection implements Disposable {
+  constructor(private url: string) {
+    console.log('Bağlantı açıldı:', url);
+  }
+
+  query(sql: string) {
+    return []; // query sonuçları
+  }
+
+  [Symbol.dispose]() {
+    console.log('Bağlantı kapatıldı:', this.url);
+  }
+}
+
+// using ile otomatik cleanup
+async function fetchData() {
+  using connection = new DatabaseConnection('postgres://localhost');
+  const results = connection.query('SELECT * FROM users');
+  return results;
+  // Fonksiyon bittiğinde connection otomatik dispose edilir
+}
+
+// Async dispose
+class FileHandle implements AsyncDisposable {
+  async [Symbol.asyncDispose]() {
+    await this.close();
+  }
+
+  async close() {
+    console.log('Dosya kapatıldı');
+  }
+}
+
+async function processFile() {
+  await using file = new FileHandle();
+  // ... dosya işlemleri
+  // Otomatik await file[Symbol.asyncDispose]()
+}</code></pre>
+
+<h3>TypeScript 5.3-5.4 Yenilikleri</h3>
+
+<h4>Import Attributes (5.3)</h4>
+
+<pre><code>// Import assertions yerine import attributes
+import data from './config.json' with { type: 'json' };
+import styles from './styles.css' with { type: 'css' };
+
+// Dynamic import ile
+const config = await import('./config.json', {
+  with: { type: 'json' }
+});</code></pre>
+
+<h4>NoInfer Utility Type (5.4)</h4>
+
+<pre><code>// NoInfer: Belirli pozisyondan tip çıkarımını engeller
+function createFSM&lt;S extends string&gt;(config: {
+  initial: NoInfer&lt;S&gt;;
+  states: S[];
+}) {
+  return config;
+}
+
+// Hata: 'idle' states dizisinde olmalı
+createFSM({
+  initial: 'idle',       // NoInfer sayesinde buradan çıkarım yapılmaz
+  states: ['active', 'inactive'], // Tip S buradan çıkarılır
+});
+
+// Doğru kullanım
+createFSM({
+  initial: 'active',
+  states: ['active', 'inactive'],
+});</code></pre>
+
+<h3>TypeScript 5.5-5.7 Yenilikleri</h3>
+
+<h4>Inferred Type Predicates (5.5)</h4>
+
+<pre><code>// TypeScript 5.5: Otomatik type predicate çıkarımı
+const numbers = [1, null, 2, undefined, 3].filter(
+  (x) =&gt; x !== null &amp;&amp; x !== undefined
+);
+// TypeScript 5.5: number[] (önceden (number | null | undefined)[] olurdu)
+
+// Otomatik çıkarım
+function isString(value: unknown) {
+  return typeof value === 'string';
+}
+// TypeScript 5.5 bunu otomatik olarak type predicate olarak algılar
+// function isString(value: unknown): value is string</code></pre>
+
+<h4>Regular Expression Checking (5.5)</h4>
+
+<pre><code>// TypeScript 5.5: Regex syntax kontrolü
+const regex1 = /hello world/;        // OK
+const regex2 = /[a-z]+/gi;           // OK
+// const regex3 = /[a-z/;             // Hata: Unterminated regex
+// const regex4 = /(?&lt;name&gt;[a-z+)/;  // Hata: Invalid regex</code></pre>
+
+<h4>Isolated Declarations (5.5)</h4>
+
+<pre><code>// tsconfig.json
+{
+  "compilerOptions": {
+    "isolatedDeclarations": true
+  }
+}
+
+// Fonksiyon dönüş tipleri açıkça belirtilmeli
+export function add(a: number, b: number): number {
+  return a + b;
+}
+
+// Hata: isolatedDeclarations modunda dönüş tipi gerekli
+// export function multiply(a: number, b: number) {
+//   return a * b;
+// }</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>isolatedDeclarations</code>, paralel tip oluşturmayı mümkün kılarak büyük projelerde derleme süresini önemli ölçüde kısaltabilir. SWC ve oxc gibi araçlar bu özellikten faydalanır.
+</div>
+
+<h4>Config Extends Glob Patterns (5.5+)</h4>
+
+<pre><code>// tsconfig.json
+{
+  "extends": ["@repo/config-typescript/base", "./tsconfig.paths.json"],
+  // Birden fazla config dosyasını extend edebilirsiniz
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> TypeScript 5.x serisinin bazı özellikleri (using declarations, import attributes) henüz tüm runtime'larda desteklenmeyebilir. Polyfill veya target ayarlarınızı kontrol edin.
+</div>
+
+<h3>Migration ve Güncelleme</h3>
+
+<pre><code># TypeScript güncelleme
+npm install typescript@latest
+
+# Breaking change kontrolü
+npx tsc --noEmit
+
+# Versiyon bazlı yenilik kontrolü
+npx tsc --version</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript 5.x serisi, standart decorator'ler, const type parametreleri, using declarations, NoInfer ve otomatik type predicate çıkarımı gibi güçlü özelliklerle dilin ifade gücünü artırdı. Her yeni sürüm hem geliştirici deneyimini hem de derleme performansını iyileştiriyor. Projelerinizi güncel tutarak bu özelliklerden faydalanın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/release-notes/overview.html" target="_blank" rel="noopener noreferrer">TypeScript Release Notes</a></li>
+  <li><a href="https://devblogs.microsoft.com/typescript/" target="_blank" rel="noopener noreferrer">TypeScript Blog</a></li>
+  <li><a href="https://github.com/tc39/proposal-decorators" target="_blank" rel="noopener noreferrer">TC39 Decorators Proposal</a></li>
+  <li><a href="https://github.com/tc39/proposal-explicit-resource-management" target="_blank" rel="noopener noreferrer">TC39 Explicit Resource Management</a></li>
+  <li><a href="https://www.totaltypescript.com/workshops" target="_blank" rel="noopener noreferrer">Total TypeScript Workshops</a></li>
+</ul>

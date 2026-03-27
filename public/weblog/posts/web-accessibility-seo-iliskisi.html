@@ -1,0 +1,167 @@
+<h2>Web Accessibility ve SEO İlişkisi: a11y'nin Arama Etkisi</h2>
+
+<p>Web erişilebilirliği (accessibility, kısaca a11y) ve SEO, farklı amaçlara hizmet ediyor gibi görünseler de pek çok teknik gereksinimi paylaşırlar. Erişilebilir bir web sitesi, hem engelli kullanıcılara hem de arama motoru botlarına daha iyi bir deneyim sunar. Semantik HTML, alt text, heading hiyerarşisi ve ARIA attribute'ları gibi a11y pratikleri, arama motorlarının içeriğinizi anlamasını da doğrudan kolaylaştırır. Bu yazıda erişilebilirlik ve SEO'nun kesişim noktalarını, uygulamalı örneklerle inceliyoruz.</p>
+
+<h3>Accessibility ve SEO Neden Birlikte Düşünülmeli?</h3>
+
+<p>Arama motoru botları ve ekran okuyucular (screen readers), web sayfalarını benzer şekilde tüketir: her ikisi de görsel tasarımı göremez, HTML yapısına ve metin içeriğine dayanır. Bu nedenle erişilebilirlik için yapılan iyileştirmeler genellikle SEO'ya da katkıda bulunur.</p>
+
+<ul>
+  <li><strong>Semantik HTML:</strong> Doğru HTML elementleri hem screen reader'lar hem de botlar için anlam taşır.</li>
+  <li><strong>Alt text:</strong> Görselleri hem görme engelli kullanıcılar hem de Google Images için tanımlar.</li>
+  <li><strong>Heading hiyerarşisi:</strong> İçerik yapısını hem kullanıcılar hem de botlar için netleştirir.</li>
+  <li><strong>Link text:</strong> Açıklayıcı link metinleri hem navigasyonu hem de anchor text sinyallerini güçlendirir.</li>
+  <li><strong>Sayfa hızı:</strong> Performans hem erişilebilirlik hem de Core Web Vitals için kritiktir.</li>
+</ul>
+
+<h3>1. Semantik HTML Kullanımı</h3>
+
+<p>Semantik HTML elementleri, içeriğin amacını ve yapısını tanımlar. <code>&lt;div&gt;</code> ve <code>&lt;span&gt;</code> yerine anlamlı elementler kullanmak, hem erişilebilirliği hem de SEO'yu iyileştirir.</p>
+
+<pre><code>&lt;!-- Kötü: Semantik olmayan yapı --&gt;
+&lt;div class="header"&gt;
+  &lt;div class="nav"&gt;
+    &lt;div class="nav-item"&gt;&lt;a href="/"&gt;Ana Sayfa&lt;/a&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="content"&gt;
+  &lt;div class="title"&gt;Başlık&lt;/div&gt;
+  &lt;div class="text"&gt;İçerik metni...&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- İyi: Semantik HTML --&gt;
+&lt;header&gt;
+  &lt;nav aria-label="Ana navigasyon"&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="/"&gt;Ana Sayfa&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+&lt;main&gt;
+  &lt;article&gt;
+    &lt;h1&gt;Başlık&lt;/h1&gt;
+    &lt;p&gt;İçerik metni...&lt;/p&gt;
+  &lt;/article&gt;
+&lt;/main&gt;
+&lt;footer&gt;
+  &lt;p&gt;&amp;copy; 2025 Tarik Tunç&lt;/p&gt;
+&lt;/footer&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>&lt;main&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;header&gt;</code>, <code>&lt;footer&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;section&gt;</code> ve <code>&lt;aside&gt;</code> gibi landmark elementleri kullanın. Bu elementler hem screen reader navigasyonunu hem de arama motorlarının içerik bölümlerini ayırt etmesini sağlar.
+</div>
+
+<h3>2. Görsel Erişilebilirliği ve SEO</h3>
+
+<p>Alt text, görselleri hem görme engelli kullanıcılar hem de arama motorları için tanımlar. Google Images sıralamasında alt text doğrudan etkilidir.</p>
+
+<pre><code>&lt;!-- Kötü örnekler --&gt;
+&lt;img src="photo.webp"&gt;                              &lt;!-- Alt text yok --&gt;
+&lt;img src="photo.webp" alt="resim"&gt;                  &lt;!-- Anlamsız alt text --&gt;
+&lt;img src="photo.webp" alt="seo seo optimizasyon seo"&gt; &lt;!-- Keyword stuffing --&gt;
+
+&lt;!-- İyi örnekler --&gt;
+&lt;img
+  src="core-web-vitals-dashboard.webp"
+  alt="Google Search Console Core Web Vitals raporu ekran görüntüsü"
+  width="800"
+  height="450"
+  loading="lazy"
+&gt;
+
+&lt;!-- Dekoratif görseller için boş alt --&gt;
+&lt;img src="divider.svg" alt="" role="presentation"&gt;
+
+&lt;!-- Figure ve figcaption ile --&gt;
+&lt;figure&gt;
+  &lt;img src="lighthouse-score.webp" alt="Lighthouse performans skoru 98/100"&gt;
+  &lt;figcaption&gt;Optimizasyon sonrası Lighthouse performans skoru&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre>
+
+<h3>3. Heading Hiyerarşisi</h3>
+
+<p>Heading'ler (h1-h6) hem screen reader kullanıcılarının hem de arama motorlarının içerik yapısını anlamasını sağlar. Her sayfada yalnızca bir <code>&lt;h1&gt;</code> olmalı ve heading seviyeleri atlanmamalıdır.</p>
+
+<pre><code>&lt;!-- Doğru heading hiyerarşisi --&gt;
+&lt;h1&gt;Web Accessibility ve SEO&lt;/h1&gt;           &lt;!-- Seviye 1: Sayfa başlığı --&gt;
+  &lt;h2&gt;Semantik HTML Kullanımı&lt;/h2&gt;          &lt;!-- Seviye 2: Ana bölüm --&gt;
+    &lt;h3&gt;Landmark Elementleri&lt;/h3&gt;           &lt;!-- Seviye 3: Alt bölüm --&gt;
+    &lt;h3&gt;Form Elementleri&lt;/h3&gt;               &lt;!-- Seviye 3: Alt bölüm --&gt;
+  &lt;h2&gt;Görsel Erişilebilirliği&lt;/h2&gt;          &lt;!-- Seviye 2: Ana bölüm --&gt;
+    &lt;h3&gt;Alt Text Best Practices&lt;/h3&gt;        &lt;!-- Seviye 3: Alt bölüm --&gt;
+
+&lt;!-- Yanlış: Seviye atlama --&gt;
+&lt;h1&gt;Başlık&lt;/h1&gt;
+  &lt;h4&gt;Alt başlık&lt;/h4&gt;  &lt;!-- h2 ve h3 atlanmış! --&gt;</code></pre>
+
+<h3>4. Link Erişilebilirliği</h3>
+
+<p>Açıklayıcı link metinleri hem screen reader kullanıcıları hem de SEO anchor text sinyalleri için önemlidir.</p>
+
+<pre><code>&lt;!-- Kötü --&gt;
+&lt;a href="/blog/seo-rehberi"&gt;Buraya tıklayın&lt;/a&gt;
+&lt;a href="/blog/seo-rehberi"&gt;Devamını oku&lt;/a&gt;
+
+&lt;!-- İyi --&gt;
+&lt;a href="/blog/seo-rehberi"&gt;Teknik SEO rehberimizi okuyun&lt;/a&gt;
+
+&lt;!-- Yeni sekmede açılan linkler --&gt;
+&lt;a href="https://schema.org" target="_blank" rel="noopener noreferrer"&gt;
+  Schema.org dokümantasyonu
+  &lt;span class="sr-only"&gt;(yeni sekmede açılır)&lt;/span&gt;
+&lt;/a&gt;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> "Buraya tıklayın", "Devamını oku" gibi genel link metinleri hem erişilebilirlik hem de SEO açısından zayıftır. Screen reader kullanıcıları bağlam dışı link listesine eriştiğinde bu metinler anlamsızdır. Arama motorları da anchor text'i sıralama sinyali olarak kullanır.
+</div>
+
+<h3>5. ARIA ve SEO</h3>
+
+<p>ARIA (Accessible Rich Internet Applications) attribute'ları, HTML'in yetersiz kaldığı durumlarda erişilebilirlik bilgisi sağlar. Arama motorları ARIA'yı doğrudan sıralama faktörü olarak kullanmaz, ancak erişilebilir siteler dolaylı olarak daha iyi performans gösterir.</p>
+
+<h3>Erişilebilirlik Test Araçları</h3>
+
+<ul>
+  <li><strong>axe DevTools:</strong> Tarayıcı eklentisi olarak erişilebilirlik denetimi.</li>
+  <li><strong>Lighthouse Accessibility:</strong> Chrome DevTools içinde erişilebilirlik skoru.</li>
+  <li><strong>WAVE:</strong> Web Accessibility Evaluation Tool.</li>
+  <li><strong>Pa11y:</strong> CI/CD entegrasyonu için komut satırı erişilebilirlik testi.</li>
+</ul>
+
+<pre><code>// Pa11y ile otomatik erişilebilirlik testi
+// package.json
+{
+  "scripts": {
+    "test:a11y": "pa11y-ci --config .pa11yci.json"
+  }
+}
+
+// .pa11yci.json
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "timeout": 10000
+  },
+  "urls": [
+    "http://localhost:3000/",
+    "http://localhost:3000/blog",
+    "http://localhost:3000/about"
+  ]
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> WCAG 2.1 AA seviyesi, çoğu ülkenin yasal erişilebilirlik gereksinimleri için yeterlidir. Türkiye'de 5378 sayılı Engelliler Kanunu ve AB'nin European Accessibility Act (EAA) kapsamında web erişilebilirliği yasal zorunluluk haline gelmektedir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Web erişilebilirliği ve SEO, birbirini tamamlayan disiplinlerdir. Semantik HTML, açıklayıcı alt text, doğru heading hiyerarşisi ve anlamlı link metinleri gibi a11y pratikleri, arama motorlarının içeriğinizi daha iyi anlamasını sağlar. Erişilebilir bir web sitesi inşa etmek, sadece etik bir sorumluluk değil, aynı zamanda SEO avantajı ve yasal uyumluluk sağlayan stratejik bir yatırımdır.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.w3.org/WAI/standards-guidelines/wcag/" target="_blank" rel="noopener noreferrer">W3C - WCAG Guidelines</a></li>
+  <li><a href="https://web.dev/explore/accessible" target="_blank" rel="noopener noreferrer">web.dev - Accessibility</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility" target="_blank" rel="noopener noreferrer">MDN - Web Accessibility</a></li>
+  <li><a href="https://www.deque.com/axe/" target="_blank" rel="noopener noreferrer">axe DevTools</a></li>
+</ul>

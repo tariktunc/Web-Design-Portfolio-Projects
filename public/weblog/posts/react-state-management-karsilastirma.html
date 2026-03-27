@@ -1,0 +1,321 @@
+<h2>React State Management: Redux vs Zustand vs Jotai vs Context</h2>
+
+<p>React uygulamalarında state yönetimi, projenin büyüklüğüne ve karmaşıklığına göre farklı yaklaşımlar gerektirir. Bu rehberde, en popüler dört state management çözümünü — Redux Toolkit, Zustand, Jotai ve Context API — detaylı şekilde karşılaştıracağız. Her birinin güçlü ve zayıf yönlerini, kullanım senaryolarını ve performans özelliklerini inceleyeceğiz.</p>
+
+<h3>1. Context API: React'in Yerleşik Çözümü</h3>
+
+<p>Context API, React'in kendi içinde sunduğu en basit state paylaşım mekanizmasıdır. Küçük ve orta ölçekli uygulamalarda harici bir kütüphane kullanmadan state paylaşımı yapmanızı sağlar. Ancak performans açısından dikkatli kullanılması gereken önemli noktalar vardır.</p>
+
+<pre><code>import React, { createContext, useContext, useState } from 'react';
+
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise&lt;void&gt;;
+  logout: () => void;
+  isLoading: boolean;
+}
+
+const AuthContext = createContext&lt;AuthContextType | undefined&gt;(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState&lt;User | null&gt;(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const userData = await response.json();
+      setUser(userData);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => setUser(null);
+
+  return (
+    &lt;AuthContext.Provider value={{ user, login, logout, isLoading }}&gt;
+      {children}
+    &lt;/AuthContext.Provider&gt;
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Context API'de her value değişikliğinde, o context'i consume eden tüm componentler yeniden render olur. Bu nedenle sık değişen veriler için Context API yerine Zustand veya Jotai tercih edilmelidir.
+</div>
+
+<h3>2. Redux Toolkit: Endüstri Standardı</h3>
+
+<p>Redux Toolkit (RTK), Redux'un modern ve önerilen kullanım şeklidir. createSlice, createAsyncThunk gibi yardımcı fonksiyonlarla boilerplate kodunu minimize eder. Büyük ekiplerde ve karmaşık uygulamalarda güçlü DevTools desteğiyle öne çıkar.</p>
+
+<pre><code>import { createSlice, createAsyncThunk, configureStore } from '@reduxjs/toolkit';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+}
+
+interface CartState {
+  items: Product[];
+  total: number;
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+}
+
+const initialState: CartState = {
+  items: [],
+  total: 0,
+  status: 'idle',
+};
+
+export const fetchCart = createAsyncThunk('cart/fetch', async (userId: string) => {
+  const response = await fetch(`/api/cart/${userId}`);
+  return response.json();
+});
+
+const cartSlice = createSlice({
+  name: 'cart',
+  initialState,
+  reducers: {
+    addItem(state, action) {
+      state.items.push(action.payload);
+      state.total += action.payload.price;
+    },
+    removeItem(state, action) {
+      const index = state.items.findIndex(item => item.id === action.payload);
+      if (index !== -1) {
+        state.total -= state.items[index].price;
+        state.items.splice(index, 1);
+      }
+    },
+    clearCart(state) {
+      state.items = [];
+      state.total = 0;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCart.pending, (state) => { state.status = 'loading'; })
+      .addCase(fetchCart.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.items = action.payload.items;
+        state.total = action.payload.total;
+      })
+      .addCase(fetchCart.rejected, (state) => { state.status = 'failed'; });
+  },
+});
+
+export const { addItem, removeItem, clearCart } = cartSlice.actions;
+
+const store = configureStore({
+  reducer: { cart: cartSlice.reducer },
+});
+
+export type RootState = ReturnType&lt;typeof store.getState&gt;;
+export default store;</code></pre>
+
+<h3>3. Zustand: Minimalist ve Güçlü</h3>
+
+<p>Zustand, Jotai'nin yaratıcısı Daishi Kato tarafından geliştirilmiş, son derece hafif ve performanslı bir state management kütüphanesidir. Boilerplate kodu neredeyse sıfırdır ve React dışında da kullanılabilir. Selector bazlı yapısı sayesinde gereksiz render'ları otomatik olarak önler.</p>
+
+<pre><code>import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+interface TodoStore {
+  todos: Todo[];
+  filter: 'all' | 'active' | 'completed';
+  addTodo: (text: string) => void;
+  toggleTodo: (id: string) => void;
+  removeTodo: (id: string) => void;
+  setFilter: (filter: 'all' | 'active' | 'completed') => void;
+  filteredTodos: () => Todo[];
+}
+
+const useTodoStore = create&lt;TodoStore&gt;()(
+  devtools(
+    persist(
+      (set, get) => ({
+        todos: [],
+        filter: 'all',
+        addTodo: (text) =>
+          set((state) => ({
+            todos: [...state.todos, { id: crypto.randomUUID(), text, completed: false }],
+          })),
+        toggleTodo: (id) =>
+          set((state) => ({
+            todos: state.todos.map((todo) =>
+              todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            ),
+          })),
+        removeTodo: (id) =>
+          set((state) => ({
+            todos: state.todos.filter((todo) => todo.id !== id),
+          })),
+        setFilter: (filter) => set({ filter }),
+        filteredTodos: () => {
+          const { todos, filter } = get();
+          if (filter === 'active') return todos.filter((t) => !t.completed);
+          if (filter === 'completed') return todos.filter((t) => t.completed);
+          return todos;
+        },
+      }),
+      { name: 'todo-storage' }
+    )
+  )
+);</code></pre>
+
+<h3>4. Jotai: Atomic State Management</h3>
+
+<p>Jotai, atom bazlı bir state management yaklaşımı sunar. Her atom bağımsız bir state parçasını temsil eder ve sadece o atomu kullanan componentler yeniden render olur. Bu yaklaşım özellikle büyük ve karmaşık state ağaçlarında mükemmel performans sağlar. Recoil'den ilham almış ancak çok daha minimal bir API sunar.</p>
+
+<pre><code>import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
+
+// Temel atomlar
+const darkModeAtom = atomWithStorage('darkMode', false);
+const fontSizeAtom = atom(16);
+const languageAtom = atom&lt;'tr' | 'en'&gt;('tr');
+
+// Derived (türetilmiş) atom
+const themeAtom = atom((get) => ({
+  isDark: get(darkModeAtom),
+  fontSize: get(fontSizeAtom),
+  language: get(languageAtom),
+  cssVariables: {
+    '--bg-color': get(darkModeAtom) ? '#1a1a2e' : '#ffffff',
+    '--text-color': get(darkModeAtom) ? '#e0e0e0' : '#333333',
+    '--font-size': `${get(fontSizeAtom)}px`,
+  },
+}));
+
+// Async atom
+const userProfileAtom = atom(async () => {
+  const response = await fetch('/api/profile');
+  return response.json();
+});
+
+// Write-only atom
+const resetSettingsAtom = atom(null, (get, set) => {
+  set(darkModeAtom, false);
+  set(fontSizeAtom, 16);
+  set(languageAtom, 'tr');
+});
+
+function SettingsPanel() {
+  const [darkMode, setDarkMode] = useAtom(darkModeAtom);
+  const theme = useAtomValue(themeAtom);
+  const resetSettings = useSetAtom(resetSettingsAtom);
+
+  return (
+    &lt;div style={theme.cssVariables}&gt;
+      &lt;label&gt;
+        &lt;input type="checkbox" checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)} /&gt;
+        Karanlık Mod
+      &lt;/label&gt;
+      &lt;button onClick={resetSettings}&gt;Ayarları Sıfırla&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Karşılaştırma Tablosu</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Özellik</th>
+      <th>Context API</th>
+      <th>Redux Toolkit</th>
+      <th>Zustand</th>
+      <th>Jotai</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bundle Boyutu</td>
+      <td>0 KB</td>
+      <td>~11 KB</td>
+      <td>~1.5 KB</td>
+      <td>~3 KB</td>
+    </tr>
+    <tr>
+      <td>Öğrenme Eğrisi</td>
+      <td>Düşük</td>
+      <td>Orta-Yüksek</td>
+      <td>Düşük</td>
+      <td>Düşük</td>
+    </tr>
+    <tr>
+      <td>DevTools</td>
+      <td>React DevTools</td>
+      <td>Redux DevTools</td>
+      <td>Redux DevTools</td>
+      <td>Jotai DevTools</td>
+    </tr>
+    <tr>
+      <td>Performans</td>
+      <td>Zayıf (büyük state)</td>
+      <td>İyi</td>
+      <td>Çok İyi</td>
+      <td>Çok İyi</td>
+    </tr>
+    <tr>
+      <td>TypeScript Desteği</td>
+      <td>İyi</td>
+      <td>Mükemmel</td>
+      <td>Mükemmel</td>
+      <td>Mükemmel</td>
+    </tr>
+    <tr>
+      <td>Middleware</td>
+      <td>Yok</td>
+      <td>Zengin</td>
+      <td>Var</td>
+      <td>Sınırlı</td>
+    </tr>
+    <tr>
+      <td>SSR Desteği</td>
+      <td>Var</td>
+      <td>Var</td>
+      <td>Var</td>
+      <td>Var</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="tip">
+  <strong>İpucu:</strong> Proje seçimi yaparken şu kuralı izleyin: Küçük projeler için Context API, orta ölçekli projeler için Zustand veya Jotai, büyük enterprise projeler için Redux Toolkit idealdir.
+</div>
+
+<h3>Hangi Durumda Hangisi?</h3>
+
+<ul>
+  <li><strong>Context API:</strong> Tema, dil ayarları gibi nadiren değişen global state'ler için idealdir.</li>
+  <li><strong>Redux Toolkit:</strong> Karmaşık iş mantığı, middleware ihtiyacı ve büyük ekiplerde standartlaşma gereken projelerde tercih edilmelidir.</li>
+  <li><strong>Zustand:</strong> Hızlı prototipleme, orta ölçekli projeler ve minimal boilerplate isteyenler için mükemmeldir.</li>
+  <li><strong>Jotai:</strong> Bağımsız, granüler state parçaları olan uygulamalarda ve form-heavy projelerde öne çıkar.</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>React ekosisteminde "en iyi" state management çözümü diye bir şey yoktur — projenizin ihtiyaçlarına en uygun olanı seçmelisiniz. Context API basitliğiyle, Redux Toolkit olgunluğuyla, Zustand minimalizmiyle ve Jotai atom bazlı yaklaşımıyla farklı senaryolarda parlar. Önemli olan, seçtiğiniz çözümü tutarlı şekilde kullanmak ve gereksiz karmaşıklıktan kaçınmaktır. Küçük başlayın, gerektiğinde ölçeklendirin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/learn/managing-state" target="_blank">React Docs: Managing State</a></li>
+  <li><a href="https://redux-toolkit.js.org/" target="_blank">Redux Toolkit Official Docs</a></li>
+  <li><a href="https://github.com/pmndrs/zustand" target="_blank">Zustand GitHub</a></li>
+  <li><a href="https://jotai.org/" target="_blank">Jotai Official Docs</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Client-side_JavaScript_frameworks/React_getting_started" target="_blank">MDN: React Başlangıç</a></li>
+</ul>

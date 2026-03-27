@@ -1,0 +1,213 @@
+<h2>TypeScript Nedir? JavaScript'ten TypeScript'e Geçiş Rehberi</h2>
+
+<p>JavaScript, web geliştirmenin vazgeçilmez dili olmasına rağmen, büyük ölçekli projelerde tip güvenliği eksikliği ciddi sorunlara yol açabilir. Microsoft tarafından geliştirilen <strong>TypeScript</strong>, JavaScript'in üzerine inşa edilmiş, statik tip sistemi sunan bir programlama dilidir. Bu rehberde TypeScript'in ne olduğunu, neden tercih edilmesi gerektiğini ve JavaScript'ten nasıl geçiş yapılacağını adım adım inceleyeceğiz.</p>
+
+<h3>TypeScript Nedir?</h3>
+
+<p>TypeScript, JavaScript'in bir <strong>superset</strong>'idir. Bu, her geçerli JavaScript kodunun aynı zamanda geçerli bir TypeScript kodu olduğu anlamına gelir. TypeScript, derleme zamanında tip kontrolü yaparak hataları çalışma zamanından önce yakalamanızı sağlar.</p>
+
+<pre><code>// JavaScript
+function topla(a, b) {
+  return a + b;
+}
+topla("5", 3); // "53" - beklenmedik sonuç!
+
+// TypeScript
+function topla(a: number, b: number): number {
+  return a + b;
+}
+topla("5", 3); // Derleme hatası! string tipinde argüman number'a atanamaz</code></pre>
+
+<h3>Neden TypeScript Kullanmalısınız?</h3>
+
+<ul>
+  <li><strong>Tip Güvenliği:</strong> Derleme zamanında hataları yakalayarak çalışma zamanı hatalarını büyük ölçüde azaltır.</li>
+  <li><strong>Gelişmiş IDE Desteği:</strong> Otomatik tamamlama, refactoring ve hata gösterimi gibi özelliklerle geliştirici deneyimini iyileştirir.</li>
+  <li><strong>Okunabilirlik:</strong> Tip tanımları kodun belgesi gibi çalışır, diğer geliştiricilerin kodu anlamasını kolaylaştırır.</li>
+  <li><strong>Büyük Proje Yönetimi:</strong> Modüler yapı ve güçlü tip sistemi sayesinde büyük ekiplerde kod tutarlılığını sağlar.</li>
+  <li><strong>Ekosistem:</strong> React, Angular, Vue, Node.js gibi popüler framework ve kütüphaneler TypeScript desteği sunar.</li>
+</ul>
+
+<h3>TypeScript Kurulumu ve İlk Proje</h3>
+
+<p>TypeScript'i kullanmaya başlamak için Node.js kurulu olmalıdır. Ardından aşağıdaki adımları izleyin:</p>
+
+<pre><code># TypeScript'i global olarak kurun
+npm install -g typescript
+
+# Proje dizini oluşturun
+mkdir ilk-ts-projem && cd ilk-ts-projem
+
+# package.json oluşturun
+npm init -y
+
+# TypeScript yapılandırma dosyasını oluşturun
+tsc --init
+
+# İlk TypeScript dosyanızı oluşturun
+touch index.ts</code></pre>
+
+<p>Oluşturulan <code>tsconfig.json</code> dosyası TypeScript derleyicisinin davranışını belirler. Temel bir yapılandırma:</p>
+
+<pre><code>{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}</code></pre>
+
+<h3>JavaScript'ten TypeScript'e Geçiş Stratejileri</h3>
+
+<p>Mevcut bir JavaScript projesini TypeScript'e geçirmek için iki ana strateji vardır:</p>
+
+<h4>1. Kademeli Geçiş (Önerilen)</h4>
+
+<p>Projenizi bir anda tamamen dönüştürmek yerine, dosya dosya geçiş yapmak en güvenli yaklaşımdır:</p>
+
+<pre><code>// Adım 1: .js dosyalarını .ts olarak yeniden adlandırın
+// Adım 2: tsconfig.json'da allowJs: true ekleyin
+{
+  "compilerOptions": {
+    "allowJs": true,        // JS dosyalarının derlenmesine izin ver
+    "checkJs": false,       // JS dosyalarını kontrol etme (başlangıçta)
+    "strict": false,        // Başlangıçta katı mod kapalı
+    "noImplicitAny": false  // any tipine izin ver
+  }
+}
+
+// Adım 3: Kritik dosyalardan başlayarak tip ekleyin
+// Adım 4: strict seçeneklerini aşamalı olarak etkinleştirin</code></pre>
+
+<h4>2. Tam Geçiş</h4>
+
+<p>Küçük projelerde tüm dosyaları tek seferde dönüştürebilirsiniz. Bu yaklaşım, projenin boyutuna bağlı olarak birkaç saat ile birkaç gün arasında sürebilir.</p>
+
+<div class="tip">
+  <strong>İpucu:</strong> Geçiş sırasında <code>@ts-ignore</code> veya <code>// @ts-expect-error</code> yorumlarını geçici çözüm olarak kullanabilirsiniz. Ancak bunları kalıcı bırakmaktan kaçının; her birini zaman içinde düzgün tip tanımlarıyla değiştirin.
+</div>
+
+<h3>Temel TypeScript Kavramları</h3>
+
+<p>TypeScript'e geçişte bilmeniz gereken temel kavramlar:</p>
+
+<h4>Temel Tipler</h4>
+
+<pre><code>// Primitif tipler
+let isim: string = "Tarik";
+let yas: number = 30;
+let aktif: boolean = true;
+
+// Array tipleri
+let sayilar: number[] = [1, 2, 3];
+let isimler: Array&lt;string&gt; = ["Ali", "Ayşe"];
+
+// Object tipi
+interface Kullanici {
+  id: number;
+  isim: string;
+  email: string;
+  yas?: number; // opsiyonel alan
+}
+
+const kullanici: Kullanici = {
+  id: 1,
+  isim: "Tarik Tunç",
+  email: "tarik@example.com"
+};
+
+// Fonksiyon tipleri
+function selamla(isim: string): string {
+  return `Merhaba, ${isim}!`;
+}
+
+// Arrow function
+const topla = (a: number, b: number): number => a + b;</code></pre>
+
+<h4>Type Assertion</h4>
+
+<p>Bazen TypeScript'e bir değerin tipini siz daha iyi bilirsiniz. Bu durumda type assertion kullanabilirsiniz:</p>
+
+<pre><code>const inputElement = document.getElementById("email") as HTMLInputElement;
+inputElement.value = "tarik@example.com";
+
+// Alternatif sözdizimi (JSX ile uyumsuz)
+const element = &lt;HTMLInputElement&gt;document.getElementById("email");</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Type assertion, tip dönüşümü (type casting) değildir. Çalışma zamanında hiçbir değişiklik yapmaz. Yanlış assertion yaparsanız çalışma zamanı hataları alabilirsiniz. Mümkün olduğunca type guard kullanmayı tercih edin.
+</div>
+
+<h3>TypeScript ile Geliştirme Araçları</h3>
+
+<p>TypeScript deneyimini iyileştiren araçlar:</p>
+
+<table>
+  <tr>
+    <th>Araç</th>
+    <th>Açıklama</th>
+    <th>Kullanım</th>
+  </tr>
+  <tr>
+    <td>VS Code</td>
+    <td>Yerleşik TypeScript desteği</td>
+    <td>En popüler editör</td>
+  </tr>
+  <tr>
+    <td>ts-node</td>
+    <td>TypeScript'i doğrudan çalıştırma</td>
+    <td>npx ts-node dosya.ts</td>
+  </tr>
+  <tr>
+    <td>tsx</td>
+    <td>Hızlı TypeScript çalıştırıcı</td>
+    <td>npx tsx dosya.ts</td>
+  </tr>
+  <tr>
+    <td>ESLint</td>
+    <td>Kod kalitesi ve stil kontrolü</td>
+    <td>@typescript-eslint eklentisi</td>
+  </tr>
+  <tr>
+    <td>Prettier</td>
+    <td>Kod formatlama</td>
+    <td>TypeScript desteği yerleşik</td>
+  </tr>
+</table>
+
+<div class="info">
+  <strong>Bilgi:</strong> Visual Studio Code, TypeScript ile en iyi entegrasyonu sunan editördür. Otomatik tip çıkarımı, hata gösterimi ve refactoring araçları ile geliştirme sürecinizi hızlandırır. TypeScript zaten Microsoft tarafından geliştirildiği için VS Code'daki destek birinci sınıftır.
+</div>
+
+<h3>Yaygın Geçiş Hataları ve Çözümleri</h3>
+
+<p>JavaScript'ten TypeScript'e geçişte sıkça karşılaşılan hatalar:</p>
+
+<ul>
+  <li><strong>"Cannot find module" hatası:</strong> Kullandığınız kütüphanenin tip tanım dosyasını kurun: <code>npm install @types/kütüphane-adı</code></li>
+  <li><strong>"Property does not exist" hatası:</strong> Object tiplerinizi interface veya type ile tanımlayın.</li>
+  <li><strong>"Implicit any" hatası:</strong> Fonksiyon parametrelerine ve dönüş değerlerine tip ekleyin.</li>
+  <li><strong>Üçüncü parti kütüphaneler:</strong> DefinitelyTyped (<code>@types/*</code>) deposunda tip tanımlarını arayın.</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript, JavaScript ekosisteminin evriminde önemli bir adımdır. Tip güvenliği, gelişmiş IDE desteği ve büyük projelerde sürdürülebilirlik gibi avantajları, başlangıçtaki öğrenme eğrisini fazlasıyla telafi eder. Kademeli geçiş stratejisiyle mevcut projelerinizi güvenle TypeScript'e taşıyabilir, yeni projelerinizi ise doğrudan TypeScript ile başlatabilirsiniz.</p>
+
+<p>JavaScript bilginiz, TypeScript öğrenmeniz için güçlü bir temeldir. TypeScript, JavaScript'in üzerine yalnızca tip sistemi ekler; yeni bir dil öğrenmek zorunda değilsiniz. Bu rehberdeki adımları izleyerek hemen bugün TypeScript yolculuğunuza başlayabilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/" target="_blank" rel="noopener noreferrer">TypeScript Resmi Dokümantasyonu</a></li>
+  <li><a href="https://www.typescriptlang.org/play" target="_blank" rel="noopener noreferrer">TypeScript Playground</a></li>
+  <li><a href="https://github.com/microsoft/TypeScript" target="_blank" rel="noopener noreferrer">TypeScript GitHub Deposu</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/migrating-from-javascript.html" target="_blank" rel="noopener noreferrer">JavaScript'ten TypeScript'e Geçiş Kılavuzu</a></li>
+</ul>

@@ -1,0 +1,202 @@
+<h2>Critical Rendering Path: Tarayıcı Render Süreci</h2>
+
+<p>Critical Rendering Path (CRP), tarayıcının HTML, CSS ve JavaScript'i ekrandaki piksellere dönüştürdüğü adımlar bütünüdür. Bu süreci anlamak, web performans optimizasyonunun temelidir. Tarayıcının her adımda ne yaptığını bilmek, darboğazları tespit etmenizi ve ilk render süresini minimize etmenizi sağlar. Bu rehberde CRP'nin her aşamasını inceleyecek ve optimizasyon stratejilerini kod örnekleri ile göstereceğiz.</p>
+
+<h3>Render Süreci Adımları</h3>
+
+<p>Tarayıcı bir sayfayı render ederken şu adımları takip eder:</p>
+
+<ol>
+  <li><strong>HTML Parsing → DOM Oluşturma:</strong> HTML byte'ları tokenize edilir ve DOM (Document Object Model) ağacı oluşturulur.</li>
+  <li><strong>CSS Parsing → CSSOM Oluşturma:</strong> CSS dosyaları parse edilerek CSSOM (CSS Object Model) ağacı oluşturulur.</li>
+  <li><strong>JavaScript Çalıştırma:</strong> Script'ler çalıştırılır, DOM ve CSSOM değiştirilebilir.</li>
+  <li><strong>Render Tree Oluşturma:</strong> DOM ve CSSOM birleştirilerek sadece görünür öğeleri içeren render tree oluşturulur.</li>
+  <li><strong>Layout (Reflow):</strong> Her öğenin sayfa üzerindeki konum ve boyutu hesaplanır.</li>
+  <li><strong>Paint:</strong> Piksel bilgileri oluşturulur (renk, gölge, metin, görsel vb.).</li>
+  <li><strong>Composite:</strong> Katmanlar birleştirilerek ekrana çizilir.</li>
+</ol>
+
+<div class="info">
+  <strong>Bilgi:</strong> CSS render-blocking bir kaynaktır. Tarayıcı CSSOM oluşturulmadan render tree'yi oluşturamaz. Bu nedenle critical CSS'i mümkün olduğunca erken yüklemek hayati önem taşır.
+</div>
+
+<h3>Render-Blocking Kaynaklar</h3>
+
+<p>CSS ve senkron JavaScript, render sürecini bloke eden en yaygın kaynaklardır. Bu kaynakların yönetimi, ilk render süresini doğrudan etkiler:</p>
+
+<pre><code>&lt;!-- KÖTÜ: Tüm CSS render-blocking --&gt;
+&lt;link rel="stylesheet" href="/css/main.css"&gt;
+&lt;link rel="stylesheet" href="/css/animations.css"&gt;
+&lt;link rel="stylesheet" href="/css/print.css"&gt;
+
+&lt;!-- İYİ: Critical CSS inline, geri kalan async yükle --&gt;
+&lt;style&gt;
+  /* Critical CSS - above-the-fold için gerekli minimum stiller */
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,sans-serif;line-height:1.6}
+  .header{background:#1a1a2e;color:#fff;padding:1rem 2rem}
+  .hero{padding:4rem 2rem;text-align:center}
+  .hero h1{font-size:2.5rem;margin-bottom:1rem}
+&lt;/style&gt;
+
+&lt;!-- Non-critical CSS async yükleme --&gt;
+&lt;link rel="preload" href="/css/main.css" as="style"
+      onload="this.onload=null;this.rel='stylesheet'"&gt;
+&lt;noscript&gt;&lt;link rel="stylesheet" href="/css/main.css"&gt;&lt;/noscript&gt;
+
+&lt;!-- Print CSS: media attribute ile sadece yazdırma için --&gt;
+&lt;link rel="stylesheet" href="/css/print.css" media="print"&gt;</code></pre>
+
+<h3>JavaScript Loading Stratejileri</h3>
+
+<p>JavaScript'in DOM parse sürecini bloke etmesini önlemek için doğru yükleme stratejisini seçmelisiniz:</p>
+
+<pre><code>&lt;!-- Normal: HTML parsing'i durdurur, indir ve çalıştır --&gt;
+&lt;script src="/js/app.js"&gt;&lt;/script&gt;
+
+&lt;!-- async: Paralel indir, hazır olunca hemen çalıştır (parsing durur) --&gt;
+&lt;!-- Bağımsız scriptler için: analytics, ads --&gt;
+&lt;script async src="/js/analytics.js"&gt;&lt;/script&gt;
+
+&lt;!-- defer: Paralel indir, HTML parsing bittikten sonra sırayla çalıştır --&gt;
+&lt;!-- DOM'a bağımlı scriptler için: uygulama kodu --&gt;
+&lt;script defer src="/js/app.js"&gt;&lt;/script&gt;
+&lt;script defer src="/js/components.js"&gt;&lt;/script&gt;
+
+&lt;!-- type="module": Otomatik defer davranışı --&gt;
+&lt;script type="module" src="/js/app.mjs"&gt;&lt;/script&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>defer</code> ve <code>async</code> arasındaki kritik fark: <code>defer</code> scriptler HTML'deki sırayı korur ve DOMContentLoaded'dan önce çalışır. <code>async</code> scriptler ise indirme tamamlanır tamamlanmaz çalışır ve sıra garantisi yoktur. Uygulama kodunuz için <code>defer</code> tercih edin.
+</div>
+
+<h3>Critical CSS Çıkarma</h3>
+
+<p>Critical CSS, above-the-fold içeriği render etmek için gereken minimum CSS'tir. Bu CSS'i inline ederek ilk render için ek HTTP isteği gerekmez:</p>
+
+<pre><code>// critical CSS çıkarma - Node.js script
+const critical = require('critical');
+
+async function generateCriticalCSS() {
+  const result = await critical.generate({
+    src: 'https://example.com',
+    width: 1300,
+    height: 900,
+    inline: false,  // Sadece critical CSS'i çıkar
+    target: {
+      css: 'critical.css',
+      uncritical: 'rest.css'
+    },
+    // Birden fazla viewport boyutu
+    dimensions: [
+      { width: 375, height: 667 },   // Mobile
+      { width: 768, height: 1024 },  // Tablet
+      { width: 1440, height: 900 }   // Desktop
+    ]
+  });
+
+  console.log('Critical CSS boyutu:', result.css.length, 'bytes');
+}
+
+generateCriticalCSS();</code></pre>
+
+<h3>Layout Thrashing'den Kaçınma</h3>
+
+<p>Layout thrashing, JavaScript'in DOM'u okuyup yazma işlemlerini karışık sırada yapması sonucu tarayıcının gereksiz yere tekrar tekrar layout hesaplaması yapmasıdır:</p>
+
+<pre><code>// KÖTÜ: Layout thrashing - her iterasyonda forced reflow
+function badLayout(elements) {
+  elements.forEach(el => {
+    // Okuma → Layout tetikler
+    const height = el.offsetHeight;
+    // Yazma → Layout'u invalidate eder
+    el.style.height = (height * 2) + 'px';
+    // Sonraki okuma tekrar layout tetikler!
+  });
+}
+
+// İYİ: Batch read, sonra batch write
+function goodLayout(elements) {
+  // Önce tüm okumaları yap
+  const heights = elements.map(el => el.offsetHeight);
+
+  // Sonra tüm yazmaları yap
+  elements.forEach((el, i) => {
+    el.style.height = (heights[i] * 2) + 'px';
+  });
+}
+
+// EN İYİ: requestAnimationFrame ile yazma işlemlerini bir sonraki frame'e taşı
+function bestLayout(elements) {
+  const heights = elements.map(el => el.offsetHeight);
+
+  requestAnimationFrame(() => {
+    elements.forEach((el, i) => {
+      el.style.height = (heights[i] * 2) + 'px';
+    });
+  });
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>offsetHeight</code>, <code>offsetWidth</code>, <code>getBoundingClientRect()</code>, <code>scrollTop</code> gibi özellikler forced reflow tetikler. Bu özellikler DOM yazma işlemlerinden sonra okunursa tarayıcı layout'u yeniden hesaplamak zorunda kalır. Okuma ve yazma işlemlerini her zaman gruplayın.
+</div>
+
+<h3>Composite-Only Animasyonlar</h3>
+
+<p>Sadece <code>transform</code> ve <code>opacity</code> özellikleri GPU tarafından compositing aşamasında işlenir ve layout/paint tetiklemez. Performanslı animasyonlar için bu özellikleri tercih edin:</p>
+
+<pre><code>/* KÖTÜ: Layout + Paint tetikler (her frame'de) */
+.animate-bad {
+  transition: left 0.3s, top 0.3s, width 0.3s;
+}
+.animate-bad:hover {
+  left: 100px;
+  top: 50px;
+  width: 200px;
+}
+
+/* İYİ: Sadece composite - GPU hızlandırmalı */
+.animate-good {
+  transition: transform 0.3s, opacity 0.3s;
+  will-change: transform, opacity;
+}
+.animate-good:hover {
+  transform: translate(100px, 50px) scale(1.2);
+  opacity: 0.8;
+}
+
+/* will-change: Tarayıcıya önceden haber ver (dikkatli kullanın) */
+.card {
+  will-change: transform;  /* Sadece animasyon olacak öğelerde */
+}
+.card:hover {
+  transform: translateY(-4px);
+}</code></pre>
+
+<h3>CRP Optimizasyon Kontrol Listesi</h3>
+
+<p>Critical Rendering Path'i optimize etmek için sistematik olarak şu adımları takip edin:</p>
+
+<ol>
+  <li>Critical CSS'i inline edin, geri kalanı async yükleyin</li>
+  <li>JavaScript'leri <code>defer</code> veya <code>async</code> ile yükleyin</li>
+  <li>Render-blocking kaynak sayısını minimize edin</li>
+  <li>CSS ve JS dosyalarını minify ve sıkıştırın</li>
+  <li>Preload ile kritik kaynakların keşfini hızlandırın</li>
+  <li>DOM boyutunu küçük tutun (1500 öğe altı hedefleyin)</li>
+  <li>Layout thrashing'den kaçının</li>
+  <li>Animasyonlarda transform ve opacity tercih edin</li>
+</ol>
+
+<h3>Sonuç</h3>
+
+<p>Critical Rendering Path'i anlamak, web performans optimizasyonunun temelidir. Tarayıcının HTML'den piksele giden yolculuğunu bilmek, darboğazları tespit etmenizi ve doğru optimizasyon stratejisini seçmenizi sağlar. Render-blocking kaynakları yönetmek, critical CSS inline etmek ve JavaScript yükleme stratejilerini doğru uygulamak, ilk render süresini dramatik şekilde azaltabilir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://web.dev/articles/critical-rendering-path" target="_blank" rel="noopener noreferrer">web.dev - Critical Rendering Path</a></li>
+  <li><a href="https://developer.chrome.com/docs/devtools/performance" target="_blank" rel="noopener noreferrer">Chrome DevTools - Performance Panel</a></li>
+  <li><a href="https://csstriggers.com/" target="_blank" rel="noopener noreferrer">CSS Triggers - Layout/Paint/Composite Referansı</a></li>
+  <li><a href="https://github.com/addyosmani/critical" target="_blank" rel="noopener noreferrer">Critical - Critical CSS Generator</a></li>
+</ul>

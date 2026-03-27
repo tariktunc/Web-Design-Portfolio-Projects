@@ -1,0 +1,279 @@
+<h2>JSX Nedir? React'te JSX Kullanımının Derinlemesine İncelenmesi</h2>
+
+<p>JSX (JavaScript XML), React ekosisteminin en ayırt edici özelliklerinden biridir. İlk bakışta HTML gibi görünse de aslında JavaScript'in bir uzantısıdır. Bu yazıda JSX'in ne olduğunu, nasıl çalıştığını, kurallarını ve ileri seviye kullanım tekniklerini derinlemesine inceleyeceğiz.</p>
+
+<h3>JSX'in Temeli: Neden Var?</h3>
+
+<p>Geleneksel web geliştirmede HTML, CSS ve JavaScript ayrı dosyalarda tutulur. React ise farklı bir felsefe benimser: <strong>teknolojilere göre değil, sorumluluklara göre ayırma</strong>. Bir butonun görünümü, davranışı ve mantığı aynı bileşende bir arada bulunur.</p>
+
+<blockquote>JSX, React.createElement() fonksiyonunun sözdizimsel şekeridir (syntactic sugar). Kod okunabilirliğini artırır ancak teknik olarak zorunlu değildir. JSX olmadan da React yazabilirsiniz, fakat kimse bunu tercih etmez.</blockquote>
+
+<pre><code>// JSX kullanarak
+const header = (
+  &lt;header className="main-header"&gt;
+    &lt;nav&gt;
+      &lt;a href="/"&gt;Ana Sayfa&lt;/a&gt;
+      &lt;a href="/hakkimda"&gt;Hakkımda&lt;/a&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+);
+
+// JSX kullanmadan (React.createElement ile)
+const header = React.createElement(
+  'header',
+  { className: 'main-header' },
+  React.createElement(
+    'nav',
+    null,
+    React.createElement('a', { href: '/' }, 'Ana Sayfa'),
+    React.createElement('a', { href: '/hakkimda' }, 'Hakkımda')
+  )
+);</code></pre>
+
+<p>Gördüğünüz gibi, JSX olmadan basit bir header bile okunması zor bir hale gelir. JSX, bu karmaşıklığı ortadan kaldırır.</p>
+
+<h3>JSX Kuralları</h3>
+
+<h4>1. Tek Kök Eleman Kuralı</h4>
+
+<p>Her JSX ifadesi tek bir kök eleman döndürmelidir. Birden fazla eleman döndürmek istiyorsanız bir sarmalayıcı kullanmalısınız:</p>
+
+<pre><code>// HATALI - birden fazla kök eleman
+function Header() {
+  return (
+    &lt;h1&gt;Başlık&lt;/h1&gt;
+    &lt;p&gt;Alt başlık&lt;/p&gt;
+  );
+}
+
+// DOĞRU - Fragment kullanarak
+function Header() {
+  return (
+    &lt;&gt;
+      &lt;h1&gt;Başlık&lt;/h1&gt;
+      &lt;p&gt;Alt başlık&lt;/p&gt;
+    &lt;/&gt;
+  );
+}
+
+// DOĞRU - div sarmalayıcı ile
+function Header() {
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Başlık&lt;/h1&gt;
+      &lt;p&gt;Alt başlık&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <p><strong>İpucu:</strong> Fragment (<code>&lt;&gt;...&lt;/&gt;</code>) kullanmak DOM'a ekstra bir eleman eklemez. Gereksiz div kirliliğinden kaçınmak için Fragment tercih edin. Key prop'u gerektiğinde <code>&lt;React.Fragment key={id}&gt;</code> kullanabilirsiniz.</p>
+</div>
+
+<h4>2. HTML ve JSX Arasındaki Farklar</h4>
+
+<p>JSX, HTML'e benzese de bazı önemli farklar içerir:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>HTML</th>
+      <th>JSX</th>
+      <th>Açıklama</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>class</td>
+      <td>className</td>
+      <td>class JavaScript'te ayrılmış kelimedir</td>
+    </tr>
+    <tr>
+      <td>for</td>
+      <td>htmlFor</td>
+      <td>for JavaScript'te ayrılmış kelimedir</td>
+    </tr>
+    <tr>
+      <td>style="color: red"</td>
+      <td>style={{ color: 'red' }}</td>
+      <td>Style objesi olarak verilir</td>
+    </tr>
+    <tr>
+      <td>onclick</td>
+      <td>onClick</td>
+      <td>camelCase kullanılır</td>
+    </tr>
+    <tr>
+      <td>tabindex</td>
+      <td>tabIndex</td>
+      <td>camelCase kullanılır</td>
+    </tr>
+    <tr>
+      <td>&lt;br&gt;</td>
+      <td>&lt;br /&gt;</td>
+      <td>Self-closing taglar kapatılmalıdır</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>3. JavaScript İfadelerini Kullanma</h4>
+
+<p>JSX içinde süslü parantezler <code>{}</code> kullanarak JavaScript ifadelerini çalıştırabilirsiniz:</p>
+
+<pre><code>function UserDashboard({ user }) {
+  const loginDate = new Date(user.lastLogin);
+  const isNewUser = user.postsCount === 0;
+
+  return (
+    &lt;div className="dashboard"&gt;
+      {/* Değişken kullanımı */}
+      &lt;h2&gt;Hoş geldin, {user.name}!&lt;/h2&gt;
+
+      {/* Ternary operatör */}
+      &lt;span className={isNewUser ? 'badge-new' : 'badge-active'}&gt;
+        {isNewUser ? 'Yeni Üye' : 'Aktif Üye'}
+      &lt;/span&gt;
+
+      {/* Fonksiyon çağrısı */}
+      &lt;p&gt;Son giriş: {loginDate.toLocaleDateString('tr-TR')}&lt;/p&gt;
+
+      {/* Template literal */}
+      &lt;p&gt;{`Toplam ${user.postsCount} yazı paylaştınız`}&lt;/p&gt;
+
+      {/* Mantıksal AND operatörü ile koşullu render */}
+      {user.isAdmin &amp;&amp; (
+        &lt;a href="/admin"&gt;Yönetici Paneli&lt;/a&gt;
+      )}
+
+      {/* Matematiksel ifade */}
+      &lt;p&gt;Üyelik süresi: {Math.floor((Date.now() - user.createdAt) / 86400000)} gün&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <p><strong>Uyarı:</strong> Süslü parantezler içinde yalnızca <strong>ifadeler</strong> (expressions) kullanılabilir. <code>if/else</code>, <code>for</code>, <code>switch</code> gibi <strong>deyimler</strong> (statements) doğrudan kullanılamaz. Bunun yerine ternary operatör, mantıksal operatörler veya map/filter metotları kullanın.</p>
+</div>
+
+<h3>JSX'te Style Kullanımı</h3>
+
+<p>JSX'te inline style kullanırken CSS özellik adları camelCase formatına dönüştürülür ve değerler bir JavaScript objesi olarak verilir:</p>
+
+<pre><code>function StyledCard({ title, color, isHighlighted }) {
+  // Style objesini değişken olarak tanımlama
+  const cardStyle = {
+    backgroundColor: isHighlighted ? '#fff3cd' : '#ffffff',
+    border: `2px solid ${color}`,
+    borderRadius: '8px',
+    padding: '20px',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    // Sayısal değerler otomatik px alır (bazı istisnalar hariç)
+    marginBottom: 16,
+    // Birim belirtmek isterseniz string kullanın
+    maxWidth: '400px'
+  };
+
+  return (
+    &lt;div style={cardStyle}&gt;
+      &lt;h3 style={{ color, fontSize: '1.25rem' }}&gt;{title}&lt;/h3&gt;
+      &lt;p&gt;Bu bir stil örneğidir.&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>JSX'te Koşullu Render Teknikleri</h3>
+
+<p>JSX içinde koşullu olarak içerik göstermenin birden fazla yolu vardır:</p>
+
+<pre><code>function Notification({ type, message, count }) {
+  // 1. Erken return
+  if (!message) return null;
+
+  // 2. Değişkene atama
+  let icon;
+  if (type === 'success') icon = '✓';
+  else if (type === 'error') icon = '✗';
+  else icon = 'ℹ';
+
+  return (
+    &lt;div className={`notification notification-${type}`}&gt;
+      {/* 3. Ternary operatör */}
+      &lt;span&gt;{icon} {message}&lt;/span&gt;
+
+      {/* 4. Mantıksal AND - count 0 olduğunda dikkat! */}
+      {count &gt; 0 &amp;&amp; &lt;span className="badge"&gt;{count}&lt;/span&gt;}
+
+      {/* 5. Nullish coalescing */}
+      &lt;p&gt;Durum: {type ?? 'bilinmiyor'}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="info">
+  <p><strong>Bilgi:</strong> <code>{count &amp;&amp; &lt;span&gt;{count}&lt;/span&gt;}</code> ifadesinde count 0 ise ekranda "0" yazısı görünür, çünkü 0 falsy bir değerdir ama React tarafından render edilir. Bunu önlemek için <code>{count &gt; 0 &amp;&amp; ...}</code> veya ternary operatör kullanın.</p>
+</div>
+
+<h3>JSX'te Spread Operatörü</h3>
+
+<p>Props aktarırken spread operatörü oldukça kullanışlıdır:</p>
+
+<pre><code>function Button({ children, variant = 'primary', ...restProps }) {
+  return (
+    &lt;button
+      className={`btn btn-${variant}`}
+      {...restProps}
+    &gt;
+      {children}
+    &lt;/button&gt;
+  );
+}
+
+// Kullanım
+function App() {
+  return (
+    &lt;div&gt;
+      &lt;Button variant="primary" onClick={() =&gt; alert('Tıklandı')} disabled={false}&gt;
+        Kaydet
+      &lt;/Button&gt;
+      &lt;Button variant="danger" type="button" aria-label="Sil"&gt;
+        Sil
+      &lt;/Button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>JSX Dönüşümü: Babel ve Yeni JSX Transform</h3>
+
+<p>React 17 öncesinde her JSX dosyasında <code>import React from 'react'</code> gerekiyordu. React 17 ile gelen yeni JSX transform sayesinde bu artık gerekli değildir:</p>
+
+<pre><code>// React 17 öncesi - React import zorunlu
+import React from 'react';
+
+function App() {
+  return &lt;h1&gt;Merhaba&lt;/h1&gt;;
+}
+
+// React 17+ - React import gerekmez (JSX için)
+function App() {
+  return &lt;h1&gt;Merhaba&lt;/h1&gt;;
+}
+
+// Yeni transform'un derlediği kod:
+import { jsx as _jsx } from 'react/jsx-runtime';
+
+function App() {
+  return _jsx('h1', { children: 'Merhaba' });
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>JSX, React geliştirmenin temel taşıdır. HTML benzeri sözdizimiyle JavaScript'in gücünü birleştirir ve bileşen yapısını okunabilir hale getirir. JSX kurallarını, HTML ile farklılıklarını ve koşullu render tekniklerini iyi anlamak, React ile verimli çalışmanın ilk adımıdır. Babel'in JSX'i nasıl dönüştürdüğünü bilmek de hata ayıklama sırasında size avantaj sağlayacaktır.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/learn/writing-markup-with-jsx" target="_blank" rel="noopener noreferrer">React Docs - Writing Markup with JSX</a></li>
+  <li><a href="https://react.dev/learn/javascript-in-jsx-with-curly-braces" target="_blank" rel="noopener noreferrer">React Docs - JavaScript in JSX with Curly Braces</a></li>
+  <li><a href="https://legacy.reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html" target="_blank" rel="noopener noreferrer">React Blog - Introducing the New JSX Transform</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax" target="_blank" rel="noopener noreferrer">MDN - Spread Syntax</a></li>
+</ul>

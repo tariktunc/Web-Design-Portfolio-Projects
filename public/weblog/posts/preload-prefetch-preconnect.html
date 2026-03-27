@@ -1,0 +1,242 @@
+<h2>Preload, Prefetch, Preconnect: Resource Hints Rehberi</h2>
+
+<p>Resource hints, tarayıcıya gelecekte ihtiyaç duyulacak kaynaklar hakkında ipuçları vererek sayfa yükleme performansını artıran HTML mekanizmalarıdır. Doğru kullanıldığında LCP süresini yüzlerce milisaniye kısaltabilir, sayfa geçişlerini anlık hale getirebilir ve bağlantı kurulum süresini ortadan kaldırabilir. Ancak yanlış veya aşırı kullanım, bant genişliği israfına ve performans düşüşüne yol açar. Bu rehberde her bir resource hint'in çalışma prensibini, kullanım alanlarını ve best practice'lerini detaylı olarak inceleyeceğiz.</p>
+
+<h3>Resource Hints Genel Bakış</h3>
+
+<p>Beş temel resource hint mevcuttur:</p>
+
+<table>
+  <tr>
+    <th>Hint</th>
+    <th>Ne Yapar</th>
+    <th>Öncelik</th>
+    <th>Kullanım Alanı</th>
+  </tr>
+  <tr>
+    <td>preload</td>
+    <td>Kaynağı hemen indir</td>
+    <td>Yüksek</td>
+    <td>Mevcut sayfa için kritik kaynaklar</td>
+  </tr>
+  <tr>
+    <td>prefetch</td>
+    <td>Boş zamanda indir</td>
+    <td>Düşük</td>
+    <td>Sonraki sayfa için kaynaklar</td>
+  </tr>
+  <tr>
+    <td>preconnect</td>
+    <td>DNS + TCP + TLS bağlantısı kur</td>
+    <td>Orta</td>
+    <td>Üçüncü parti domain'ler</td>
+  </tr>
+  <tr>
+    <td>dns-prefetch</td>
+    <td>Sadece DNS çözümlemesi</td>
+    <td>Düşük</td>
+    <td>Çok sayıda üçüncü parti domain</td>
+  </tr>
+  <tr>
+    <td>modulepreload</td>
+    <td>ES module'ü indir ve parse et</td>
+    <td>Yüksek</td>
+    <td>JavaScript modülleri</td>
+  </tr>
+</table>
+
+<h3>Preload: Kritik Kaynakları Erken Yükle</h3>
+
+<p>Preload, mevcut sayfa için kesinlikle gerekli olan kaynakları tarayıcıya erkenden bildirmenizi sağlar. CSS içinde referans verilen font veya background-image gibi geç keşfedilen kaynaklar için idealdir:</p>
+
+<pre><code>&lt;!-- Font preload - CSS parse edilmeden keşfedilir --&gt;
+&lt;link rel="preload" href="/fonts/inter-regular.woff2"
+      as="font" type="font/woff2" crossorigin&gt;
+
+&lt;!-- LCP görseli preload --&gt;
+&lt;link rel="preload" href="/images/hero.webp"
+      as="image" type="image/webp"
+      fetchpriority="high"&gt;
+
+&lt;!-- Responsive preload: farklı ekranlar için farklı kaynak --&gt;
+&lt;link rel="preload" href="/images/hero-mobile.webp"
+      as="image" type="image/webp"
+      media="(max-width: 768px)"&gt;
+&lt;link rel="preload" href="/images/hero-desktop.webp"
+      as="image" type="image/webp"
+      media="(min-width: 769px)"&gt;
+
+&lt;!-- Critical CSS dosyası --&gt;
+&lt;link rel="preload" href="/css/critical.css" as="style"&gt;
+&lt;link rel="stylesheet" href="/css/critical.css"&gt;
+
+&lt;!-- JavaScript modülü --&gt;
+&lt;link rel="modulepreload" href="/js/app.mjs"&gt;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Preload edilip 3 saniye içinde kullanılmayan kaynaklar için Chrome konsolda uyarı verir. Her preload'ın gerçekten kullanıldığından emin olun. Fazla preload, bant genişliğini daha kritik kaynakların aleyhine çalar.
+</div>
+
+<h3>Preconnect: Bağlantı Süresini Ortadan Kaldır</h3>
+
+<p>Üçüncü parti domain'lere bağlantı kurmak DNS çözümleme, TCP handshake ve TLS negotiation adımlarını gerektirir. Bu süre 200-600ms arasında olabilir. Preconnect ile bu adımları önceden tamamlayabilirsiniz:</p>
+
+<pre><code>&lt;!-- Google Fonts için preconnect --&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+
+&lt;!-- CDN domain'i --&gt;
+&lt;link rel="preconnect" href="https://cdn.example.com"&gt;
+
+&lt;!-- Analytics --&gt;
+&lt;link rel="preconnect" href="https://www.google-analytics.com"&gt;
+
+&lt;!-- API endpoint --&gt;
+&lt;link rel="preconnect" href="https://api.example.com"&gt;
+
+&lt;!-- dns-prefetch: Preconnect'in fallback'i + daha hafif --&gt;
+&lt;!-- Tüm tarayıcılarda desteklenir, sadece DNS çözümler --&gt;
+&lt;link rel="dns-prefetch" href="https://fonts.googleapis.com"&gt;
+
+&lt;!-- İkisini birlikte kullanma pattern'i --&gt;
+&lt;link rel="preconnect" href="https://cdn.example.com"&gt;
+&lt;link rel="dns-prefetch" href="https://cdn.example.com"&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> En fazla 4-6 domain'e preconnect yapın. Her bağlantı TCP/TLS handshake gerektirir ve CPU/ağ kaynağı tüketir. Daha fazla domain için dns-prefetch tercih edin; sadece DNS çözümleme yapar ve çok daha hafiftir.
+</div>
+
+<h3>Prefetch: Sonraki Sayfa İçin Hazırlık</h3>
+
+<p>Prefetch, kullanıcının muhtemelen ziyaret edeceği bir sonraki sayfanın kaynaklarını düşük öncelikli olarak indirir:</p>
+
+<pre><code>&lt;!-- Sonraki sayfanın JavaScript chunk'ı --&gt;
+&lt;link rel="prefetch" href="/js/about-page.chunk.js"&gt;
+
+&lt;!-- Sonraki sayfanın verisi --&gt;
+&lt;link rel="prefetch" href="/api/products.json" as="fetch"&gt;
+
+&lt;!-- Sayfa tamamını prefetch (Speculation Rules API) --&gt;
+&lt;script type="speculationrules"&gt;
+{
+  "prefetch": [
+    {
+      "where": { "href_matches": "/products/*" },
+      "eagerness": "moderate"
+    }
+  ],
+  "prerender": [
+    {
+      "where": { "href_matches": "/about" },
+      "eagerness": "moderate"
+    }
+  ]
+}
+&lt;/script&gt;</code></pre>
+
+<h3>Programatik Resource Hint Yönetimi</h3>
+
+<p>JavaScript ile resource hint'leri dinamik olarak ekleyebilirsiniz. Bu, kullanıcı davranışına göre akıllı prefetch yapmanızı sağlar:</p>
+
+<pre><code>// Hover'da prefetch - kullanıcı tıklamadan önce hazırlık yap
+class SmartPrefetcher {
+  constructor() {
+    this.prefetched = new Set();
+    this.observer = null;
+    this.init();
+  }
+
+  init() {
+    // Viewport'a giren linkleri prefetch et
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const href = entry.target.getAttribute('href');
+          this.prefetchURL(href);
+        }
+      });
+    }, { rootMargin: '200px' });
+
+    // Internal linkleri izle
+    document.querySelectorAll('a[href^="/"]').forEach(link => {
+      this.observer.observe(link);
+
+      // Hover'da preconnect + prefetch
+      link.addEventListener('mouseenter', () => {
+        this.prefetchURL(link.href);
+      }, { once: true });
+    });
+  }
+
+  prefetchURL(url) {
+    if (this.prefetched.has(url)) return;
+    if (navigator.connection?.saveData) return;  // Data saver modda prefetch yapma
+
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = url;
+    document.head.appendChild(link);
+    this.prefetched.add(url);
+  }
+
+  // Preconnect helper
+  preconnect(origin) {
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = origin;
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  }
+}
+
+// Sayfa yüklendikten sonra başlat
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(() => new SmartPrefetcher());
+} else {
+  setTimeout(() => new SmartPrefetcher(), 2000);
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Chrome'un Speculation Rules API'si, prefetch ve prerender için daha güçlü bir mekanizma sunar. <code>&lt;script type="speculationrules"&gt;</code> ile tarayıcıya hangi sayfaların önceden yükleneceğini veya render edileceğini bildirebilirsiniz. Bu API, eski <code>&lt;link rel="prerender"&gt;</code>'ın yerini almaktadır.
+</div>
+
+<h3>Fetchpriority ile Önceliklendirme</h3>
+
+<p><code>fetchpriority</code> attribute'u ile tarayıcının kaynak indirme önceliğini doğrudan kontrol edebilirsiniz:</p>
+
+<pre><code>&lt;!-- LCP görseli: Yüksek öncelik --&gt;
+&lt;img src="/hero.webp" fetchpriority="high" alt="Hero"&gt;
+
+&lt;!-- Above-the-fold olmayan görsel: Düşük öncelik --&gt;
+&lt;img src="/footer-logo.webp" fetchpriority="low" alt="Logo"&gt;
+
+&lt;!-- Kritik script --&gt;
+&lt;script src="/js/critical.js" fetchpriority="high"&gt;&lt;/script&gt;
+
+&lt;!-- Preload ile birlikte --&gt;
+&lt;link rel="preload" href="/hero.webp" as="image" fetchpriority="high"&gt;</code></pre>
+
+<h3>Resource Hints Kontrol Listesi</h3>
+
+<ul>
+  <li>LCP görseli veya geç keşfedilen kritik kaynaklar için <code>preload</code> kullanın</li>
+  <li>Üçüncü parti domain'lere (CDN, API, font servisleri) <code>preconnect</code> ekleyin</li>
+  <li>Sonraki sayfa navigasyonları için <code>prefetch</code> kullanın</li>
+  <li>4-6'dan fazla domain'e preconnect yapmayın</li>
+  <li>Kullanılmayan preload'lardan kaçının</li>
+  <li>Data saver modda prefetch'i devre dışı bırakın</li>
+  <li><code>fetchpriority</code> ile kaynak önceliğini kontrol edin</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Resource hints, tarayıcıya stratejik ipuçları vererek sayfa yükleme performansını önemli ölçüde artırır. Preload ile kritik kaynakları erken keşfettirin, preconnect ile bağlantı süresini ortadan kaldırın ve prefetch ile sonraki navigasyonu hızlandırın. Her hint'in amacını ve sınırlarını anlayarak kullanın; aşırı kullanım fayda yerine zarar verebilir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://web.dev/articles/preload-critical-assets" target="_blank" rel="noopener noreferrer">web.dev - Preload Critical Assets</a></li>
+  <li><a href="https://web.dev/articles/preconnect-and-dns-prefetch" target="_blank" rel="noopener noreferrer">web.dev - Preconnect and dns-prefetch</a></li>
+  <li><a href="https://developer.chrome.com/docs/web-platform/prerender-pages" target="_blank" rel="noopener noreferrer">Chrome - Speculation Rules API</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/prefetch" target="_blank" rel="noopener noreferrer">MDN - Prefetch</a></li>
+</ul>

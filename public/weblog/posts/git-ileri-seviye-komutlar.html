@@ -1,0 +1,233 @@
+<h2>Git İleri Seviye: Rebase, Cherry-Pick, Stash Rehberi</h2>
+
+<p>Git, modern yazılım geliştirmenin vazgeçilmez versiyon kontrol sistemidir. Temel komutları (<code>add</code>, <code>commit</code>, <code>push</code>) bilmek başlangıç için yeterli olsa da, profesyonel projelerde ileri seviye Git komutlarına hakim olmak büyük fark yaratır. Bu rehberde <strong>rebase</strong>, <strong>cherry-pick</strong>, <strong>stash</strong> ve diğer güçlü Git komutlarını detaylı örneklerle inceliyoruz.</p>
+
+<h3>Git Rebase Nedir?</h3>
+
+<p>Rebase, bir branch'in başlangıç noktasını değiştirerek commit geçmişini yeniden düzenleyen güçlü bir komuttur. Merge'den farklı olarak, rebase daha temiz ve lineer bir commit history oluşturur.</p>
+
+<pre><code># feature branch'inizi main üzerine rebase edin
+git checkout feature/user-auth
+git rebase main
+
+# Interactive rebase ile son 5 commit'i düzenleyin
+git rebase -i HEAD~5
+
+# Interactive rebase sırasında kullanabileceğiniz komutlar:
+# pick   - commit'i olduğu gibi kullan
+# reword - commit mesajını değiştir
+# edit   - commit'i değiştirmek için dur
+# squash - önceki commit ile birleştir
+# fixup  - squash gibi ama mesajı at
+# drop   - commit'i sil</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Paylaşılmış (remote'a push edilmiş) branch'lerde rebase kullanmaktan kaçının. Rebase commit hash'lerini değiştirir ve bu durum takım arkadaşlarınızın çalışmalarında çakışmalara yol açabilir. Altın kural: "Public branch'lerde rebase yapma!"
+</div>
+
+<h3>Rebase vs Merge Karşılaştırması</h3>
+
+<table>
+  <tr>
+    <th>Özellik</th>
+    <th>Rebase</th>
+    <th>Merge</th>
+  </tr>
+  <tr>
+    <td>Commit History</td>
+    <td>Lineer, temiz</td>
+    <td>Merge commit'leri ile dallanmış</td>
+  </tr>
+  <tr>
+    <td>Orijinal Commit'ler</td>
+    <td>Yeniden yazılır</td>
+    <td>Korunur</td>
+  </tr>
+  <tr>
+    <td>Çakışma Çözümü</td>
+    <td>Her commit için ayrı ayrı</td>
+    <td>Tek seferde</td>
+  </tr>
+  <tr>
+    <td>Kullanım Alanı</td>
+    <td>Yerel branch'ler</td>
+    <td>Paylaşılan branch'ler</td>
+  </tr>
+</table>
+
+<h3>Git Cherry-Pick ile Seçici Commit Aktarımı</h3>
+
+<p>Cherry-pick, belirli bir commit'i başka bir branch'e uygulamanızı sağlar. Tüm branch'i merge etmeden sadece ihtiyacınız olan değişiklikleri alabilirsiniz.</p>
+
+<pre><code># Tek bir commit'i mevcut branch'e uygula
+git cherry-pick abc1234
+
+# Birden fazla commit'i sırayla uygula
+git cherry-pick abc1234 def5678 ghi9012
+
+# Commit aralığını uygula (ilk commit dahil değil)
+git cherry-pick abc1234..ghi9012
+
+# Commit aralığını uygula (ilk commit dahil)
+git cherry-pick abc1234^..ghi9012
+
+# Cherry-pick yap ama commit etme (staging'de bırak)
+git cherry-pick --no-commit abc1234
+
+# Çakışma durumunda cherry-pick'i iptal et
+git cherry-pick --abort
+
+# Çakışmayı çözdükten sonra devam et
+git cherry-pick --continue</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Production'da acil bir bug fix yapmanız gerektiğinde, feature branch'teki fix commit'ini cherry-pick ile doğrudan main branch'e alabilirsiniz. Bu, hotfix süreçlerinde sıkça kullanılan bir tekniktir.
+</div>
+
+<h3>Git Stash: Değişiklikleri Geçici Olarak Saklama</h3>
+
+<p>Stash, üzerinde çalıştığınız değişiklikleri commit etmeden geçici olarak kaydetmenizi sağlar. Branch değiştirmeniz gerektiğinde veya temiz bir working directory istediğinizde son derece faydalıdır.</p>
+
+<pre><code># Değişiklikleri stash'e kaydet
+git stash
+
+# Açıklayıcı mesajla stash oluştur
+git stash save "login form validation düzenlemesi"
+
+# Untracked dosyaları da dahil et
+git stash -u
+
+# Stash listesini görüntüle
+git stash list
+# stash@{0}: On feature/auth: login form validation düzenlemesi
+# stash@{1}: WIP on main: abc1234 Son commit mesajı
+
+# En son stash'i uygula ve listeden kaldır
+git stash pop
+
+# Belirli bir stash'i uygula (listeden kaldırmadan)
+git stash apply stash@{1}
+
+# Stash'in içeriğini görüntüle
+git stash show -p stash@{0}
+
+# Belirli bir stash'i sil
+git stash drop stash@{1}
+
+# Tüm stash'leri temizle
+git stash clear</code></pre>
+
+<h3>Git Reflog: Kayıp Commit'leri Kurtarma</h3>
+
+<p>Reflog, Git'in gizli süper gücüdür. HEAD'in tüm hareketlerini kaydeder ve yanlışlıkla sildiğiniz commit'leri, branch'leri veya rebase sonrası kaybolmuş gibi görünen değişiklikleri kurtarmanızı sağlar.</p>
+
+<pre><code># Reflog'u görüntüle
+git reflog
+
+# Belirli bir branch'in reflog'u
+git reflog show feature/auth
+
+# Kayıp commit'i kurtarmak için
+git reflog
+# abc1234 HEAD@{5}: commit: önemli değişiklik
+git checkout -b recovery-branch abc1234
+
+# Yanlışlıkla yapılan reset'i geri al
+git reset --hard HEAD@{2}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Git reflog varsayılan olarak 90 gün boyunca kayıtları saklar. Bu süre <code>gc.reflogExpire</code> ayarı ile değiştirilebilir. Ancak <code>git gc</code> çalıştırılmadığı sürece erişilemeyen commit'ler silinmez.
+</div>
+
+<h3>Git Bisect: Hata Kaynaklarını Bulma</h3>
+
+<p>Bisect, binary search algoritması kullanarak bir hatanın hangi commit'te ortaya çıktığını bulmanızı sağlar. Yüzlerce commit arasında hata aramak yerine, bisect ile logaritmik zamanda bulabilirsiniz.</p>
+
+<pre><code># Bisect oturumunu başlat
+git bisect start
+
+# Mevcut commit'i "kötü" olarak işaretle
+git bisect bad
+
+# Çalışan bir commit'i "iyi" olarak işaretle
+git bisect good v1.0.0
+
+# Git otomatik olarak ortadaki commit'e checkout yapar
+# Test edin ve sonucu bildirin:
+git bisect good  # Bu commit'te hata yok
+git bisect bad   # Bu commit'te hata var
+
+# Otomatik bisect (test script'i ile)
+git bisect run npm test
+
+# Bisect'i sonlandır
+git bisect reset</code></pre>
+
+<h3>Git Worktree: Paralel Çalışma Alanları</h3>
+
+<p>Worktree, aynı repository'nin farklı branch'lerini farklı klasörlerde eş zamanlı olarak açmanızı sağlar. Branch değiştirmeden birden fazla branch üzerinde çalışabilirsiniz.</p>
+
+<pre><code># Yeni worktree oluştur
+git worktree add ../project-hotfix hotfix/critical-bug
+
+# Mevcut worktree'leri listele
+git worktree list
+
+# Worktree'yi kaldır
+git worktree remove ../project-hotfix
+
+# Geçersiz worktree referanslarını temizle
+git worktree prune</code></pre>
+
+<h3>İleri Seviye Git Alias'ları</h3>
+
+<p>Sık kullandığınız komut kombinasyonlarını kısaltmak için Git alias'ları tanımlayabilirsiniz:</p>
+
+<pre><code># Faydalı alias'lar
+git config --global alias.lg "log --oneline --graph --all --decorate"
+git config --global alias.st "status -sb"
+git config --global alias.co "checkout"
+git config --global alias.br "branch -vv"
+git config --global alias.unstage "reset HEAD --"
+git config --global alias.last "log -1 HEAD --stat"
+git config --global alias.amend "commit --amend --no-edit"
+
+# Kullanım
+git lg    # Grafik commit geçmişi
+git st    # Kısa status çıktısı</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>git lg</code> alias'ı, commit geçmişinizi renkli ve grafiksel olarak gösterir. Özellikle branch'ler arası ilişkileri görselleştirmek için mükemmeldir.
+</div>
+
+<h3>Pratik Senaryolar</h3>
+
+<p>Gerçek dünya senaryolarında bu komutları nasıl birleştireceğinize bakalım:</p>
+
+<p><strong>Senaryo 1:</strong> Feature branch'inizde çalışırken acil bir hotfix gerekiyor:</p>
+<pre><code>git stash save "feature-x devam eden çalışma"
+git checkout main
+git checkout -b hotfix/urgent-fix
+# ... fix'i yapın
+git commit -am "fix: kritik güvenlik açığı düzeltmesi"
+git checkout main && git merge hotfix/urgent-fix
+git checkout feature/x
+git stash pop</code></pre>
+
+<p><strong>Senaryo 2:</strong> Son 3 commit'i tek bir commit'te birleştirme:</p>
+<pre><code>git rebase -i HEAD~3
+# Editörde ilk commit'i "pick", diğerlerini "squash" yapın
+# Yeni commit mesajını yazın ve kaydedin</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Git'in ileri seviye komutları, günlük iş akışınızı önemli ölçüde hızlandırır ve daha temiz bir proje geçmişi oluşturmanızı sağlar. Rebase ile lineer bir history, cherry-pick ile seçici commit aktarımı, stash ile esnek çalışma yönetimi ve reflog ile güvenli bir geri dönüş mekanizması elde edersiniz. Bu komutları küçük projelerde pratik yaparak içselleştirin ve büyük projelerde güvenle kullanın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://git-scm.com/doc" target="_blank" rel="noopener noreferrer">Git Resmi Dokümantasyonu</a></li>
+  <li><a href="https://www.atlassian.com/git/tutorials/advanced-overview" target="_blank" rel="noopener noreferrer">Atlassian Git İleri Seviye Eğitim</a></li>
+  <li><a href="https://learngitbranching.js.org/" target="_blank" rel="noopener noreferrer">Learn Git Branching - İnteraktif Eğitim</a></li>
+  <li><a href="https://ohshitgit.com/" target="_blank" rel="noopener noreferrer">Oh Shit, Git!?! - Yaygın Hataları Düzeltme</a></li>
+</ul>

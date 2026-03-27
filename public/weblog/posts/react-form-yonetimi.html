@@ -1,0 +1,323 @@
+<h2>React'te Form Yönetimi: Controlled ve Uncontrolled Component'ler</h2>
+
+<p>Form yönetimi, web uygulamalarının en karmaşık ve kritik parçalarından biridir. Kullanıcı kayıt formları, arama kutuları, ödeme sayfaları ve ayar panelleri gibi sayısız senaryoda form işlemleriyle karşılaşırız. React'te formlar iki temel yaklaşımla yönetilir: <strong>Controlled</strong> ve <strong>Uncontrolled</strong> component'ler. Bu rehberde her iki yaklaşımı, validasyon tekniklerini ve gerçek dünya uygulamalarını detaylı olarak inceleyeceğiz.</p>
+
+<h3>Controlled Component'ler</h3>
+
+<p>Controlled component'lerde form elemanlarının değeri React state'i tarafından kontrol edilir. Her değişiklik bir event handler aracılığıyla state'i günceller ve React, güncel state'i form elemanına yansıtır:</p>
+
+<pre><code>import { useState } from 'react';
+
+function RegistrationForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'user',
+    agreeToTerms: false,
+    interests: []
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) =&gt; {
+    const { name, value, type, checked } = e.target;
+
+    if (type === 'checkbox' &amp;&amp; name === 'interests') {
+      setFormData(prev =&gt; ({
+        ...prev,
+        interests: checked
+          ? [...prev.interests, value]
+          : prev.interests.filter(i =&gt; i !== value)
+      }));
+    } else {
+      setFormData(prev =&gt; ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+  };
+
+  const validate = () =&gt; {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Ad zorunludur';
+    if (!formData.email.includes('@')) newErrors.email = 'Geçerli e-posta giriniz';
+    if (formData.password.length &lt; 8) newErrors.password = 'En az 8 karakter olmalıdır';
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Şifreler eşleşmiyor';
+    }
+    if (!formData.agreeToTerms) newErrors.agreeToTerms = 'Koşulları kabul etmelisiniz';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) =&gt; {
+    e.preventDefault();
+    if (validate()) {
+      console.log('Form gönderiliyor:', formData);
+    }
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit} noValidate&gt;
+      &lt;div className="form-group"&gt;
+        &lt;label htmlFor="name"&gt;Ad Soyad&lt;/label&gt;
+        &lt;input
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          className={errors.name ? 'input-error' : ''}
+        /&gt;
+        {errors.name &amp;&amp; &lt;span className="error"&gt;{errors.name}&lt;/span&gt;}
+      &lt;/div&gt;
+
+      &lt;div className="form-group"&gt;
+        &lt;label htmlFor="email"&gt;E-posta&lt;/label&gt;
+        &lt;input
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+        /&gt;
+        {errors.email &amp;&amp; &lt;span className="error"&gt;{errors.email}&lt;/span&gt;}
+      &lt;/div&gt;
+
+      &lt;div className="form-group"&gt;
+        &lt;label&gt;Rol&lt;/label&gt;
+        &lt;select name="role" value={formData.role} onChange={handleChange}&gt;
+          &lt;option value="user"&gt;Kullanıcı&lt;/option&gt;
+          &lt;option value="editor"&gt;Editör&lt;/option&gt;
+          &lt;option value="admin"&gt;Yönetici&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/div&gt;
+
+      &lt;div className="form-group"&gt;
+        &lt;label&gt;
+          &lt;input
+            type="checkbox"
+            name="agreeToTerms"
+            checked={formData.agreeToTerms}
+            onChange={handleChange}
+          /&gt;
+          Koşulları kabul ediyorum
+        &lt;/label&gt;
+        {errors.agreeToTerms &amp;&amp; &lt;span className="error"&gt;{errors.agreeToTerms}&lt;/span&gt;}
+      &lt;/div&gt;
+
+      &lt;button type="submit"&gt;Kayıt Ol&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+<h3>Uncontrolled Component'ler</h3>
+
+<p>Uncontrolled component'lerde form değerleri DOM tarafından yönetilir. <code>useRef</code> ile değerlere erişilir:</p>
+
+<pre><code>import { useRef } from 'react';
+
+function QuickSearchForm({ onSearch }) {
+  const inputRef = useRef(null);
+
+  const handleSubmit = (e) =&gt; {
+    e.preventDefault();
+    onSearch(inputRef.current.value);
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input ref={inputRef} defaultValue="" placeholder="Hızlı arama..." /&gt;
+      &lt;button type="submit"&gt;Ara&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}
+
+// Dosya yükleme - her zaman uncontrolled
+function FileUpload({ onUpload }) {
+  const fileInputRef = useRef(null);
+
+  const handleSubmit = (e) =&gt; {
+    e.preventDefault();
+    const files = fileInputRef.current.files;
+    if (files.length &gt; 0) {
+      onUpload(files);
+    }
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input type="file" ref={fileInputRef} accept="image/*" multiple /&gt;
+      &lt;button type="submit"&gt;Yükle&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+<div class="info">
+  <p><strong>Bilgi:</strong> Dosya input'ları (<code>&lt;input type="file"&gt;</code>) her zaman uncontrolled'dır çünkü değerleri güvenlik nedeniyle programatik olarak ayarlanamaz. Bunun dışında React ekibi çoğu durumda controlled component'leri önermektedir.</p>
+</div>
+
+<h3>Controlled vs Uncontrolled Karşılaştırma</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Özellik</th>
+      <th>Controlled</th>
+      <th>Uncontrolled</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Değer kaynağı</td>
+      <td>React state</td>
+      <td>DOM</td>
+    </tr>
+    <tr>
+      <td>Anlık validasyon</td>
+      <td>Kolay</td>
+      <td>Zor</td>
+    </tr>
+    <tr>
+      <td>Koşullu alan devre dışı bırakma</td>
+      <td>Kolay</td>
+      <td>Zor</td>
+    </tr>
+    <tr>
+      <td>Performans (çok alan)</td>
+      <td>Her tuşta re-render</td>
+      <td>Re-render yok</td>
+    </tr>
+    <tr>
+      <td>Karmaşıklık</td>
+      <td>Daha fazla kod</td>
+      <td>Daha az kod</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>React Hook Form ile Modern Form Yönetimi</h3>
+
+<pre><code>import { useForm } from 'react-hook-form';
+
+function ContactForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset
+  } = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      subject: '',
+      message: ''
+    }
+  });
+
+  const onSubmit = async (data) =&gt; {
+    await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    reset();
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit(onSubmit)}&gt;
+      &lt;input
+        {...register('name', { required: 'Ad zorunludur' })}
+        placeholder="Adınız"
+      /&gt;
+      {errors.name &amp;&amp; &lt;span className="error"&gt;{errors.name.message}&lt;/span&gt;}
+
+      &lt;input
+        {...register('email', {
+          required: 'E-posta zorunludur',
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: 'Geçerli e-posta giriniz'
+          }
+        })}
+        placeholder="E-posta"
+      /&gt;
+      {errors.email &amp;&amp; &lt;span className="error"&gt;{errors.email.message}&lt;/span&gt;}
+
+      &lt;textarea
+        {...register('message', {
+          required: 'Mesaj zorunludur',
+          minLength: { value: 10, message: 'En az 10 karakter' }
+        })}
+        placeholder="Mesajınız"
+        rows={5}
+      /&gt;
+      {errors.message &amp;&amp; &lt;span className="error"&gt;{errors.message.message}&lt;/span&gt;}
+
+      &lt;button type="submit" disabled={isSubmitting}&gt;
+        {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
+      &lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <p><strong>İpucu:</strong> React Hook Form, uncontrolled component yaklaşımını kullanarak performansı optimize eder. Büyük formlar, dinamik alanlar ve karmaşık validasyon kuralları olan projelerde native controlled component yaklaşımı yerine React Hook Form kullanmayı değerlendirin.</p>
+</div>
+
+<h3>Dinamik Form Alanları</h3>
+
+<pre><code>function DynamicForm() {
+  const [fields, setFields] = useState([{ id: 1, value: '' }]);
+
+  const addField = () =&gt; {
+    setFields(prev =&gt; [...prev, { id: Date.now(), value: '' }]);
+  };
+
+  const removeField = (id) =&gt; {
+    setFields(prev =&gt; prev.filter(field =&gt; field.id !== id));
+  };
+
+  const updateField = (id, value) =&gt; {
+    setFields(prev =&gt;
+      prev.map(field =&gt; field.id === id ? { ...field, value } : field)
+    );
+  };
+
+  return (
+    &lt;div&gt;
+      {fields.map((field, index) =&gt; (
+        &lt;div key={field.id} className="dynamic-field"&gt;
+          &lt;input
+            value={field.value}
+            onChange={(e) =&gt; updateField(field.id, e.target.value)}
+            placeholder={`Alan ${index + 1}`}
+          /&gt;
+          {fields.length &gt; 1 &amp;&amp; (
+            &lt;button onClick={() =&gt; removeField(field.id)}&gt;Kaldır&lt;/button&gt;
+          )}
+        &lt;/div&gt;
+      ))}
+      &lt;button onClick={addField}&gt;Alan Ekle&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <p><strong>Uyarı:</strong> Controlled ve uncontrolled yaklaşımları aynı input'ta karıştırmayın. Bir input <code>value</code> prop'u alıyorsa controlled'dır ve mutlaka bir <code>onChange</code> handler'ı da olmalıdır. <code>defaultValue</code> kullanıyorsanız uncontrolled'dır. Bu iki yaklaşımı aynı input'ta kullanmak React uyarılarına neden olur.</p>
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React'te form yönetimi, controlled ve uncontrolled yaklaşımların avantajlarını anlamakla başlar. Çoğu durumda controlled component'ler daha güvenli ve yönetilebilir bir yaklaşım sunar. Büyük ve karmaşık formlarda React Hook Form gibi kütüphaneler geliştirme sürecini hızlandırır ve performansı artırır. Doğru validasyon stratejisi ve erişilebilir form tasarımı her zaman önceliğiniz olmalıdır.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/reference/react-dom/components/input" target="_blank" rel="noopener noreferrer">React Docs - Input Component</a></li>
+  <li><a href="https://react-hook-form.com/" target="_blank" rel="noopener noreferrer">React Hook Form Dökümantasyonu</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Learn/Forms" target="_blank" rel="noopener noreferrer">MDN - Web Forms</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/forms" target="_blank" rel="noopener noreferrer">MDN - ARIA Forms</a></li>
+</ul>

@@ -1,0 +1,286 @@
+<h2>Lazy Loading: Intersection Observer API Rehberi</h2>
+
+<p>Lazy loading, sayfa yüklenirken tüm kaynakları birden yüklemek yerine, kullanıcının görüntüleme alanına yaklaştıkça yükleme yapan bir performans optimizasyon tekniğidir. Intersection Observer API, bu tekniğin modern ve performanslı implementasyonunu sağlar. Bu rehberde Intersection Observer API'yi derinlemesine inceleyecek, resimler, bileşenler ve sonsuz scroll gibi pratik uygulamaları ele alacağız.</p>
+
+<h3>1. Intersection Observer Nedir?</h3>
+
+<p>Intersection Observer API, bir hedef elementin viewport veya belirli bir üst element ile kesişimini asenkron olarak izleyen bir tarayıcı API'sidir. Scroll event listener'a kıyasla büyük performans avantajı sunar.</p>
+
+<table>
+<tr><th>Özellik</th><th>Scroll Event</th><th>Intersection Observer</th></tr>
+<tr><td>Performans</td><td>Main thread'i bloklar</td><td>Asenkron, non-blocking</td></tr>
+<tr><td>Throttle/Debounce</td><td>Manuel gerekir</td><td>Otomatik optimize</td></tr>
+<tr><td>getBoundingClientRect</td><td>Her scroll'da çağrılır</td><td>Gerekmiyor</td></tr>
+<tr><td>Tarayıcı desteği</td><td>Evrensel</td><td>%96+ (modern tarayıcılar)</td></tr>
+</table>
+
+<h3>2. Temel Kullanım</h3>
+
+<pre><code>// Intersection Observer oluşturma
+const observer = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      console.log('Element görünür oldu:', entry.target);
+      console.log('Kesişim oranı:', entry.intersectionRatio);
+
+      // Gözlemi durdur (bir kez tetiklensin)
+      observer.unobserve(entry.target);
+    }
+  });
+}, {
+  root: null,          // viewport (varsayılan)
+  rootMargin: '0px',   // viewport kenar boşluğu
+  threshold: 0.1,      // %10 görünürlükte tetikle
+});
+
+// Element'i gözlemlemeye başla
+const element = document.querySelector('.lazy-element');
+observer.observe(element);</code></pre>
+
+<h4>Seçenek Parametreleri</h4>
+
+<pre><code>// root: Kesişimin kontrol edileceği container
+// null = viewport, bir element belirtilirse o elementin sınırları kullanılır
+const scrollContainer = document.querySelector('.scroll-area');
+
+// rootMargin: Viewport sınırlarını genişletir/daraltır
+// Pozitif değer: Daha erken tetiklenir (preload için ideal)
+// Negatif değer: Daha geç tetiklenir
+const options = {
+  root: scrollContainer,
+  rootMargin: '200px 0px', // Viewport'a 200px kala tetikle
+  threshold: 0,
+};
+
+// threshold: Tetiklenme eşik değerleri
+// 0 = 1 piksel bile görünürse
+// 0.5 = %50 görünür olduğunda
+// 1.0 = Tamamen görünür olduğunda
+// [0, 0.25, 0.5, 0.75, 1] = Her aşamada tetikle
+const progressOptions = {
+  threshold: [0, 0.25, 0.5, 0.75, 1.0],
+};</code></pre>
+
+<h3>3. Resim Lazy Loading</h3>
+
+<pre><code>&lt;!-- HTML yapısı --&gt;
+&lt;img class="lazy-img"
+     src="placeholder.svg"
+     data-src="actual-image.jpg"
+     data-srcset="image-400.jpg 400w, image-800.jpg 800w"
+     alt="Açıklama"
+     width="800" height="600"&gt;</code></pre>
+
+<pre><code>// Resim lazy loading
+function lazyLoadImages() {
+  const images = document.querySelectorAll('img.lazy-img');
+
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+
+        // Gerçek kaynağı yükle
+        img.src = img.dataset.src;
+        if (img.dataset.srcset) {
+          img.srcset = img.dataset.srcset;
+        }
+
+        // Yüklendikten sonra class ekle (fade-in animasyon için)
+        img.onload = () => {
+          img.classList.add('loaded');
+          img.classList.remove('lazy-img');
+        };
+
+        observer.unobserve(img);
+      }
+    });
+  }, {
+    rootMargin: '300px 0px', // 300px önceden yüklemeye başla
+    threshold: 0,
+  });
+
+  images.forEach(img => imageObserver.observe(img));
+}
+
+document.addEventListener('DOMContentLoaded', lazyLoadImages);</code></pre>
+
+<pre><code>/* CSS — fade-in efekti */
+.lazy-img {
+  opacity: 0;
+  transition: opacity 0.5s ease-in;
+  filter: blur(10px);
+}
+
+.lazy-img.loaded {
+  opacity: 1;
+  filter: blur(0);
+}</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Modern tarayıcılarda <code>&lt;img loading="lazy"&gt;</code> native lazy loading desteği mevcuttur. Ancak Intersection Observer, daha fazla kontrol ve custom davranışlar için hala gereklidir.
+</div>
+
+<h3>4. Native Lazy Loading</h3>
+
+<pre><code>&lt;!-- Native lazy loading (Chrome 76+, Firefox 75+) --&gt;
+&lt;img src="image.jpg" loading="lazy" alt="Açıklama" width="800" height="600"&gt;
+
+&lt;!-- iframe için de geçerli --&gt;
+&lt;iframe src="video.html" loading="lazy" width="560" height="315"&gt;&lt;/iframe&gt;
+
+&lt;!-- Kritik resimler için eager (varsayılan) --&gt;
+&lt;img src="hero.jpg" loading="eager" alt="Hero" width="1200" height="600"&gt;</code></pre>
+
+<h3>5. Sonsuz Scroll (Infinite Scroll)</h3>
+
+<pre><code>// Sonsuz scroll implementasyonu
+function setupInfiniteScroll() {
+  const sentinel = document.querySelector('#scroll-sentinel');
+  let page = 1;
+  let loading = false;
+
+  const scrollObserver = new IntersectionObserver(async (entries) => {
+    const entry = entries[0];
+    if (entry.isIntersecting &amp;&amp; !loading) {
+      loading = true;
+      page++;
+
+      // Yükleniyor göstergesi
+      sentinel.textContent = 'Yükleniyor...';
+
+      try {
+        const response = await fetch(`/api/posts?page=${page}&limit=10`);
+        const posts = await response.json();
+
+        if (posts.length === 0) {
+          sentinel.textContent = 'Tüm içerikler yüklendi';
+          scrollObserver.unobserve(sentinel);
+          return;
+        }
+
+        const container = document.querySelector('#post-container');
+        posts.forEach(post => {
+          const el = createPostElement(post);
+          container.appendChild(el);
+        });
+
+        sentinel.textContent = '';
+      } catch (error) {
+        sentinel.textContent = 'Yükleme hatası. Tekrar deneyin.';
+      } finally {
+        loading = false;
+      }
+    }
+  }, {
+    rootMargin: '400px 0px', // 400px önceden yükle
+  });
+
+  scrollObserver.observe(sentinel);
+}</code></pre>
+
+<pre><code>&lt;!-- HTML yapısı --&gt;
+&lt;div id="post-container"&gt;
+  &lt;!-- Postlar buraya eklenir --&gt;
+&lt;/div&gt;
+&lt;div id="scroll-sentinel"&gt;&lt;/div&gt;</code></pre>
+
+<h3>6. Scroll Animasyonları</h3>
+
+<pre><code>// Scroll'da element animasyonu
+function setupScrollAnimations() {
+  const animatedElements = document.querySelectorAll('[data-animate]');
+
+  const animationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const animationType = entry.target.dataset.animate;
+        const delay = entry.target.dataset.delay || '0';
+
+        entry.target.style.animationDelay = `${delay}ms`;
+        entry.target.classList.add(`animate-${animationType}`);
+
+        animationObserver.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -50px 0px', // Biraz yukarıda tetikle
+  });
+
+  animatedElements.forEach(el => animationObserver.observe(el));
+}</code></pre>
+
+<pre><code>&lt;!-- Kullanım --&gt;
+&lt;div data-animate="fade-up" data-delay="0"&gt;Birinci element&lt;/div&gt;
+&lt;div data-animate="fade-up" data-delay="200"&gt;İkinci element&lt;/div&gt;
+&lt;div data-animate="fade-up" data-delay="400"&gt;Üçüncü element&lt;/div&gt;</code></pre>
+
+<h3>7. Component Lazy Loading (React)</h3>
+
+<pre><code>// React ile Intersection Observer kullanımı
+import { useRef, useState, useEffect } from 'react';
+
+function useIntersectionObserver(options = {}) {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+        observer.unobserve(element);
+      }
+    }, {
+      rootMargin: options.rootMargin || '200px',
+      threshold: options.threshold || 0,
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [options.rootMargin, options.threshold]);
+
+  return [ref, isVisible];
+}
+
+// Kullanım
+function LazySection({ children }) {
+  const [ref, isVisible] = useIntersectionObserver();
+
+  return (
+    &lt;div ref={ref}&gt;
+      {isVisible ? children : &lt;div className="skeleton h-64" /&gt;}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>8. Performans İpuçları</h3>
+
+<ul>
+<li><strong>rootMargin kullanın:</strong> Kullanıcı görmeden önce yüklemeye başlayın (200-400px ideal)</li>
+<li><strong>unobserve unutmayın:</strong> Tek seferlik gözlemleri durdurun, bellek sızıntısını önleyin</li>
+<li><strong>Placeholder boyutları:</strong> CLS'yi önlemek için resim genişlik ve yüksekliğini belirtin</li>
+<li><strong>LQIP kullanın:</strong> Düşük kalite placeholder resimler ile daha iyi UX</li>
+<li><strong>Above-the-fold istisna:</strong> İlk ekran resimleri lazy loading'den hariç tutun</li>
+</ul>
+
+<div class="warning">
+<strong>Uyarı:</strong> Above-the-fold (ilk görünen alan) içeriğine lazy loading uygulamayın. Bu, LCP (Largest Contentful Paint) metriğinizi olumsuz etkiler ve Core Web Vitals puanınızı düşürür.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Intersection Observer API, lazy loading implementasyonu için modern ve performanslı bir çözümdür. Resim lazy loading, sonsuz scroll, scroll animasyonları ve component lazy loading gibi senaryolarda scroll event listener'ın çok ötesinde performans sunar. Native <code>loading="lazy"</code> attribute'u basit durumlar için yeterli olsa da, Intersection Observer daha fazla kontrol ve özelleştirme imkanı sağlar. rootMargin ile preloading, threshold ile tetikleme hassasiyeti ve unobserve ile bellek yönetimi en kritik yapılandırma noktalarıdır.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API" target="_blank">MDN — Intersection Observer API</a></li>
+<li><a href="https://web.dev/lazy-loading-images/" target="_blank">web.dev — Lazy Loading Images</a></li>
+<li><a href="https://web.dev/browser-level-image-lazy-loading/" target="_blank">web.dev — Native Lazy Loading</a></li>
+<li><a href="https://developer.chrome.com/docs/lighthouse/performance/offscreen-images/" target="_blank">Chrome — Offscreen Images</a></li>
+<li><a href="https://caniuse.com/intersectionobserver" target="_blank">Can I Use — Intersection Observer</a></li>
+</ul>

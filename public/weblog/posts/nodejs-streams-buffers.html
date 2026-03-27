@@ -1,0 +1,229 @@
+<h2>Node.js Streams ve Buffers: Büyük Veri İşleme</h2>
+
+<p>Node.js'te büyük dosyaları ve veri akışlarını verimli şekilde işlemek için Streams ve Buffers kavramlarını anlamak kritik öneme sahiptir. Bir dosyanın tamamını belleğe yüklemek yerine, stream'ler veriyi küçük parçalar (chunk) halinde işleyerek bellek kullanımını dramatik şekilde azaltır. Bu rehberde Readable, Writable, Transform ve Duplex stream türlerini, Buffer işlemlerini, pipe mekanizmasını ve gerçek dünya kullanım senaryolarını kapsamlı örneklerle ele alacağız.</p>
+
+<h3>1. Buffer: Düşük Seviye Veri İşleme</h3>
+
+<p>Buffer, Node.js'te ikili (binary) veriyi temsil eden sabit boyutlu bir bellek alanıdır. Dosya okuma, ağ iletişimi ve kriptografi gibi işlemlerde kullanılır. JavaScript'in string türü UTF-16 kodlamalı iken, Buffer doğrudan bayt dizileriyle çalışır ve farklı encoding'ler arasında dönüşüm yapabilir.</p>
+
+<pre><code>// Buffer oluşturma yöntemleri
+const buf1 = Buffer.from('Merhaba Node.js', 'utf-8');
+const buf2 = Buffer.alloc(16);        // 16 byte sıfırlanmış
+const buf3 = Buffer.allocUnsafe(16);  // 16 byte başlatılmamış (hızlı)
+
+// Buffer okuma/yazma
+console.log(buf1.toString('utf-8'));   // 'Merhaba Node.js'
+console.log(buf1.toString('base64'));  // Base64 kodlaması
+console.log(buf1.toString('hex'));     // Hexadecimal
+
+// Buffer karşılaştırma ve arama
+const a = Buffer.from('abc');
+const b = Buffer.from('abc');
+console.log(a.equals(b));             // true
+console.log(buf1.includes('Node'));   // true
+console.log(buf1.indexOf('Node'));    // Byte offset
+
+// Buffer birleştirme
+const combined = Buffer.concat([buf1, Buffer.from(' - Stream Rehberi')]);
+console.log(combined.toString());
+
+// Buffer ve JSON
+const data = { name: 'test', value: 42 };
+const jsonBuffer = Buffer.from(JSON.stringify(data));
+const parsed = JSON.parse(jsonBuffer.toString());
+
+// Buffer boyut bilgisi
+console.log(buf1.length);             // Byte cinsinden
+console.log(Buffer.byteLength('Merhaba', 'utf-8')); // Türkçe karakter dikkat!</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Buffer.allocUnsafe() performans için eski bellek içeriğini temizlemez; hassas verilerle çalışırken mutlaka Buffer.alloc() kullanın. Ayrıca Buffer.from(string) ile oluşturulan buffer'ların boyutu, özellikle Türkçe karakterler gibi multi-byte UTF-8 karakterlerde string uzunluğundan farklı olabilir.
+</div>
+
+<h3>2. Readable ve Writable Streams</h3>
+
+<p>Readable stream veri kaynağını, Writable stream veri hedefini temsil eder. Dosya okuma/yazma, HTTP istekleri/yanıtları ve process stdin/stdout bu stream türlerinin en yaygın örnekleridir. Stream'ler event-driven çalışır ve backpressure mekanizması ile veri akış hızını otomatik olarak dengeler.</p>
+
+<pre><code>const fs = require('fs');
+const { pipeline } = require('stream/promises');
+
+// Büyük dosya kopyalama (stream ile)
+async function copyFile(src, dest) {
+  const readStream = fs.createReadStream(src, {
+    highWaterMark: 64 * 1024  // 64KB chunk boyutu
+  });
+  const writeStream = fs.createWriteStream(dest);
+
+  let bytesProcessed = 0;
+
+  readStream.on('data', (chunk) => {
+    bytesProcessed += chunk.length;
+    const mb = (bytesProcessed / (1024 * 1024)).toFixed(2);
+    process.stdout.write(`\rİşlenen: ${mb} MB`);
+  });
+
+  await pipeline(readStream, writeStream);
+  console.log('\nKopyalama tamamlandı');
+}
+
+// Satır satır dosya okuma
+const readline = require('readline');
+
+async function processLargeFile(filePath) {
+  const fileStream = fs.createReadStream(filePath);
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+
+  let lineCount = 0;
+  const results = [];
+
+  for await (const line of rl) {
+    lineCount++;
+    // Her satırı işle
+    if (line.startsWith('ERROR')) {
+      results.push({ line: lineCount, content: line });
+    }
+  }
+
+  console.log(`Toplam ${lineCount} satır, ${results.length} hata bulundu`);
+  return results;
+}
+
+// Custom Readable Stream
+const { Readable } = require('stream');
+
+class DataGenerator extends Readable {
+  constructor(options = {}) {
+    super(options);
+    this.current = 0;
+    this.max = options.max || 1000;
+  }
+
+  _read() {
+    if (this.current >= this.max) {
+      this.push(null); // Stream sonu
+      return;
+    }
+
+    const data = JSON.stringify({
+      id: this.current++,
+      timestamp: Date.now(),
+      value: Math.random()
+    }) + '\n';
+
+    this.push(data);
+  }
+}
+
+// Kullanım
+const generator = new DataGenerator({ max: 10000 });
+generator.pipe(fs.createWriteStream('data.jsonl'));</code></pre>
+
+<h3>3. Transform Streams: Veri Dönüştürme</h3>
+
+<p>Transform stream, gelen veriyi dönüştürerek çıkış olarak ileten bir stream türüdür. Veri sıkıştırma, şifreleme, format dönüşümü ve filtreleme gibi işlemler için idealdir. pipe() ile birden fazla transform stream'i zincirlenerek güçlü veri işleme pipeline'ları oluşturulabilir.</p>
+
+<pre><code>const { Transform } = require('stream');
+const zlib = require('zlib');
+
+// CSV'den JSON'a dönüştürme
+class CsvToJson extends Transform {
+  constructor(options = {}) {
+    super({ ...options, objectMode: true });
+    this.headers = null;
+    this.buffer = '';
+  }
+
+  _transform(chunk, encoding, callback) {
+    this.buffer += chunk.toString();
+    const lines = this.buffer.split('\n');
+    this.buffer = lines.pop(); // Son satır eksik olabilir
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const values = line.split(',').map(v => v.trim());
+
+      if (!this.headers) {
+        this.headers = values;
+        continue;
+      }
+
+      const obj = {};
+      this.headers.forEach((header, i) => {
+        obj[header] = values[i] || '';
+      });
+
+      this.push(JSON.stringify(obj) + '\n');
+    }
+
+    callback();
+  }
+
+  _flush(callback) {
+    if (this.buffer.trim() && this.headers) {
+      const values = this.buffer.split(',').map(v => v.trim());
+      const obj = {};
+      this.headers.forEach((header, i) => {
+        obj[header] = values[i] || '';
+      });
+      this.push(JSON.stringify(obj) + '\n');
+    }
+    callback();
+  }
+}
+
+// Pipeline ile kullanım: CSV oku -> JSON'a dönüştür -> Sıkıştır -> Yaz
+async function processCsvFile(inputPath, outputPath) {
+  await pipeline(
+    fs.createReadStream(inputPath),
+    new CsvToJson(),
+    zlib.createGzip(),
+    fs.createWriteStream(outputPath + '.gz')
+  );
+  console.log('CSV işleme tamamlandı');
+}
+
+// Dosya sıkıştırma / açma
+async function compressFile(input, output) {
+  await pipeline(
+    fs.createReadStream(input),
+    zlib.createGzip({ level: 9 }),
+    fs.createWriteStream(output)
+  );
+}
+
+async function decompressFile(input, output) {
+  await pipeline(
+    fs.createReadStream(input),
+    zlib.createGunzip(),
+    fs.createWriteStream(output)
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> stream/promises modülündeki pipeline fonksiyonu, hata yönetimini ve stream temizliğini otomatik olarak yapar. Eski pipe() yöntemi yerine her zaman pipeline kullanın; pipe() hata durumlarında stream'leri otomatik olarak kapatmaz ve bellek sızıntılarına yol açabilir.
+</div>
+
+<h3>4. HTTP Streaming ve Gerçek Dünya Senaryoları</h3>
+
+<p>Stream'ler, HTTP sunucularında büyük dosya indirme, video streaming ve gerçek zamanlı veri aktarımı gibi senaryolarda kritik rol oynar. Express.js ile stream tabanlı dosya servisi yapmak, bellek kullanımını minimum seviyede tutar. Gigabyte'larca büyüklükteki dosyalar bile sabit bellek kullanımıyla servis edilebilir.</p>
+
+<p>Backpressure mekanizması, tüketici (consumer) üreticiden (producer) daha yavaş olduğunda otomatik olarak devreye girer ve veri akışını yavaşlatır. Bu mekanizma, bellek taşmasını önler ve sistemin kararlı çalışmasını sağlar. highWaterMark parametresi ile buffer boyutunu ayarlayarak performans ve bellek kullanımı arasında denge kurabilirsiniz.</p>
+
+<div class="info">
+  <strong>Bilgi:</strong> Node.js 16+ ile birlikte stream'ler for await...of döngüsü ile iterate edilebilir. Bu sayede stream verilerini modern async/await syntax'ı ile işleyebilirsiniz. Ayrıca Web Streams API (ReadableStream, WritableStream) de desteklenmektedir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Streams ve Buffers, Node.js'in büyük veri işleme yeteneklerinin temelini oluşturur. Dosya tamamını belleğe yüklemek yerine stream tabanlı yaklaşım kullanarak gigabyte'larca veriyi sabit bellek kullanımıyla işleyebilirsiniz. Transform stream'ler ile güçlü veri dönüşüm pipeline'ları, pipeline fonksiyonu ile güvenli hata yönetimi ve backpressure mekanizması ile optimal kaynak kullanımı sağlarsınız.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+  <li><a href="https://nodejs.org/api/stream.html" target="_blank" rel="noopener noreferrer">Node.js Stream Documentation</a></li>
+  <li><a href="https://nodejs.org/api/buffer.html" target="_blank" rel="noopener noreferrer">Node.js Buffer Documentation</a></li>
+  <li><a href="https://nodejs.dev/en/learn/nodejs-streams/" target="_blank" rel="noopener noreferrer">Node.js Streams - Learn Node.js</a></li>
+  <li><a href="https://github.com/substack/stream-handbook" target="_blank" rel="noopener noreferrer">Stream Handbook - GitHub</a></li>
+</ul>

@@ -1,0 +1,288 @@
+<h2>JavaScript WeakMap ve WeakSet: Hafıza Yönetimi</h2>
+
+<p>JavaScript'te hafıza yönetimi, performanslı uygulamalar geliştirmenin kritik bir parçasıdır. <strong>WeakMap</strong> ve <strong>WeakSet</strong>, nesnelere zayıf referanslar tutarak garbage collector'ın gereksiz verileri temizlemesine izin verir. Bu rehberde WeakMap ve WeakSet'in çalışma prensiplerini, kullanım senaryolarını, Map/Set ile farklılıklarını ve pratik örneklerini inceleyeceğiz.</p>
+
+<h3>Zayıf Referans (Weak Reference) Nedir?</h3>
+
+<p>Normal bir referans, bir nesneye işaret ettiği sürece garbage collector o nesneyi temizleyemez. Zayıf referans ise nesnenin garbage collection'a engel olmaz:</p>
+
+<pre><code>// Güçlü referans: obj bellekte kalır
+let obj = { data: 'önemli veri' };
+const map = new Map();
+map.set(obj, 'değer');
+obj = null; // obj hala Map içinde referans edildiği için bellekte kalır
+
+// Zayıf referans: obj temizlenebilir
+let obj2 = { data: 'geçici veri' };
+const weakMap = new WeakMap();
+weakMap.set(obj2, 'değer');
+obj2 = null; // obj2'ye başka referans kalmadığı için GC temizleyebilir</code></pre>
+
+<h3>WeakMap Detaylı İnceleme</h3>
+
+<h4>WeakMap vs Map Karşılaştırma</h4>
+
+<table>
+  <tr><th>Özellik</th><th>Map</th><th>WeakMap</th></tr>
+  <tr><td>Anahtar tipi</td><td>Her tip</td><td>Sadece object/symbol</td></tr>
+  <tr><td>Enumerable</td><td>Evet (for...of, forEach)</td><td>Hayır</td></tr>
+  <tr><td>size özelliği</td><td>Var</td><td>Yok</td></tr>
+  <tr><td>clear() metodu</td><td>Var</td><td>Yok</td></tr>
+  <tr><td>GC etkisi</td><td>Engeller</td><td>Engellemez</td></tr>
+  <tr><td>Iterasyon</td><td>keys(), values(), entries()</td><td>Yok</td></tr>
+</table>
+
+<h4>WeakMap API</h4>
+
+<pre><code>const weakMap = new WeakMap();
+
+const key1 = { id: 1 };
+const key2 = { id: 2 };
+
+// Temel işlemler
+weakMap.set(key1, 'değer 1');
+weakMap.set(key2, { nested: 'data' });
+
+console.log(weakMap.get(key1));   // 'değer 1'
+console.log(weakMap.has(key2));   // true
+
+weakMap.delete(key1);
+console.log(weakMap.has(key1));   // false
+
+// Primitive anahtarlar kullanılamaz
+// weakMap.set('string', 'value'); // TypeError!
+// weakMap.set(42, 'value');       // TypeError!</code></pre>
+
+<h3>WeakMap Kullanım Senaryoları</h3>
+
+<h4>1. Private Data (Özel Veri Saklama)</h4>
+
+<pre><code>// WeakMap ile private field simülasyonu
+const privateData = new WeakMap();
+
+class Person {
+  constructor(name, age, ssn) {
+    this.name = name;
+    this.age = age;
+    // SSN'yi private olarak sakla
+    privateData.set(this, { ssn });
+  }
+
+  getSSN(authToken) {
+    if (!isValidToken(authToken)) {
+      throw new Error('Yetkisiz erişim');
+    }
+    return privateData.get(this)?.ssn;
+  }
+}
+
+const person = new Person('Ali', 30, '123-45-6789');
+console.log(person.name);    // 'Ali'
+console.log(person.ssn);     // undefined (erişilemez)
+// person GC tarafından temizlendiğinde SSN verisi de otomatik silinir</code></pre>
+
+<h4>2. DOM Element Metadata</h4>
+
+<pre><code>// DOM elementlerine metadata ekle (hafıza sızıntısı riski olmadan)
+const elementData = new WeakMap();
+
+function trackElement(element, metadata) {
+  elementData.set(element, {
+    ...metadata,
+    trackedAt: Date.now(),
+  });
+}
+
+function getElementData(element) {
+  return elementData.get(element);
+}
+
+// Kullanım
+const button = document.querySelector('#submit-btn');
+trackElement(button, { clicks: 0, lastClicked: null });
+
+button.addEventListener('click', () =&gt; {
+  const data = getElementData(button);
+  if (data) {
+    data.clicks++;
+    data.lastClicked = Date.now();
+  }
+});
+
+// button DOM'dan kaldırıldığında, metadata otomatik GC tarafından temizlenir</code></pre>
+
+<h4>3. Cache / Memoization</h4>
+
+<pre><code>// Nesne bazlı cache (hafıza dostu)
+const cache = new WeakMap();
+
+function expensiveComputation(obj) {
+  if (cache.has(obj)) {
+    console.log('Cache hit');
+    return cache.get(obj);
+  }
+
+  console.log('Computing...');
+  const result = {
+    hash: JSON.stringify(obj).split('').reduce(
+      (a, b) =&gt; ((a &lt;&lt; 5) - a + b.charCodeAt(0)) | 0, 0
+    ),
+    timestamp: Date.now(),
+  };
+
+  cache.set(obj, result);
+  return result;
+}
+
+let data = { name: 'test', values: [1, 2, 3] };
+expensiveComputation(data); // 'Computing...'
+expensiveComputation(data); // 'Cache hit'
+
+data = null; // Cache otomatik temizlenir</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> WeakMap tabanlı cache, nesne artık kullanılmadığında otomatik olarak temizlenir. Bu sayede manuel cache invalidation'a gerek kalmaz ve hafıza sızıntısı riski ortadan kalkar.
+</div>
+
+<h3>WeakSet Detaylı İnceleme</h3>
+
+<pre><code>const weakSet = new WeakSet();
+
+const obj1 = { id: 1 };
+const obj2 = { id: 2 };
+
+weakSet.add(obj1);
+weakSet.add(obj2);
+
+console.log(weakSet.has(obj1)); // true
+weakSet.delete(obj2);
+console.log(weakSet.has(obj2)); // false</code></pre>
+
+<h4>WeakSet Kullanım Senaryoları</h4>
+
+<pre><code>// 1. Circular Reference Tespiti
+function deepClone(obj, seen = new WeakSet()) {
+  if (obj === null || typeof obj !== 'object') return obj;
+
+  // Circular reference kontrolü
+  if (seen.has(obj)) {
+    throw new Error('Circular reference tespit edildi');
+  }
+  seen.add(obj);
+
+  if (Array.isArray(obj)) {
+    return obj.map(item =&gt; deepClone(item, seen));
+  }
+
+  const clone = {};
+  for (const key of Object.keys(obj)) {
+    clone[key] = deepClone(obj[key], seen);
+  }
+  return clone;
+}
+
+// 2. Nesne İşlenme Takibi
+const processed = new WeakSet();
+
+function processOnce(item) {
+  if (processed.has(item)) {
+    console.log('Zaten işlendi, atlanıyor');
+    return;
+  }
+
+  // İşle
+  console.log('İşleniyor:', item);
+  processed.add(item);
+}
+
+const task = { id: 1, name: 'görev' };
+processOnce(task); // 'İşleniyor: ...'
+processOnce(task); // 'Zaten işlendi, atlanıyor'
+
+// 3. Branding / Tagging
+const verified = new WeakSet();
+
+function verifyUser(user) {
+  // Doğrulama mantığı...
+  verified.add(user);
+  return user;
+}
+
+function isVerified(user) {
+  return verified.has(user);
+}
+
+const user = verifyUser({ name: 'Ali', email: 'ali@test.com' });
+console.log(isVerified(user)); // true</code></pre>
+
+<h3>WeakRef ve FinalizationRegistry</h3>
+
+<p>ES2021 ile gelen <code>WeakRef</code> ve <code>FinalizationRegistry</code>, daha detaylı zayıf referans kontrolü sağlar:</p>
+
+<pre><code>// WeakRef: Nesneye zayıf referans
+let target = { data: 'önemli' };
+const weakRef = new WeakRef(target);
+
+console.log(weakRef.deref()); // { data: 'önemli' }
+target = null;
+// GC çalıştıktan sonra:
+// weakRef.deref() =&gt; undefined
+
+// FinalizationRegistry: GC temizliği geri bildirimi
+const registry = new FinalizationRegistry((heldValue) =&gt; {
+  console.log(`Nesne temizlendi: ${heldValue}`);
+  // Temizlik işlemleri (cache silme, bağlantı kapatma vb.)
+});
+
+let obj = { name: 'geçici' };
+registry.register(obj, 'obj-temizlik-bilgisi');
+obj = null; // GC çalıştığında: "Nesne temizlendi: obj-temizlik-bilgisi"</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>WeakRef</code> ve <code>FinalizationRegistry</code> ileri düzey araçlardır. GC zamanlaması garanti edilmez, bu nedenle kritik iş mantığını bunlara dayandırmayın. Çoğu senaryoda WeakMap/WeakSet yeterlidir.
+</div>
+
+<h3>Performans ve Hafıza Karşılaştırması</h3>
+
+<pre><code>// Hafıza sızıntısı örneği (Map ile)
+function leakyCache() {
+  const cache = new Map();
+  let counter = 0;
+
+  return function process(data) {
+    const key = { id: counter++ };
+    cache.set(key, heavyComputation(data));
+    // key referansı hiç temizlenmiyor = hafıza sızıntısı!
+    return cache.get(key);
+  };
+}
+
+// Güvenli versiyon (WeakMap ile)
+function safeCache() {
+  const cache = new WeakMap();
+
+  return function process(obj) {
+    if (!cache.has(obj)) {
+      cache.set(obj, heavyComputation(obj));
+    }
+    return cache.get(obj);
+  };
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Chrome DevTools Memory sekmesinden heap snapshot alarak WeakMap/WeakSet'in hafıza üzerindeki etkisini gözlemleyebilirsiniz. Retained size farkını karşılaştırın.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>WeakMap ve WeakSet, JavaScript'te hafıza yönetiminin güçlü araçlarıdır. Nesnelere metadata ekleme, cache mekanizması, private data saklama ve circular reference tespiti gibi senaryolarda hafıza sızıntısı riskini ortadan kaldırırlar. Enumerable olmamaları ve primitive anahtar desteklememeleri sınırlılıklarıdır, ancak doğru kullanıldıklarında uygulamanızın hafıza verimliliğini önemli ölçüde artırırlar.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap" target="_blank" rel="noopener noreferrer">MDN - WeakMap</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet" target="_blank" rel="noopener noreferrer">MDN - WeakSet</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef" target="_blank" rel="noopener noreferrer">MDN - WeakRef</a></li>
+  <li><a href="https://v8.dev/blog/free-garbage-collection" target="_blank" rel="noopener noreferrer">V8 Blog - Garbage Collection</a></li>
+  <li><a href="https://javascript.info/weakmap-weakset" target="_blank" rel="noopener noreferrer">JavaScript.info - WeakMap and WeakSet</a></li>
+</ul>

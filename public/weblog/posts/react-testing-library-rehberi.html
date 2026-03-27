@@ -1,0 +1,264 @@
+<h2>React Testing Library ile Test Yazma Rehberi</h2>
+
+<p>Test yazmak, güvenilir ve sürdürülebilir React uygulamaları geliştirmenin vazgeçilmez bir parçasıdır. React Testing Library (RTL), componentlerinizi kullanıcının bakış açısından test etmenizi sağlayan, topluluk tarafından en çok benimsenen test kütüphanesidir. Bu rehberde, RTL'in temel felsefesinden ileri test tekniklerine kadar her şeyi adım adım ele alacağız.</p>
+
+<h3>React Testing Library Felsefesi</h3>
+
+<p>RTL'in temel prensibi şudur: "Testleriniz, yazılımınızın kullanılma şekline ne kadar benzerse, o kadar güvenilir olur." Bu nedenle RTL, implementasyon detaylarını (state, props, lifecycle) test etmek yerine, kullanıcının gördüğü ve etkileşimde bulunduğu şeyleri test etmeyi teşvik eder. DOM node'larına erişim için role, label ve metin bazlı sorgular kullanılır.</p>
+
+<h3>Kurulum ve Yapılandırma</h3>
+
+<pre><code>// Gerekli paketlerin yüklenmesi
+// npm install --save-dev @testing-library/react @testing-library/jest-dom @testing-library/user-event vitest jsdom
+
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.ts',
+    css: true,
+  },
+});
+
+// src/test/setup.ts
+import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
+afterEach(() => {
+  cleanup();
+});</code></pre>
+
+<h3>Temel Test Yazma</h3>
+
+<p>İlk olarak basit bir component testi yazalım. RTL'de en çok kullanılan sorgular getByRole, getByText ve getByLabelText'tir. Bu sorgular erişilebilirlik (a11y) ağacını kullanarak DOM elemanlarını bulur.</p>
+
+<pre><code>// src/components/LoginForm.tsx
+import { useState } from 'react';
+
+interface LoginFormProps {
+  onSubmit: (email: string, password: string) => Promise&lt;void&gt;;
+}
+
+export function LoginForm({ onSubmit }: LoginFormProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email || !password) {
+      setError('E-posta ve şifre zorunludur');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await onSubmit(email, password);
+    } catch (err) {
+      setError('Giriş başarısız. Bilgilerinizi kontrol edin.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit} aria-label="Giriş formu"&gt;
+      {error && &lt;div role="alert"&gt;{error}&lt;/div&gt;}
+
+      &lt;label htmlFor="email"&gt;E-posta&lt;/label&gt;
+      &lt;input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /&gt;
+
+      &lt;label htmlFor="password"&gt;Şifre&lt;/label&gt;
+      &lt;input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} /&gt;
+
+      &lt;button type="submit" disabled={isLoading}&gt;
+        {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+      &lt;/button&gt;
+    &lt;/form&gt;
+  );
+}
+
+// src/components/__tests__/LoginForm.test.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi } from 'vitest';
+import { LoginForm } from '../LoginForm';
+
+describe('LoginForm', () => {
+  const mockOnSubmit = vi.fn();
+
+  beforeEach(() => {
+    mockOnSubmit.mockReset();
+  });
+
+  it('formu doğru şekilde render eder', () => {
+    render(&lt;LoginForm onSubmit={mockOnSubmit} /&gt;);
+
+    expect(screen.getByLabelText('E-posta')).toBeInTheDocument();
+    expect(screen.getByLabelText('Şifre')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Giriş Yap' })).toBeInTheDocument();
+  });
+
+  it('boş form gönderildiğinde hata mesajı gösterir', async () => {
+    const user = userEvent.setup();
+    render(&lt;LoginForm onSubmit={mockOnSubmit} /&gt;);
+
+    await user.click(screen.getByRole('button', { name: 'Giriş Yap' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('E-posta ve şifre zorunludur');
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  it('geçerli bilgilerle formu gönderir', async () => {
+    const user = userEvent.setup();
+    mockOnSubmit.mockResolvedValueOnce(undefined);
+
+    render(&lt;LoginForm onSubmit={mockOnSubmit} /&gt;);
+
+    await user.type(screen.getByLabelText('E-posta'), 'test@example.com');
+    await user.type(screen.getByLabelText('Şifre'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Giriş Yap' }));
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledWith('test@example.com', 'password123');
+    });
+  });
+
+  it('gönderim sırasında loading durumunu gösterir', async () => {
+    const user = userEvent.setup();
+    mockOnSubmit.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
+
+    render(&lt;LoginForm onSubmit={mockOnSubmit} /&gt;);
+
+    await user.type(screen.getByLabelText('E-posta'), 'test@example.com');
+    await user.type(screen.getByLabelText('Şifre'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Giriş Yap' }));
+
+    expect(screen.getByRole('button', { name: 'Giriş yapılıyor...' })).toBeDisabled();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Giriş Yap' })).toBeEnabled();
+    });
+  });
+});</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>userEvent</code> kütüphanesini <code>fireEvent</code> yerine tercih edin. userEvent, gerçek kullanıcı etkileşimlerini (focus, blur, keydown, keyup) simüle eder ve daha güvenilir testler yazmanızı sağlar.
+</div>
+
+<h3>Asenkron İşlemleri Test Etme</h3>
+
+<pre><code>// src/components/__tests__/UserProfile.test.tsx
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { UserProfile } from '../UserProfile';
+
+// fetch'i mock'la
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
+describe('UserProfile', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+  });
+
+  it('kullanıcı verisi yüklendikten sonra profili gösterir', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        name: 'Tarık Tunç',
+        email: 'tarik@example.com',
+        role: 'Developer',
+      }),
+    });
+
+    render(&lt;UserProfile userId="123" /&gt;);
+
+    // Yükleniyor durumunu kontrol et
+    expect(screen.getByText('Yükleniyor...')).toBeInTheDocument();
+
+    // Veri geldikten sonra profili kontrol et
+    expect(await screen.findByText('Tarık Tunç')).toBeInTheDocument();
+    expect(screen.getByText('tarik@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('Yükleniyor...')).not.toBeInTheDocument();
+  });
+
+  it('hata durumunda hata mesajı gösterir', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+    render(&lt;UserProfile userId="123" /&gt;);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Profil yüklenemedi');
+  });
+});</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Testlerde <code>getByTestId</code> kullanmaktan mümkün olduğunca kaçının. Bu sorgu son çare olmalıdır. Önce <code>getByRole</code>, <code>getByLabelText</code>, <code>getByText</code> gibi semantik sorguları deneyin. Bu hem testlerinizi daha güvenilir yapar hem de component'inizin erişilebilirliğini doğrular.
+</div>
+
+<h3>Custom Hook Testleri</h3>
+
+<pre><code>// src/hooks/__tests__/useCounter.test.ts
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { useCounter } from '../useCounter';
+
+describe('useCounter', () => {
+  it('başlangıç değeriyle başlar', () => {
+    const { result } = renderHook(() => useCounter(10));
+    expect(result.current.count).toBe(10);
+  });
+
+  it('increment doğru çalışır', () => {
+    const { result } = renderHook(() => useCounter(0));
+
+    act(() => {
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(1);
+  });
+
+  it('reset başlangıç değerine döner', () => {
+    const { result } = renderHook(() => useCounter(5));
+
+    act(() => {
+      result.current.increment();
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(7);
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.count).toBe(5);
+  });
+});</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> RTL sorgu önceliği: getByRole > getByLabelText > getByPlaceholderText > getByText > getByDisplayValue > getByAltText > getByTitle > getByTestId. Bu sıralama, testlerinizin erişilebilirlik kalitesini de yansıtır.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React Testing Library, "kullanıcı gibi test et" felsefesiyle güvenilir ve sürdürülebilir testler yazmanızı sağlar. Implementasyon detaylarından uzak durarak, component'lerinizin refactoring'e dayanıklı testlerini yazabilirsiniz. userEvent ile gerçekçi etkileşimler, waitFor ile asenkron bekleme ve role bazlı sorgular ile hem testlerinizi hem de component'lerinizin erişilebilirliğini güçlendirin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://testing-library.com/docs/react-testing-library/intro" target="_blank">React Testing Library Docs</a></li>
+  <li><a href="https://testing-library.com/docs/queries/about#priority" target="_blank">RTL: Query Priority</a></li>
+  <li><a href="https://vitest.dev/" target="_blank">Vitest Official Docs</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Client-side_JavaScript_frameworks/React_testing" target="_blank">MDN: React Testing</a></li>
+</ul>

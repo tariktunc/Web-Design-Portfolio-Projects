@@ -1,0 +1,296 @@
+<h2>Next.js Internationalization (i18n): Çok Dilli Site</h2>
+
+<p>Çok dilli web siteleri oluşturmak, global bir kullanıcı kitlesine ulaşmanın en etkili yoludur. Next.js App Router ile <strong>internationalization (i18n)</strong> kurmak, middleware tabanlı dil yönlendirmesi ve çeviri dosyaları ile sistematik bir şekilde yapılabilir. Bu yazıda Next.js'te sıfırdan çok dilli bir site oluşturma sürecini adım adım inceleyeceğiz.</p>
+
+<h3>i18n Stratejileri</h3>
+
+<p>Çok dilli site için iki temel URL stratejisi vardır:</p>
+
+<ul>
+  <li><strong>Sub-path routing:</strong> <code>/tr/hakkimizda</code>, <code>/en/about</code> — En yaygın yöntem</li>
+  <li><strong>Domain routing:</strong> <code>tr.site.com</code>, <code>en.site.com</code> — Farklı domainler</li>
+</ul>
+
+<p>Bu rehberde sub-path routing stratejisini kullanacağız.</p>
+
+<h3>Proje Yapısı</h3>
+
+<pre><code>app/
+├── [locale]/
+│   ├── layout.js
+│   ├── page.js
+│   ├── about/
+│   │   └── page.js
+│   └── blog/
+│       └── page.js
+├── layout.js
+messages/
+├── tr.json
+├── en.json
+├── de.json
+lib/
+├── i18n.js
+└── dictionaries.js
+middleware.js</code></pre>
+
+<h3>next-intl Kurulumu</h3>
+
+<p><code>next-intl</code>, Next.js App Router için en popüler i18n kütüphanesidir:</p>
+
+<pre><code>npm install next-intl</code></pre>
+
+<h4>Yapılandırma Dosyası</h4>
+
+<pre><code>// i18n/config.js
+export const locales = ['tr', 'en', 'de'];
+export const defaultLocale = 'tr';
+export const localeNames = {
+  tr: 'Türkçe',
+  en: 'English',
+  de: 'Deutsch',
+};</code></pre>
+
+<h4>Çeviri Dosyaları</h4>
+
+<pre><code>// messages/tr.json
+{
+  "common": {
+    "home": "Ana Sayfa",
+    "about": "Hakkımızda",
+    "blog": "Blog",
+    "contact": "İletişim",
+    "language": "Dil"
+  },
+  "home": {
+    "title": "Web Geliştirme Blogu",
+    "description": "Modern web teknolojileri hakkında yazılar ve rehberler.",
+    "latestPosts": "Son Yazılar",
+    "readMore": "Devamını Oku"
+  },
+  "about": {
+    "title": "Hakkımızda",
+    "content": "Biz web geliştirme tutkunu bir ekibiz."
+  },
+  "footer": {
+    "copyright": "© {year} Tüm hakları saklıdır.",
+    "madeWith": "{name} tarafından geliştirildi"
+  }
+}
+
+// messages/en.json
+{
+  "common": {
+    "home": "Home",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact",
+    "language": "Language"
+  },
+  "home": {
+    "title": "Web Development Blog",
+    "description": "Articles and guides about modern web technologies.",
+    "latestPosts": "Latest Posts",
+    "readMore": "Read More"
+  },
+  "about": {
+    "title": "About Us",
+    "content": "We are a team passionate about web development."
+  },
+  "footer": {
+    "copyright": "© {year} All rights reserved.",
+    "madeWith": "Developed by {name}"
+  }
+}</code></pre>
+
+<h4>i18n Request Yapılandırması</h4>
+
+<pre><code>// i18n/request.js
+import { getRequestConfig } from 'next-intl/server';
+import { routing } from './routing';
+
+export default getRequestConfig(async ({ requestLocale }) =&gt; {
+  let locale = await requestLocale;
+
+  if (!locale || !routing.locales.includes(locale)) {
+    locale = routing.defaultLocale;
+  }
+
+  return {
+    locale,
+    messages: (await import(`../messages/${locale}.json`)).default,
+  };
+});</code></pre>
+
+<pre><code>// i18n/routing.js
+import { defineRouting } from 'next-intl/routing';
+import { createNavigation } from 'next-intl/navigation';
+
+export const routing = defineRouting({
+  locales: ['tr', 'en', 'de'],
+  defaultLocale: 'tr',
+});
+
+export const { Link, redirect, usePathname, useRouter } =
+  createNavigation(routing);</code></pre>
+
+<h4>Middleware</h4>
+
+<pre><code>// middleware.js
+import createMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
+
+export default createMiddleware(routing);
+
+export const config = {
+  matcher: ['/', '/(tr|en|de)/:path*'],
+};</code></pre>
+
+<h4>Layout</h4>
+
+<pre><code>// app/[locale]/layout.js
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
+import { routing } from '@/i18n/routing';
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) =&gt; ({ locale }));
+}
+
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const messages = await getMessages({ locale });
+
+  return {
+    title: messages.home?.title || 'Web Blog',
+    description: messages.home?.description,
+  };
+}
+
+export default async function LocaleLayout({ children, params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const messages = await getMessages();
+
+  return (
+    &lt;html lang={locale}&gt;
+      &lt;body&gt;
+        &lt;NextIntlClientProvider messages={messages}&gt;
+          {children}
+        &lt;/NextIntlClientProvider&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+
+<h4>Sayfa Bileşeni</h4>
+
+<pre><code>// app/[locale]/page.js
+import { useTranslations } from 'next-intl';
+import { setRequestLocale } from 'next-intl/server';
+
+export default function HomePage({ params }) {
+  const { locale } = params;
+  setRequestLocale(locale);
+  const t = useTranslations('home');
+
+  return (
+    &lt;main&gt;
+      &lt;h1&gt;{t('title')}&lt;/h1&gt;
+      &lt;p&gt;{t('description')}&lt;/p&gt;
+
+      &lt;section&gt;
+        &lt;h2&gt;{t('latestPosts')}&lt;/h2&gt;
+        {/* Yazı listesi */}
+      &lt;/section&gt;
+    &lt;/main&gt;
+  );
+}</code></pre>
+
+<h3>Dil Değiştirme Bileşeni</h3>
+
+<pre><code>'use client';
+
+import { useLocale } from 'next-intl';
+import { useRouter, usePathname } from '@/i18n/routing';
+import { localeNames } from '@/i18n/config';
+
+export function LanguageSwitcher() {
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleChange = (newLocale) =&gt; {
+    router.replace(pathname, { locale: newLocale });
+  };
+
+  return (
+    &lt;div className="language-switcher"&gt;
+      {Object.entries(localeNames).map(([code, name]) =&gt; (
+        &lt;button
+          key={code}
+          onClick={() =&gt; handleChange(code)}
+          className={locale === code ? 'active' : ''}
+          aria-label={`Dili ${name} olarak değiştir`}
+        &gt;
+          {name}
+        &lt;/button&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Dinamik Değerler ve Çoğullama</h3>
+
+<pre><code>// messages/tr.json
+{
+  "blog": {
+    "postCount": "{count, plural, =0 {Yazı bulunamadı} one {# yazı} other {# yazı}}",
+    "publishedAt": "{date, date, medium} tarihinde yayınlandı",
+    "readTime": "{minutes} dakika okuma süresi"
+  }
+}
+
+// Kullanım
+const t = useTranslations('blog');
+t('postCount', { count: 5 });        // "5 yazı"
+t('publishedAt', { date: new Date() }); // "27 Mar 2026 tarihinde yayınlandı"
+t('readTime', { minutes: 8 });       // "8 dakika okuma süresi"</code></pre>
+
+<h3>SEO ve hreflang</h3>
+
+<pre><code>// app/[locale]/layout.js
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+
+  return {
+    alternates: {
+      canonical: `https://site.com/${locale}`,
+      languages: {
+        tr: 'https://site.com/tr',
+        en: 'https://site.com/en',
+        de: 'https://site.com/de',
+      },
+    },
+  };
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> SEO için her dil versiyonunun kendi URL'ine sahip olması, <code>hreflang</code> etiketlerinin doğru yapılandırılması ve <code>html lang</code> attribute'unun ayarlanması kritik öneme sahiptir. <code>next-intl</code> bu konularda büyük kolaylık sağlar.
+</div>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Çeviri dosyalarını düzenli tutun. Eksik anahtarlar için fallback mekanizması kurun. <code>next-intl</code>'in <code>getMessages</code> fonksiyonu eksik çevirilerde varsayılan dile düşebilir. Büyük projelerde namespace'ler kullanarak çeviri dosyalarını modüler hale getirin.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js App Router ve next-intl ile çok dilli web siteleri oluşturmak hem sistematik hem de güçlüdür. Sub-path routing stratejisi, middleware tabanlı dil yönlendirmesi, Server ve Client Component desteği, dinamik çeviriler ve SEO uyumlu hreflang yapılandırması ile profesyonel bir i18n altyapısı kurabilirsiniz. Çeviri dosyalarını modüler tutun, eksik çeviriler için fallback mekanizmaları ekleyin ve tarih/sayı formatlamalarını locale'e uygun şekilde yapın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://next-intl-docs.vercel.app/" target="_blank" rel="noopener noreferrer">next-intl Docs</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/routing/internationalization" target="_blank" rel="noopener noreferrer">Next.js Docs — Internationalization</a></li>
+  <li><a href="https://developers.google.com/search/docs/specialty/international/localized-versions" target="_blank" rel="noopener noreferrer">Google — Localized Versions of Pages</a></li>
+  <li><a href="https://formatjs.io/docs/core-concepts/icu-syntax/" target="_blank" rel="noopener noreferrer">FormatJS — ICU Message Syntax</a></li>
+</ul>

@@ -1,0 +1,215 @@
+<h2>Schema Markup Türleri: Article, FAQ, HowTo, Product</h2>
+
+<p>Schema markup, web sayfalarınızdaki içeriğin türünü ve özelliklerini arama motorlarına bildiren yapısal veri işaretlemesidir. Doğru schema markup kullanımı, arama sonuçlarında zengin snippet'ler (rich results) kazanmanızı sağlayarak CTR'nizi önemli ölçüde artırabilir. Bu yazıda en yaygın kullanılan dört schema tipini -- Article, FAQ, HowTo ve Product -- detaylı kod örnekleri ve best practice'lerle inceliyoruz.</p>
+
+<h3>Neden Schema Markup Kullanmalısınız?</h3>
+
+<p>Schema markup kullanmanın temel faydaları şunlardır:</p>
+
+<ul>
+  <li><strong>Rich Results:</strong> Arama sonuçlarında yıldız puanı, fiyat, adımlar gibi zengin bilgiler görüntülenir.</li>
+  <li><strong>CTR Artışı:</strong> Zengin snippet'ler normal sonuçlardan %20-30 daha fazla tıklama alır.</li>
+  <li><strong>Knowledge Graph:</strong> Google Knowledge Panel'de görünme şansı artar.</li>
+  <li><strong>Voice Search:</strong> Sesli asistanlar structured data'yı doğrudan yanıt olarak kullanabilir.</li>
+</ul>
+
+<h3>1. Article Schema</h3>
+
+<p>Blog yazıları, haber makaleleri ve diğer editoryal içerikler için Article schema kullanılır. Google, Article schema ile tarih, yazar ve başlık gibi bilgileri arama sonuçlarında zenginleştirilmiş şekilde gösterebilir.</p>
+
+<pre><code>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Schema Markup Türleri: Kapsamlı Rehber",
+  "description": "Article, FAQ, HowTo ve Product schema markup türlerinin detaylı kullanım rehberi.",
+  "image": [
+    "https://tariktunc.com/images/schema-markup-16x9.webp",
+    "https://tariktunc.com/images/schema-markup-4x3.webp",
+    "https://tariktunc.com/images/schema-markup-1x1.webp"
+  ],
+  "author": {
+    "@type": "Person",
+    "name": "Tarik Tunç",
+    "url": "https://tariktunc.com",
+    "sameAs": [
+      "https://github.com/tariktunc",
+      "https://linkedin.com/in/tariktunc"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Tarik Tunç Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://tariktunc.com/logo.png"
+    }
+  },
+  "datePublished": "2025-09-15",
+  "dateModified": "2025-09-15",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://tariktunc.com/blog/schema-markup-turleri"
+  },
+  "wordCount": 1200,
+  "articleSection": "SEO",
+  "inLanguage": "tr"
+}
+&lt;/script&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Google, Article schema'da birden fazla görsel formatı (16:9, 4:3, 1:1) sunmanızı önerir. Bu sayede farklı cihaz ve görüntüleme alanlarında uygun görsel seçilir. <code>image</code> alanını bir dizi (array) olarak tanımlayın.
+</div>
+
+<h3>2. FAQPage Schema</h3>
+
+<p>Sıkça sorulan sorular sayfaları için FAQPage schema kullanılır. Doğru uygulandığında arama sonuçlarında soru-cevap accordion'u olarak görüntülenir ve SERP'te önemli yer kaplar.</p>
+
+<pre><code>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Schema markup nedir?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Schema markup, web sayfalarındaki içeriğin türünü ve özelliklerini arama motorlarına bildiren yapısal veri işaretlemesidir. Schema.org standartlarına dayanır ve JSON-LD, Microdata veya RDFa formatında uygulanabilir."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Hangi schema tipi blog yazıları için kullanılır?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Blog yazıları için Article veya BlogPosting schema tipi kullanılır. BlogPosting, Article'ın daha spesifik bir alt tipidir ve blog içerikleri için özellikle uygundur."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Schema markup SEO sıralamasını etkiler mi?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Schema markup doğrudan bir sıralama faktörü değildir. Ancak rich results sayesinde CTR artışı sağlar, bu da dolaylı olarak sıralamayı olumlu etkileyebilir."
+      }
+    }
+  ]
+}
+&lt;/script&gt;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Google, 2023 Ağustos güncellemesinden sonra FAQ rich results'ı yalnızca tanınmış hükümet ve sağlık web siteleri için göstermeye başladı. Diğer siteler için FAQ schema hâlâ içerik anlama amacıyla faydalıdır ancak görsel zenginleştirme beklenmemelidir.
+</div>
+
+<h3>3. HowTo Schema</h3>
+
+<p>Adım adım talimat içeren içerikler için HowTo schema kullanılır. Tarifler, DIY projeleri, kurulum rehberleri ve teknik kılavuzlar bu schema tipine uygundur.</p>
+
+<pre><code>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Next.js Projesine Schema Markup Nasıl Eklenir",
+  "description": "Next.js App Router kullanarak projenize JSON-LD schema markup ekleme adımları.",
+  "totalTime": "PT15M",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": "0"
+  },
+  "tool": [
+    { "@type": "HowToTool", "name": "VS Code veya herhangi bir kod editörü" },
+    { "@type": "HowToTool", "name": "Node.js 18+" }
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "JsonLd bileşeni oluşturun",
+      "text": "components/JsonLd.tsx dosyası oluşturun ve JSON-LD verilerini script tag'i olarak render eden bir React bileşeni yazın.",
+      "url": "https://tariktunc.com/blog/schema-markup-turleri#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Schema verilerini tanımlayın",
+      "text": "Sayfa bileşeninizde schema objesini oluşturun ve JsonLd bileşenine prop olarak geçirin.",
+      "url": "https://tariktunc.com/blog/schema-markup-turleri#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Rich Results Test ile doğrulayın",
+      "text": "Google Rich Results Test aracını kullanarak schema markup'ınızı doğrulayın ve hataları düzeltin.",
+      "url": "https://tariktunc.com/blog/schema-markup-turleri#step-3"
+    }
+  ]
+}
+&lt;/script&gt;</code></pre>
+
+<h3>4. Product Schema</h3>
+
+<p>E-ticaret siteleri ve ürün sayfaları için Product schema kullanılır. Fiyat, stok durumu, marka ve yorum bilgilerini arama sonuçlarında zengin snippet olarak gösterir.</p>
+
+<pre><code>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "SEO Audit Pro Tool",
+  "description": "Kapsamlı teknik SEO analiz aracı",
+  "image": "https://example.com/images/seo-audit-pro.webp",
+  "brand": {
+    "@type": "Brand",
+    "name": "SEOTools"
+  },
+  "sku": "SEO-AUDIT-001",
+  "offers": {
+    "@type": "Offer",
+    "url": "https://example.com/products/seo-audit-pro",
+    "priceCurrency": "USD",
+    "price": "49.99",
+    "priceValidUntil": "2026-12-31",
+    "availability": "https://schema.org/InStock",
+    "seller": {
+      "@type": "Organization",
+      "name": "SEOTools Inc."
+    }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.7",
+    "reviewCount": "128"
+  }
+}
+&lt;/script&gt;</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Product schema ile zengin snippet almak için <code>name</code>, <code>image</code>, <code>offers</code> (fiyat ve stok durumu) ve <code>aggregateRating</code> veya <code>review</code> alanları zorunludur. Eksik alanlar zengin sonuç görüntülenmesini engeller.
+</div>
+
+<h3>Birden Fazla Schema Tipini Birlikte Kullanma</h3>
+
+<p>Bir sayfada birden fazla schema tipi kullanabilirsiniz. Örneğin bir blog yazısında hem Article hem de BreadcrumbList schema'sı bulunabilir. Her schema tipini ayrı bir <code>&lt;script type="application/ld+json"&gt;</code> bloğunda veya tek bir blokta <code>@graph</code> ile tanımlayabilirsiniz.</p>
+
+<h3>Doğrulama ve İzleme</h3>
+
+<ul>
+  <li><strong>Google Rich Results Test:</strong> Tek sayfa doğrulaması için kullanın.</li>
+  <li><strong>Schema Markup Validator:</strong> Schema.org uygunluğunu kontrol eder.</li>
+  <li><strong>Google Search Console:</strong> "Enhancements" bölümünden canlı site verilerini izleyin.</li>
+  <li><strong>Ahrefs/Semrush:</strong> Site genelinde schema denetimi yapın.</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Schema markup, SEO stratejinizin güçlü bir bileşenidir. Article ile blog içeriklerinizi, FAQPage ile sık sorulan sorularınızı, HowTo ile adım adım rehberlerinizi ve Product ile ürün sayfalarınızı zenginleştirerek arama sonuçlarında öne çıkabilirsiniz. Her zaman Schema.org dokümantasyonunu referans alın, zorunlu alanları eksiksiz doldurun ve değişikliklerinizi doğrulama araçlarıyla test edin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://schema.org/Article" target="_blank" rel="noopener noreferrer">Schema.org - Article</a></li>
+  <li><a href="https://schema.org/FAQPage" target="_blank" rel="noopener noreferrer">Schema.org - FAQPage</a></li>
+  <li><a href="https://schema.org/HowTo" target="_blank" rel="noopener noreferrer">Schema.org - HowTo</a></li>
+  <li><a href="https://developers.google.com/search/docs/appearance/structured-data/product" target="_blank" rel="noopener noreferrer">Google - Product Structured Data</a></li>
+</ul>

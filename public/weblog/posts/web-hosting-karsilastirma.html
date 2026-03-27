@@ -1,0 +1,311 @@
+<h2>Web Hosting Karşılaştırması: Vercel vs Netlify vs AWS</h2>
+
+<p>Modern web uygulamalarını yayınlamak için birçok platform seçeneği bulunmaktadır. <strong>Vercel</strong>, <strong>Netlify</strong> ve <strong>AWS</strong> en popüler hosting çözümleri arasında yer alır ve her birinin kendine özgü güçlü yönleri vardır. Doğru platform seçimi projenizin başarısını, geliştirme hızınızı ve maliyetinizi doğrudan etkiler. Bu rehberde bu üç platformu derinlemesine karşılaştırıyor, hangi durumda hangisini tercih etmeniz gerektiğini gerçek dünya senaryolarıyla açıklıyoruz.</p>
+
+<h3>Platform Genel Bakış</h3>
+
+<table>
+  <tr>
+    <th>Özellik</th>
+    <th>Vercel</th>
+    <th>Netlify</th>
+    <th>AWS (Amplify)</th>
+  </tr>
+  <tr>
+    <td>Odak Alanı</td>
+    <td>Next.js / Frontend</td>
+    <td>JAMstack / Static</td>
+    <td>Full Cloud / Enterprise</td>
+  </tr>
+  <tr>
+    <td>Deployment</td>
+    <td>Git push + CLI</td>
+    <td>Git push + CLI + Drag&Drop</td>
+    <td>Git push + CLI + Console</td>
+  </tr>
+  <tr>
+    <td>Edge Network</td>
+    <td>Global (Anycast)</td>
+    <td>Global CDN</td>
+    <td>CloudFront (200+ PoP)</td>
+  </tr>
+  <tr>
+    <td>Serverless Functions</td>
+    <td>Node.js, Edge Runtime</td>
+    <td>Node.js, Go, Rust</td>
+    <td>Lambda (15+ dil)</td>
+  </tr>
+  <tr>
+    <td>Free Tier</td>
+    <td>Hobby (kişisel)</td>
+    <td>Starter (kişisel)</td>
+    <td>12 ay Free Tier</td>
+  </tr>
+  <tr>
+    <td>Öğrenme Eğrisi</td>
+    <td>Düşük</td>
+    <td>Düşük</td>
+    <td>Yüksek</td>
+  </tr>
+</table>
+
+<h3>Vercel: Next.js'in Doğal Evi</h3>
+
+<p>Vercel, Next.js'in yaratıcıları tarafından geliştirilen ve özellikle React/Next.js projeleri için optimize edilmiş bir platformdur.</p>
+
+<pre><code># Vercel ile deployment
+npm i -g vercel
+
+# Otomatik framework algılama ile deploy
+vercel
+
+# Production deployment
+vercel --prod
+
+# vercel.json konfigürasyonu
+{
+  "framework": "nextjs",
+  "regions": ["iad1", "fra1", "sin1"],
+  "crons": [
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
+
+# Vercel Edge Functions
+// app/api/geo/route.ts
+export const runtime = 'edge';
+
+export async function GET(request: Request) {
+  const country = request.headers.get('x-vercel-ip-country');
+  const city = request.headers.get('x-vercel-ip-city');
+  return Response.json({ country, city });
+}</code></pre>
+
+<p><strong>Vercel Avantajları:</strong></p>
+<ul>
+  <li>Next.js için en iyi optimizasyonlar (ISR, Edge Middleware, Image Optimization)</li>
+  <li>Her PR için otomatik preview deployment</li>
+  <li>Yerleşik analytics ve Speed Insights</li>
+  <li>Instant rollback</li>
+  <li>Sıfır konfigürasyon deployment</li>
+</ul>
+
+<p><strong>Vercel Dezavantajları:</strong></p>
+<ul>
+  <li>Fiyatlandırma yüksek bandwidth kullanımında artabilir</li>
+  <li>Serverless function timeout limiti (Hobby: 10s, Pro: 60s)</li>
+  <li>Vendor lock-in riski (Next.js'e özel optimizasyonlar)</li>
+</ul>
+
+<h3>Netlify: JAMstack'in Öncüsü</h3>
+
+<p>Netlify, JAMstack mimarisinin popülerleşmesinde büyük rol oynamış ve statik siteler ile modern web uygulamaları için kapsamlı bir platform sunar.</p>
+
+<pre><code># Netlify CLI ile deployment
+npm i -g netlify-cli
+
+# Giriş ve proje bağlantısı
+netlify login
+netlify init
+
+# Deploy
+netlify deploy --prod
+
+# netlify.toml konfigürasyonu
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Netlify Functions
+// netlify/functions/hello.ts
+import type { Handler } from '@netlify/functions';
+
+export const handler: Handler = async (event) => {
+  const name = event.queryStringParameters?.name || 'Dünya';
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: `Merhaba, ${name}!` }),
+  };
+};</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Netlify'ın Form handling, Identity (auth) ve Split Testing gibi yerleşik özellikleri, bu ihtiyaçlar için ek servis entegrasyonu gerektirmez. Özellikle JAMstack projeleri ve pazarlama siteleri için büyük kolaylık sağlar.
+</div>
+
+<p><strong>Netlify Avantajları:</strong></p>
+<ul>
+  <li>Yerleşik form handling (backend gerektirmez)</li>
+  <li>Split testing (A/B testing)</li>
+  <li>Identity (authentication)</li>
+  <li>Large Media (Git LFS alternatifi)</li>
+  <li>Framework agnostic</li>
+</ul>
+
+<p><strong>Netlify Dezavantajları:</strong></p>
+<ul>
+  <li>Next.js desteği Vercel kadar derin değil</li>
+  <li>Build süreleri Vercel'den biraz daha uzun olabilir</li>
+  <li>Edge Functions henüz Deno tabanlı (Node.js API tam uyumlu değil)</li>
+</ul>
+
+<h3>AWS: Sınırsız Esneklik</h3>
+
+<p>AWS, tam kontrol ve sınırsız ölçeklenebilirlik sunar. AWS Amplify ile frontend deployment'ı kolaylaşırken, diğer AWS servisleri ile entegrasyon mükemmeldir.</p>
+
+<pre><code># AWS Amplify ile deployment
+npm i -g @aws-amplify/cli
+
+# Proje başlatma
+amplify init
+amplify add hosting
+amplify publish
+
+# amplify.yml - Build yapılandırması
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
+
+# AWS Lambda Function (API)
+// lambda/handler.ts
+import { APIGatewayProxyHandler } from 'aws-lambda';
+
+export const handler: APIGatewayProxyHandler = async (event) => {
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    body: JSON.stringify({
+      message: 'Merhaba, AWS Lambda!',
+      path: event.path,
+    }),
+  };
+};</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> AWS'de maliyet kontrolü kritiktir. Free tier limitleri aşıldığında beklenmedik faturalar oluşabilir. AWS Budgets ile maliyet alarmları kurun ve kullanmadığınız kaynakları temizleyin. Özellikle CloudFront, Lambda ve S3 kullanımlarını izleyin.
+</div>
+
+<p><strong>AWS Avantajları:</strong></p>
+<ul>
+  <li>Tam kontrol ve esneklik</li>
+  <li>200+ servis ile entegrasyon</li>
+  <li>Enterprise SLA ve compliance</li>
+  <li>En geniş global altyapı</li>
+  <li>Maliyet optimizasyonu seçenekleri</li>
+</ul>
+
+<p><strong>AWS Dezavantajları:</strong></p>
+<ul>
+  <li>Yüksek öğrenme eğrisi</li>
+  <li>Karmaşık fiyatlandırma modeli</li>
+  <li>DevOps bilgisi gerektirir</li>
+  <li>Preview deployment'lar otomatik değil</li>
+</ul>
+
+<h3>Fiyatlandırma Karşılaştırması</h3>
+
+<table>
+  <tr>
+    <th>Plan</th>
+    <th>Vercel</th>
+    <th>Netlify</th>
+    <th>AWS Amplify</th>
+  </tr>
+  <tr>
+    <td>Free</td>
+    <td>Hobby: 100GB BW</td>
+    <td>Starter: 100GB BW</td>
+    <td>12 ay: 1000 build dk</td>
+  </tr>
+  <tr>
+    <td>Pro/Team</td>
+    <td>$20/üye/ay</td>
+    <td>$19/üye/ay</td>
+    <td>Kullanıma göre</td>
+  </tr>
+  <tr>
+    <td>Enterprise</td>
+    <td>Özel fiyat</td>
+    <td>Özel fiyat</td>
+    <td>Kullanıma göre + destek</td>
+  </tr>
+</table>
+
+<h3>Hangi Durumda Hangisi?</h3>
+
+<p>Projenizin ihtiyaçlarına göre platform seçimi:</p>
+
+<ul>
+  <li><strong>Next.js projesi:</strong> Vercel (en iyi entegrasyon ve performans)</li>
+  <li><strong>Statik site / JAMstack:</strong> Netlify (form handling, identity dahil)</li>
+  <li><strong>Enterprise / karmaşık backend:</strong> AWS (tam kontrol ve esneklik)</li>
+  <li><strong>Kişisel proje / portfolio:</strong> Vercel veya Netlify (ücretsiz planlar yeterli)</li>
+  <li><strong>E-ticaret / yüksek trafik:</strong> AWS veya Vercel Enterprise</li>
+  <li><strong>Çok dilli / çok bölgeli:</strong> AWS CloudFront veya Vercel Edge</li>
+</ul>
+
+<div class="tip">
+  <strong>İpucu:</strong> Platformlar arası taşınabilirliği korumak için uygulamanızı mümkün olduğunca platform-agnostic tutun. Next.js'in <code>output: 'standalone'</code> ayarı ile oluşturduğunuz build, herhangi bir Node.js ortamında çalışabilir. Docker ile paketleme de taşınabilirliği artırır.
+</div>
+
+<h3>Hibrit Yaklaşım</h3>
+
+<p>Birçok proje tek bir platformla sınırlı kalmak zorunda değildir:</p>
+
+<pre><code># Yaygın hibrit mimari örneği:
+# - Frontend (Next.js) → Vercel
+# - API Backend → AWS Lambda / ECS
+# - Veritabanı → AWS RDS / PlanetScale
+# - CDN → CloudFront veya Vercel Edge
+# - Auth → Auth0 / Clerk
+# - Arama → Algolia / Meilisearch
+# - E-posta → AWS SES / Resend
+
+# Vercel'de environment variable ile API endpoint tanımlama
+NEXT_PUBLIC_API_URL=https://api.example.com
+DATABASE_URL=postgresql://...@aws-rds-endpoint:5432/mydb</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Platform seçimi projenizin büyüklüğüne, takımınızın deneyimine ve teknik gereksinimlerinize bağlıdır. Vercel, Next.js projeleri için en sorunsuz deneyimi sunar. Netlify, JAMstack ve statik siteler için mükemmel bir seçimdir. AWS, tam kontrol ve enterprise ölçeklenebilirlik gerektiren projeler için idealdir. Küçük projelerde Vercel veya Netlify'ın ücretsiz planlarıyla başlayıp, ihtiyaç büyüdükçe geçiş yapabilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://vercel.com/docs" target="_blank" rel="noopener noreferrer">Vercel Dokümantasyonu</a></li>
+  <li><a href="https://docs.netlify.com/" target="_blank" rel="noopener noreferrer">Netlify Dokümantasyonu</a></li>
+  <li><a href="https://docs.aws.amazon.com/amplify/" target="_blank" rel="noopener noreferrer">AWS Amplify Dokümantasyonu</a></li>
+  <li><a href="https://bejamas.io/compare/vercel-vs-netlify-vs-aws-amplify/" target="_blank" rel="noopener noreferrer">Detaylı Platform Karşılaştırması</a></li>
+</ul>

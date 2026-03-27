@@ -1,0 +1,206 @@
+<h2>Third-Party Script Yönetimi: Performans Etkisi ve Çözümler</h2>
+
+<p>Üçüncü parti scriptler — analytics, reklam, chat widget'ları, sosyal medya entegrasyonları — modern web sitelerinin vazgeçilmez parçalarıdır. Ancak HTTP Archive verilerine göre ortalama bir web sitesi 20'den fazla üçüncü parti script yükler ve bu scriptler toplam JavaScript boyutunun %50'sinden fazlasını oluşturur. Bu rehberde üçüncü parti scriptlerin performans etkisini ölçmeyi, kontrol altına almayı ve en iyi yükleme stratejilerini uygulamayı öğreneceksiniz.</p>
+
+<h3>Üçüncü Parti Scriptlerin Performans Etkisi</h3>
+
+<p>Third-party scriptler performansı birden fazla boyutta etkiler:</p>
+
+<ul>
+  <li><strong>Ağ etkisi:</strong> Ek DNS çözümleme, TCP/TLS bağlantıları ve bant genişliği kullanımı</li>
+  <li><strong>CPU etkisi:</strong> Parse, compile ve execution süresi ana thread'i bloke eder</li>
+  <li><strong>Render etkisi:</strong> DOM manipülasyonu, layout thrashing ve forced reflow</li>
+  <li><strong>CLS etkisi:</strong> Dinamik olarak eklenen içerik (reklam, chat widget) layout kaymalarına neden olur</li>
+  <li><strong>Güvenlik etkisi:</strong> XSS riski, veri sızıntısı, supply chain saldırıları</li>
+</ul>
+
+<div class="info">
+  <strong>Bilgi:</strong> Google'ın araştırmasına göre, üçüncü parti scriptler ortalama bir sayfanın TBT (Total Blocking Time) metriğinin %57'sinden sorumludur. Bir chat widget'ı tek başına 500KB+ JavaScript yükleyebilir.
+</div>
+
+<h3>Üçüncü Parti Script Etkisini Ölçme</h3>
+
+<p>Performans etkisini ölçmek, optimizasyonun ilk adımıdır. Chrome DevTools ve Lighthouse bu konuda güçlü araçlar sunar:</p>
+
+<pre><code>// Performance Observer ile third-party script süresini ölç
+const thirdPartyOrigins = [
+  'www.google-analytics.com',
+  'www.googletagmanager.com',
+  'connect.facebook.net',
+  'platform.twitter.com',
+  'cdn.jsdelivr.net'
+];
+
+function isThirdParty(url) {
+  try {
+    const origin = new URL(url).hostname;
+    return !origin.includes(window.location.hostname);
+  } catch {
+    return false;
+  }
+}
+
+// Resource timing ile yükleme süresini analiz et
+function analyzeThirdPartyImpact() {
+  const resources = performance.getEntriesByType('resource');
+
+  const thirdParty = resources.filter(r => isThirdParty(r.name));
+  const firstParty = resources.filter(r => !isThirdParty(r.name));
+
+  const tpTotalSize = thirdParty.reduce((sum, r) => sum + r.transferSize, 0);
+  const tpTotalTime = thirdParty.reduce((sum, r) =>
+    sum + (r.responseEnd - r.startTime), 0);
+
+  console.table({
+    'Üçüncü Parti': {
+      'Sayı': thirdParty.length,
+      'Toplam Boyut': `${(tpTotalSize / 1024).toFixed(1)} KB`,
+      'Toplam Süre': `${tpTotalTime.toFixed(0)} ms`
+    },
+    'Birinci Parti': {
+      'Sayı': firstParty.length,
+      'Toplam Boyut': `${(firstParty.reduce((s, r) =>
+        s + r.transferSize, 0) / 1024).toFixed(1)} KB`,
+      'Toplam Süre': `${firstParty.reduce((s, r) =>
+        s + (r.responseEnd - r.startTime), 0).toFixed(0)} ms`
+    }
+  });
+}
+
+window.addEventListener('load', () => {
+  setTimeout(analyzeThirdPartyImpact, 3000);
+});</code></pre>
+
+<h3>Yükleme Stratejileri</h3>
+
+<p>Üçüncü parti scriptlerin yükleme zamanlamasını kontrol etmek, performans etkisini minimize etmenin en etkili yoludur:</p>
+
+<pre><code>&lt;!-- 1. Kritik olmayan scriptleri user interaction sonrası yükle --&gt;
+&lt;script&gt;
+// Chat widget'ı: Sayfa yüklenip kullanıcı etkileşime geçtikten sonra yükle
+function loadChatWidget() {
+  const script = document.createElement('script');
+  script.src = 'https://chat-provider.com/widget.js';
+  script.async = true;
+  document.head.appendChild(script);
+}
+
+// İlk etkileşimde yükle
+const events = ['mousedown', 'touchstart', 'scroll', 'keydown'];
+const loadOnInteraction = () => {
+  loadChatWidget();
+  events.forEach(e => document.removeEventListener(e, loadOnInteraction));
+};
+events.forEach(e => document.addEventListener(e, loadOnInteraction, { once: true }));
+
+// Veya idle callback ile
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(loadChatWidget, { timeout: 5000 });
+}
+&lt;/script&gt;
+
+&lt;!-- 2. Analytics: async ile yükle (sıra önemli değil) --&gt;
+&lt;script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXX"&gt;&lt;/script&gt;
+
+&lt;!-- 3. Facade pattern: Ağır widget yerine hafif placeholder --&gt;
+&lt;!-- YouTube embed yerine statik thumbnail göster --&gt;
+&lt;div class="youtube-facade" data-video-id="dQw4w9WgXcQ"
+     onclick="loadYouTubeEmbed(this)"&gt;
+  &lt;img src="/images/youtube-thumb.webp" alt="Video başlığı"
+       loading="lazy" width="560" height="315"&gt;
+  &lt;button class="play-button" aria-label="Videoyu oynat"&gt;▶&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Facade pattern, YouTube embed (~800KB), Google Maps (~700KB) ve sosyal medya widget'ları için çok etkilidir. Kullanıcı etkileşime geçene kadar statik bir görsel gösterin, tıklandığında gerçek widget'ı yükleyin. Bu, ilk yükleme süresini saniyeler düzeyinde iyileştirebilir.
+</div>
+
+<h3>Google Tag Manager Optimizasyonu</h3>
+
+<p>GTM, birden fazla üçüncü parti scripti merkezi olarak yönetmenizi sağlar. Ancak yanlış konfigürasyon performansı ciddi şekilde etkileyebilir:</p>
+
+<pre><code>// GTM optimizasyon stratejileri
+
+// 1. GTM'i async yükle (zaten varsayılan)
+// 2. Trigger'ları optimize et - DOM Ready yerine Window Loaded kullan
+// 3. Tag firing priority ile kritik tagları önce çalıştır
+
+// Server-side GTM: Script yükünü sunucuya taşı
+// Client-side: 1 GTM scripti yükle → 10+ tag tetiklenir
+// Server-side: 1 GTM scripti yükle → sunucu tarafında işlenir
+
+// Partytown ile main thread dışında çalıştırma
+// Third-party scriptleri Web Worker'a taşır</code></pre>
+
+<pre><code>&lt;!-- Partytown ile third-party scriptleri Web Worker'da çalıştır --&gt;
+&lt;script&gt;
+  // Partytown konfigürasyonu
+  partytown = {
+    forward: ['dataLayer.push', 'gtag'],
+    resolveUrl: (url) => {
+      // Proxy üzerinden yükle (CORS sorunlarını çözer)
+      if (url.hostname === 'www.google-analytics.com') {
+        return new URL('/proxy' + url.pathname, window.location.origin);
+      }
+      return url;
+    }
+  };
+&lt;/script&gt;
+&lt;script src="/~partytown/partytown.js"&gt;&lt;/script&gt;
+
+&lt;!-- type="text/partytown" ile script Worker'da çalışır --&gt;
+&lt;script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=G-XXXXX"&gt;&lt;/script&gt;
+&lt;script type="text/partytown"&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXX');
+&lt;/script&gt;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Partytown Web Worker'da DOM erişimi Proxy ile sağlar ve bazı kısıtlamaları vardır. Tüm scriptler Worker'da sorunsuz çalışmayabilir. Production'a almadan önce kapsamlı test yapın. Özellikle DOM'a yoğun erişen scriptler (chat widget'ları, overlay'ler) sorunlu olabilir.
+</div>
+
+<h3>Content Security Policy (CSP) ile Güvenlik</h3>
+
+<p>CSP header'ları ile hangi domain'lerden script yükleneceğini kısıtlayarak güvenlik ve kontrol sağlayın:</p>
+
+<pre><code># Content-Security-Policy header
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self'
+    https://www.googletagmanager.com
+    https://www.google-analytics.com
+    'nonce-{random}';
+  connect-src 'self'
+    https://www.google-analytics.com
+    https://api.example.com;
+  img-src 'self' data: https:;
+  style-src 'self' 'unsafe-inline';
+  font-src 'self' https://fonts.gstatic.com;</code></pre>
+
+<h3>Third-Party Audit Kontrol Listesi</h3>
+
+<ol>
+  <li>Lighthouse "Third-party usage" denetimini çalıştırın</li>
+  <li>Her üçüncü parti scriptin iş değerini sorgulayın — kullanılmıyorsa kaldırın</li>
+  <li>Kritik olmayanları lazy load edin (user interaction veya idle callback)</li>
+  <li>Facade pattern uygulayın (YouTube, Maps, sosyal widget)</li>
+  <li>Preconnect ile bağlantı süresini azaltın</li>
+  <li>Subresource Integrity (SRI) ile bütünlüğü doğrulayın</li>
+  <li>CSP ile izin verilen domain'leri kısıtlayın</li>
+  <li>Düzenli olarak bundle boyutunu ve performans etkisini izleyin</li>
+</ol>
+
+<h3>Sonuç</h3>
+
+<p>Üçüncü parti scriptler iş gereksinimlerini karşılarken performansı önemli ölçüde etkileyebilir. Her scriptin etkisini ölçün, kritik olmayanları erteleyerek yükleyin, facade pattern ile ağır widget'ları hafifletin ve Partytown gibi araçlarla ana thread'i koruyun. Düzenli audit ile gereksiz scriptleri temizleyin ve CSP ile güvenliği sağlayın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://web.dev/articles/optimizing-third-party-script" target="_blank" rel="noopener noreferrer">web.dev - Loading Third-Party JavaScript</a></li>
+  <li><a href="https://partytown.builder.io/" target="_blank" rel="noopener noreferrer">Partytown - Web Worker'da Third-Party Script</a></li>
+  <li><a href="https://web.dev/articles/third-party-facades" target="_blank" rel="noopener noreferrer">web.dev - Third-Party Facades</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP" target="_blank" rel="noopener noreferrer">MDN - Content Security Policy</a></li>
+</ul>

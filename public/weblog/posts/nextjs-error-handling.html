@@ -1,0 +1,282 @@
+<h2>Next.js Error Handling: Hata Yönetimi Rehberi</h2>
+
+<p>Hata yönetimi, güvenilir web uygulamalarının vazgeçilmez bir parçasıdır. Next.js App Router, dosya tabanlı hata yakalama mekanizmasıyla her route segmenti için otomatik error boundary'ler oluşturmanıza olanak tanır. Bu rehberde <code>error.tsx</code>, <code>not-found.tsx</code>, <code>global-error.tsx</code> dosyalarını ve Server/Client Component'lerde hata yönetimini detaylı inceleyeceğiz.</p>
+
+<h3>error.tsx ile Hata Yakalama</h3>
+
+<p><code>error.tsx</code> dosyası, bir route segmentindeki hataları otomatik olarak yakalar ve bir fallback UI gösterir:</p>
+
+<pre><code>// app/dashboard/error.tsx
+'use client'; // Error boundary'ler Client Component olmalı
+
+import { useEffect } from 'react';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () =&gt; void;
+}) {
+  useEffect(() =&gt; {
+    // Hata loglama servisi
+    console.error('Dashboard hatası:', error);
+  }, [error]);
+
+  return (
+    &lt;div className="flex flex-col items-center justify-center min-h-[400px] gap-4"&gt;
+      &lt;h2 className="text-2xl font-bold text-red-600"&gt;
+        Bir hata oluştu!
+      &lt;/h2&gt;
+      &lt;p className="text-gray-600"&gt;
+        {error.message || 'Beklenmeyen bir hata meydana geldi.'}
+      &lt;/p&gt;
+      &lt;button
+        onClick={() =&gt; reset()}
+        className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      &gt;
+        Tekrar Dene
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>reset()</code> fonksiyonu, hatalı segmenti yeniden render etmeye çalışır. Bu, geçici hatalar (ağ kesintisi gibi) için kullanıcıya kolay bir kurtarma yolu sunar.
+</div>
+
+<h3>not-found.tsx ile 404 Sayfaları</h3>
+
+<pre><code>// app/not-found.tsx (Global 404)
+import Link from 'next/link';
+
+export default function NotFound() {
+  return (
+    &lt;div className="flex flex-col items-center justify-center min-h-screen"&gt;
+      &lt;h1 className="text-6xl font-bold text-gray-300"&gt;404&lt;/h1&gt;
+      &lt;h2 className="text-2xl font-semibold mt-4"&gt;Sayfa Bulunamadı&lt;/h2&gt;
+      &lt;p className="text-gray-600 mt-2"&gt;
+        Aradığınız sayfa mevcut değil veya taşınmış olabilir.
+      &lt;/p&gt;
+      &lt;Link
+        href="/"
+        className="mt-6 px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+      &gt;
+        Ana Sayfaya Dön
+      &lt;/Link&gt;
+    &lt;/div&gt;
+  );
+}
+
+// app/blog/[slug]/page.tsx
+import { notFound } from 'next/navigation';
+
+export default async function BlogPost({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);
+
+  if (!post) {
+    notFound(); // En yakın not-found.tsx'i render eder
+  }
+
+  return &lt;article&gt;{post.title}&lt;/article&gt;;
+}</code></pre>
+
+<h3>Global Error Handler</h3>
+
+<pre><code>// app/global-error.tsx
+'use client';
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () =&gt; void;
+}) {
+  return (
+    &lt;html&gt;
+      &lt;body&gt;
+        &lt;div className="flex flex-col items-center justify-center min-h-screen"&gt;
+          &lt;h1 className="text-3xl font-bold text-red-600"&gt;
+            Kritik Hata
+          &lt;/h1&gt;
+          &lt;p className="mt-4 text-gray-600"&gt;
+            Uygulamada kritik bir hata oluştu.
+          &lt;/p&gt;
+          &lt;button
+            onClick={() =&gt; reset()}
+            className="mt-6 px-6 py-3 bg-red-500 text-white rounded"
+          &gt;
+            Uygulamayı Yenile
+          &lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>global-error.tsx</code> sadece production'da aktiftir. Development'ta Next.js error overlay gösterilir. Ayrıca <code>global-error.tsx</code> kendi <code>&lt;html&gt;</code> ve <code>&lt;body&gt;</code> etiketlerini tanımlamalıdır.
+</div>
+
+<h3>Server Component'lerde Hata Yönetimi</h3>
+
+<pre><code>// Veri çekme fonksiyonunda hata yönetimi
+async function getProducts() {
+  try {
+    const res = await fetch('https://api.example.com/products', {
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) {
+      throw new Error(`API hatası: ${res.status} ${res.statusText}`);
+    }
+
+    return res.json();
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error('Ağ bağlantısı hatası. Lütfen tekrar deneyin.');
+    }
+    throw error;
+  }
+}
+
+// Graceful degradation
+export default async function ProductsPage() {
+  let products = [];
+  let error = null;
+
+  try {
+    products = await getProducts();
+  } catch (e) {
+    error = e instanceof Error ? e.message : 'Bilinmeyen hata';
+  }
+
+  if (error) {
+    return (
+      &lt;div className="bg-yellow-50 border border-yellow-200 p-4 rounded"&gt;
+        &lt;p&gt;Ürünler yüklenemedi: {error}&lt;/p&gt;
+        &lt;p&gt;Lütfen daha sonra tekrar deneyin.&lt;/p&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  return &lt;ProductGrid products={products} /&gt;;
+}</code></pre>
+
+<h3>API Route'larda Hata Yönetimi</h3>
+
+<pre><code>// app/api/posts/route.ts
+import { NextResponse } from 'next/server';
+import { ZodError, z } from 'zod';
+
+const postSchema = z.object({
+  title: z.string().min(3, 'Başlık en az 3 karakter olmalı'),
+  content: z.string().min(10, 'İçerik en az 10 karakter olmalı'),
+  tags: z.array(z.string()).optional(),
+});
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const validated = postSchema.parse(body);
+
+    const post = await prisma.post.create({ data: validated });
+    return NextResponse.json(post, { status: 201 });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          error: 'Validasyon hatası',
+          details: error.errors.map((e) =&gt; ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof SyntaxError) {
+      return NextResponse.json(
+        { error: 'Geçersiz JSON formatı' },
+        { status: 400 }
+      );
+    }
+
+    console.error('Sunucu hatası:', error);
+    return NextResponse.json(
+      { error: 'Sunucu hatası' },
+      { status: 500 }
+    );
+  }
+}</code></pre>
+
+<h3>Error Boundary Hiyerarşisi</h3>
+
+<pre><code>app/
+├── error.tsx              # Tüm sayfalar için fallback
+├── not-found.tsx          # Global 404
+├── global-error.tsx       # Root layout hataları
+├── dashboard/
+│   ├── error.tsx          # Dashboard hataları
+│   ├── page.tsx
+│   └── settings/
+│       ├── error.tsx      # Settings'e özel hatalar
+│       └── page.tsx
+└── blog/
+    ├── error.tsx          # Blog hataları
+    ├── not-found.tsx      # Blog 404
+    └── [slug]/
+        ├── error.tsx      # Tekil yazı hataları
+        └── page.tsx</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Hata bir <code>error.tsx</code> tarafından yakalanamadığında, bir üst segmentteki <code>error.tsx</code>'e yükseltilir. Bu, DOM'daki event bubbling mekanizmasına benzer.
+</div>
+
+<h3>Hata Loglama Entegrasyonu</h3>
+
+<pre><code>// lib/error-logger.ts
+export async function logError(error: Error, context?: Record&lt;string, any&gt;) {
+  // Sentry, LogRocket veya benzeri servise gönder
+  if (process.env.NODE_ENV === 'production') {
+    await fetch('https://sentry.io/api/capture', {
+      method: 'POST',
+      body: JSON.stringify({
+        message: error.message,
+        stack: error.stack,
+        context,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+  } else {
+    console.error('[DEV ERROR]', error, context);
+  }
+}
+
+// error.tsx'te kullanım
+'use client';
+
+import { useEffect } from 'react';
+import { logError } from '@/lib/error-logger';
+
+export default function Error({ error, reset }: { error: Error; reset: () =&gt; void }) {
+  useEffect(() =&gt; {
+    logError(error, { page: 'dashboard' });
+  }, [error]);
+
+  return &lt;div&gt;Hata oluştu. &lt;button onClick={reset}&gt;Tekrar Dene&lt;/button&gt;&lt;/div&gt;;
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Next.js'in dosya tabanlı error handling sistemi, hata yönetimini organize ve öngörülebilir hale getirir. <code>error.tsx</code> ile route bazlı hata yakalama, <code>not-found.tsx</code> ile 404 sayfaları ve <code>global-error.tsx</code> ile kritik hatalar ayrı ayrı yönetilir. Bu mekanizmaları hata loglama servisleriyle birleştirerek kullanıcı deneyimini korurken, sorunları hızlıca tespit edip çözebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/routing/error-handling" target="_blank" rel="noopener noreferrer">Next.js Error Handling</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/file-conventions/error" target="_blank" rel="noopener noreferrer">error.tsx API</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/functions/not-found" target="_blank" rel="noopener noreferrer">notFound() Function</a></li>
+</ul>

@@ -1,0 +1,293 @@
+<h2>Next.js Server Components vs Client Components</h2>
+
+<p>React Server Components (RSC), React ve Next.js ekosistemindeki en önemli paradigma değişikliklerinden biridir. Next.js App Router'da bileşenler varsayılan olarak <strong>Server Component</strong>'tir. Bu yaklaşım, sunucu tarafında render edilen bileşenlerle istemci tarafında çalışan bileşenleri net bir şekilde ayırarak performans ve geliştirici deneyimini büyük ölçüde iyileştirir.</p>
+
+<h3>Server Components Nedir?</h3>
+
+<p>Server Components, sunucu tarafında render edilen ve JavaScript bundle'ına dahil edilmeyen React bileşenleridir. Bu bileşenler doğrudan veritabanına erişebilir, dosya sistemiyle çalışabilir ve hassas API anahtarlarını güvenli şekilde kullanabilir.</p>
+
+<pre><code>// Bu bir Server Component (varsayılan)
+// 'use client' direktifi YOK
+import { db } from '@/lib/database';
+
+export default async function ProductList() {
+  // Doğrudan veritabanına erişim
+  const products = await db.product.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+
+  return (
+    &lt;div className="grid grid-cols-3 gap-4"&gt;
+      {products.map((product) =&gt; (
+        &lt;div key={product.id} className="border rounded-lg p-4"&gt;
+          &lt;h3 className="font-bold"&gt;{product.name}&lt;/h3&gt;
+          &lt;p className="text-gray-600"&gt;{product.price} TL&lt;/p&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Client Components Nedir?</h3>
+
+<p>Client Components, tarayıcıda çalışan ve kullanıcı etkileşimi gerektiren bileşenlerdir. <code>'use client'</code> direktifi ile tanımlanır:</p>
+
+<pre><code>'use client';
+
+import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;div className="flex items-center gap-4"&gt;
+      &lt;button
+        onClick={() =&gt; setCount(count - 1)}
+        className="px-4 py-2 bg-red-500 text-white rounded"
+      &gt;
+        -
+      &lt;/button&gt;
+      &lt;span className="text-2xl font-bold"&gt;{count}&lt;/span&gt;
+      &lt;button
+        onClick={() =&gt; setCount(count + 1)}
+        className="px-4 py-2 bg-blue-500 text-white rounded"
+      &gt;
+        +
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>'use client'</code> direktifi bir sınır (boundary) oluşturur. Bu direktifin altındaki bileşen ve onun import ettiği tüm bileşenler client bundle'ına dahil edilir.
+</div>
+
+<h3>Ne Zaman Hangisini Kullanmalı?</h3>
+
+<table>
+  <tr>
+    <th>Senaryo</th>
+    <th>Server Component</th>
+    <th>Client Component</th>
+  </tr>
+  <tr>
+    <td>Veri çekme (fetch)</td>
+    <td>✅ Tercih edilir</td>
+    <td>Mümkün ama ideal değil</td>
+  </tr>
+  <tr>
+    <td>Veritabanı erişimi</td>
+    <td>✅ Doğrudan</td>
+    <td>❌ API üzerinden</td>
+  </tr>
+  <tr>
+    <td>onClick, onChange</td>
+    <td>❌ Kullanamaz</td>
+    <td>✅ Gereklidir</td>
+  </tr>
+  <tr>
+    <td>useState, useEffect</td>
+    <td>❌ Kullanamaz</td>
+    <td>✅ Kullanabilir</td>
+  </tr>
+  <tr>
+    <td>Hassas bilgiler (API key)</td>
+    <td>✅ Güvenli</td>
+    <td>❌ Açığa çıkar</td>
+  </tr>
+  <tr>
+    <td>Büyük bağımlılıklar</td>
+    <td>✅ Bundle'a eklenmez</td>
+    <td>❌ Bundle'ı büyütür</td>
+  </tr>
+</table>
+
+<h3>Composition Pattern: Server ve Client Birlikte</h3>
+
+<p>En iyi uygulama, Server Component'lerin Client Component'leri sarmasıdır. Veri Server Component'te çekilir, etkileşimli parçalar Client Component'e aktarılır:</p>
+
+<pre><code>// app/products/page.tsx (Server Component)
+import { db } from '@/lib/database';
+import { ProductFilter } from './ProductFilter';
+import { ProductCard } from './ProductCard';
+
+export default async function ProductsPage() {
+  const products = await db.product.findMany();
+  const categories = await db.category.findMany();
+
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Ürünler&lt;/h1&gt;
+      {/* Client Component - filtreleme etkileşimi */}
+      &lt;ProductFilter categories={categories} /&gt;
+
+      {/* Server Component - sadece görüntüleme */}
+      &lt;div className="grid grid-cols-3 gap-4"&gt;
+        {products.map((product) =&gt; (
+          &lt;ProductCard key={product.id} product={product} /&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+// ProductFilter.tsx (Client Component)
+'use client';
+
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+export function ProductFilter({ categories }: { categories: Category[] }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [selected, setSelected] = useState(
+    searchParams.get('category') || 'all'
+  );
+
+  const handleFilter = (category: string) =&gt; {
+    setSelected(category);
+    router.push(`/products?category=${category}`);
+  };
+
+  return (
+    &lt;div className="flex gap-2 my-4"&gt;
+      {categories.map((cat) =&gt; (
+        &lt;button
+          key={cat.id}
+          onClick={() =&gt; handleFilter(cat.slug)}
+          className={selected === cat.slug ? 'bg-blue-500 text-white' : 'bg-gray-200'}
+        &gt;
+          {cat.name}
+        &lt;/button&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Server Component'i Client Component'in <strong>içine import etmeyin</strong>. Bunun yerine Server Component'i children veya prop olarak geçirin. Aksi halde Server Component, Client Component gibi davranır.
+</div>
+
+<h3>Children Pattern ile Doğru Kullanım</h3>
+
+<pre><code>// ❌ Yanlış: Server Component, Client import'u içinde
+'use client';
+import ServerComponent from './ServerComponent'; // Client olarak çalışır!
+
+export function ClientWrapper() {
+  return &lt;div&gt;&lt;ServerComponent /&gt;&lt;/div&gt;;
+}
+
+// ✅ Doğru: Children pattern
+'use client';
+
+export function ClientWrapper({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(true);
+  return isOpen ? &lt;div&gt;{children}&lt;/div&gt; : null;
+}
+
+// page.tsx (Server Component)
+import { ClientWrapper } from './ClientWrapper';
+import { ServerComponent } from './ServerComponent';
+
+export default function Page() {
+  return (
+    &lt;ClientWrapper&gt;
+      &lt;ServerComponent /&gt; {/* Server Component olarak kalır */}
+    &lt;/ClientWrapper&gt;
+  );
+}</code></pre>
+
+<h3>Async Server Components</h3>
+
+<p>Server Components async olabilir, bu da veri çekmeyi son derece basitleştirir:</p>
+
+<pre><code>// Async Server Component
+async function getUser(id: string) {
+  const res = await fetch(`https://api.example.com/users/${id}`, {
+    cache: 'no-store', // Her istekte taze veri
+  });
+  return res.json();
+}
+
+export default async function UserProfile({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const user = await getUser(params.id);
+
+  return (
+    &lt;div className="max-w-2xl mx-auto p-6"&gt;
+      &lt;h1 className="text-3xl font-bold"&gt;{user.name}&lt;/h1&gt;
+      &lt;p className="text-gray-600"&gt;{user.email}&lt;/p&gt;
+      &lt;p className="mt-4"&gt;{user.bio}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Serialization Kuralları</h3>
+
+<p>Server Component'ten Client Component'e prop geçerken, veriler <strong>serializable</strong> olmalıdır:</p>
+
+<pre><code>// ✅ Geçerli prop türleri
+// string, number, boolean, null, undefined
+// Array, Object (serializable)
+// Date (string'e çevrilir)
+// Map, Set — ❌ Geçersiz
+// Fonksiyonlar — ❌ Geçersiz
+// Class instance'ları — ❌ Geçersiz
+
+// ✅ Doğru
+&lt;ClientComponent data={{ name: 'Tarik', age: 30 }} /&gt;
+
+// ❌ Yanlış
+&lt;ClientComponent onClick={() =&gt; console.log('click')} /&gt;
+// Fonksiyonlar serialize edilemez!</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Server Actions, bu sınırlamayı aşmanın bir yoludur. Bir server action fonksiyonunu Client Component'e prop olarak geçirebilirsiniz.
+</div>
+
+<h3>Third-Party Kütüphanelerle Çalışma</h3>
+
+<p>Birçok React kütüphanesi henüz Server Components ile uyumlu değildir. Bu durumda wrapper bileşen oluşturabilirsiniz:</p>
+
+<pre><code>// components/ThemeProvider.tsx
+'use client';
+
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  return (
+    &lt;NextThemesProvider attribute="class" defaultTheme="system"&gt;
+      {children}
+    &lt;/NextThemesProvider&gt;
+  );
+}
+
+// app/layout.tsx (Server Component)
+import { ThemeProvider } from '@/components/ThemeProvider';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    &lt;html lang="tr"&gt;
+      &lt;body&gt;
+        &lt;ThemeProvider&gt;{children}&lt;/ThemeProvider&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Server Components ve Client Components ayrımı, Next.js uygulamalarında performans ve güvenlik açısından büyük avantajlar sağlar. Temel kural basittir: mümkün olduğunca Server Component kullanın, yalnızca etkileşim gerektiğinde Client Component'e geçin. Composition pattern'lerini doğru uygulayarak her iki dünyanın en iyisinden faydalanabilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/rendering/server-components" target="_blank" rel="noopener noreferrer">Next.js Server Components</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/rendering/client-components" target="_blank" rel="noopener noreferrer">Next.js Client Components</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/rendering/composition-patterns" target="_blank" rel="noopener noreferrer">Composition Patterns</a></li>
+</ul>

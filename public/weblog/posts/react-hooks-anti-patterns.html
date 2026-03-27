@@ -1,0 +1,271 @@
+<h2>React Hooks Anti-Pattern'ler ve Çözümleri</h2>
+
+<p>React Hooks, fonksiyonel componentlerde state ve side effect yönetimini mümkün kılan güçlü bir API'dir. Ancak yanlış kullanıldığında performans sorunlarına, sonsuz döngülere ve beklenmeyen davranışlara yol açabilir. Bu rehberde, en yaygın hooks anti-pattern'lerini ve bunların doğru çözümlerini detaylı örneklerle inceleyeceğiz.</p>
+
+<h3>Anti-Pattern 1: useEffect İçinde Gereksiz Dependency</h3>
+
+<p>useEffect dependency array'inin yanlış yapılandırılması, sonsuz döngülerin ve gereksiz API çağrılarının en yaygın nedenidir.</p>
+
+<pre><code>import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+
+// ❌ KÖTÜ: Object dependency sonsuz döngü oluşturur
+function BadComponent({ userId }: { userId: string }) {
+  const [user, setUser] = useState(null);
+
+  // Bu options her render'da yeni bir object!
+  const options = { headers: { Authorization: 'Bearer token' } };
+
+  useEffect(() => {
+    fetch(`/api/users/${userId}`, options)
+      .then((res) => res.json())
+      .then(setUser);
+  }, [userId, options]); // options her render'da değişir → sonsuz döngü!
+
+  return &lt;div&gt;{user?.name}&lt;/div&gt;;
+}
+
+// ✅ İYİ: Sabit referans kullan
+function GoodComponent({ userId }: { userId: string }) {
+  const [user, setUser] = useState(null);
+
+  // useMemo ile sabit referans
+  const options = useMemo(
+    () => ({ headers: { Authorization: 'Bearer token' } }),
+    [] // Sadece bir kez oluşturulur
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(`/api/users/${userId}`, { ...options, signal: controller.signal })
+      .then((res) => res.json())
+      .then(setUser)
+      .catch((err) => {
+        if (err.name !== 'AbortError') console.error(err);
+      });
+
+    return () => controller.abort(); // Cleanup!
+  }, [userId, options]);
+
+  return &lt;div&gt;{user?.name}&lt;/div&gt;;
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> useEffect dependency array'ine object, array veya fonksiyon koymak tehlikelidir. Bu değerler her render'da yeni referans oluşturur. useMemo veya useCallback ile sararak referans kararlılığı sağlayın.
+</div>
+
+<h3>Anti-Pattern 2: State Güncelleme Yarış Koşulu (Race Condition)</h3>
+
+<pre><code>// ❌ KÖTÜ: Race condition — eski istek yeni isteğin sonucunu ezebilir
+function BadSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    if (!query) return;
+
+    // "abc" yazdıktan sonra "ab" araması "abc"den sonra dönebilir!
+    fetch(`/api/search?q=${query}`)
+      .then((res) => res.json())
+      .then(setResults);
+  }, [query]);
+
+  return (
+    &lt;div&gt;
+      &lt;input value={query} onChange={(e) => setQuery(e.target.value)} /&gt;
+      {results.map((r: any) => &lt;div key={r.id}&gt;{r.name}&lt;/div&gt;)}
+    &lt;/div&gt;
+  );
+}
+
+// ✅ İYİ: AbortController ile race condition önleme
+function GoodSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!query) {
+      setResults([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsLoading(true);
+
+    fetch(`/api/search?q=${query}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        setResults(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.error(err);
+          setIsLoading(false);
+        }
+      });
+
+    // Sonraki effect çalışmadan önce öncekini iptal et
+    return () => controller.abort();
+  }, [query]);
+
+  return (
+    &lt;div&gt;
+      &lt;input value={query} onChange={(e) => setQuery(e.target.value)} /&gt;
+      {isLoading && &lt;span&gt;Aranıyor...&lt;/span&gt;}
+      {results.map((r: any) => &lt;div key={r.id}&gt;{r.name}&lt;/div&gt;)}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Anti-Pattern 3: useEffect'te State Senkronizasyonu</h3>
+
+<pre><code>// ❌ KÖTÜ: Gereksiz state + useEffect senkronizasyonu
+function BadFullName({ firstName, lastName }: { firstName: string; lastName: string }) {
+  const [fullName, setFullName] = useState('');
+
+  // Bu gereksiz! fullName bir türetilmiş (derived) değerdir
+  useEffect(() => {
+    setFullName(`${firstName} ${lastName}`);
+  }, [firstName, lastName]);
+
+  return &lt;span&gt;{fullName}&lt;/span&gt;;
+}
+
+// ✅ İYİ: Derived state — hesapla, state'e kaydetme
+function GoodFullName({ firstName, lastName }: { firstName: string; lastName: string }) {
+  // Doğrudan hesapla — ekstra render yok!
+  const fullName = `${firstName} ${lastName}`;
+  return &lt;span&gt;{fullName}&lt;/span&gt;;
+}
+
+// Ağır hesaplama gerekiyorsa useMemo kullan
+function ExpensiveFullName({ users }: { users: User[] }) {
+  const sortedUsers = useMemo(
+    () => [...users].sort((a, b) => a.name.localeCompare(b.name)),
+    [users]
+  );
+
+  return (
+    &lt;ul&gt;
+      {sortedUsers.map((u) => &lt;li key={u.id}&gt;{u.name}&lt;/li&gt;)}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> "Render sırasında hesaplanabilecek bir değer için state ve useEffect kullanma" kuralını benimseyin. Bu, gereksiz render döngülerini önler ve kodunuzu basitleştirir. React docs buna "you might not need an effect" der.
+</div>
+
+<h3>Anti-Pattern 4: Stale Closure (Eski Closure Değeri)</h3>
+
+<pre><code>// ❌ KÖTÜ: setInterval içinde stale closure
+function BadTimer() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // count her zaman 0! (closure oluşturulduğu andaki değer)
+      setCount(count + 1); // 0 + 1 = 1, sürekli 1 kalır
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []); // Dependency boş — count değişse bile effect tekrar çalışmaz
+
+  return &lt;div&gt;{count}&lt;/div&gt;;
+}
+
+// ✅ İYİ: Functional updater ile stale closure önleme
+function GoodTimer() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Functional updater — her zaman güncel değeri kullanır
+      setCount((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return &lt;div&gt;{count}&lt;/div&gt;;
+}
+
+// ✅ ALTERNATİF: useRef ile güncel değere erişim
+function TimerWithRef() {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(count);
+  countRef.current = count; // Her render'da güncelle
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Ref her zaman güncel değere sahip
+      console.log('Şu anki count:', countRef.current);
+      setCount((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return &lt;div&gt;{count}&lt;/div&gt;;
+}</code></pre>
+
+<h3>Anti-Pattern 5: Gereksiz useCallback ve useMemo</h3>
+
+<pre><code>// ❌ KÖTÜ: Her yerde memoize etmek
+function OverMemoized() {
+  const [name, setName] = useState('');
+
+  // Gereksiz — bu fonksiyon sadece input'a geçiyor, child yok
+  const handleChange = useCallback((e: React.ChangeEvent&lt;HTMLInputElement&gt;) => {
+    setName(e.target.value);
+  }, []);
+
+  // Gereksiz — basit string birleştirme
+  const greeting = useMemo(() => `Merhaba, ${name}!`, [name]);
+
+  return (
+    &lt;div&gt;
+      &lt;input value={name} onChange={handleChange} /&gt;
+      &lt;p&gt;{greeting}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+// ✅ İYİ: Sadece gerektiğinde memoize et
+function ProperlyOptimized() {
+  const [name, setName] = useState('');
+
+  // Basit handler — memoize etmeye gerek yok
+  const handleChange = (e: React.ChangeEvent&lt;HTMLInputElement&gt;) => {
+    setName(e.target.value);
+  };
+
+  // Basit hesaplama — memoize etmeye gerek yok
+  const greeting = `Merhaba, ${name}!`;
+
+  return (
+    &lt;div&gt;
+      &lt;input value={name} onChange={handleChange} /&gt;
+      &lt;p&gt;{greeting}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> useCallback ve useMemo kullanma kuralı: (1) React.memo ile sarılmış child'a prop geçiyorsanız, (2) useEffect dependency'sinde kullanılıyorsa, (3) hesaplama gerçekten ağırsa. Bunların dışında genellikle gereksizdir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React Hooks anti-pattern'lerinden kaçınmak, daha performanslı ve öngörülebilir uygulamalar geliştirmenizi sağlar. useEffect'i minimum düzeyde kullanın, race condition'lara karşı AbortController kullanın, derived state için ayrı state oluşturmayın, stale closure'lara dikkat edin ve gereksiz memoizasyondan kaçının. React Compiler çıktığında birçok memoizasyon otomatik olacak olsa da, doğru mental modeli edinmek hala çok önemlidir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/learn/you-might-not-need-an-effect" target="_blank">React Docs: You Might Not Need an Effect</a></li>
+  <li><a href="https://react.dev/learn/synchronizing-with-effects" target="_blank">React Docs: Synchronizing with Effects</a></li>
+  <li><a href="https://react.dev/reference/react/useEffect" target="_blank">React Docs: useEffect</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/AbortController" target="_blank">MDN: AbortController</a></li>
+</ul>

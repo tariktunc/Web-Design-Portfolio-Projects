@@ -1,0 +1,292 @@
+<h2>JavaScript Intl API: Uluslararasılaştırma Rehberi</h2>
+
+<p>Uluslararası kullanıcılara hizmet veren uygulamalarda tarih, saat, sayı, para birimi ve metin formatlama farklı yerel ayarlara göre değişir. JavaScript'in yerleşik <strong>Intl API</strong>'si, bu formatlamaları tarayıcı desteğiyle standart şekilde gerçekleştirmenizi sağlar. Bu rehberde Intl API'nin tüm bileşenlerini, pratik kullanım örneklerini ve i18n stratejilerini inceleyeceğiz.</p>
+
+<h3>Intl API Nedir?</h3>
+
+<p><code>Intl</code> nesnesi, dile duyarlı string karşılaştırma, sayı formatlama, tarih/saat formatlama ve daha fazlası için yapıcılar (constructor) sağlar. Harici kütüphanelere gerek kalmadan yerelleştirme yapabilirsiniz.</p>
+
+<h3>Intl.NumberFormat: Sayı Formatlama</h3>
+
+<pre><code>// Temel sayı formatlama
+const trFormatter = new Intl.NumberFormat('tr-TR');
+console.log(trFormatter.format(1234567.89)); // "1.234.567,89"
+
+const enFormatter = new Intl.NumberFormat('en-US');
+console.log(enFormatter.format(1234567.89)); // "1,234,567.89"
+
+// Para birimi
+const tryFormat = new Intl.NumberFormat('tr-TR', {
+  style: 'currency',
+  currency: 'TRY',
+});
+console.log(tryFormat.format(1500.50)); // "₺1.500,50"
+
+const usdFormat = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+console.log(usdFormat.format(1500.50)); // "$1,500.50"
+
+// Yüzde
+const percentFormat = new Intl.NumberFormat('tr-TR', {
+  style: 'percent',
+  minimumFractionDigits: 1,
+});
+console.log(percentFormat.format(0.856)); // "%85,6"
+
+// Birim
+const speedFormat = new Intl.NumberFormat('tr-TR', {
+  style: 'unit',
+  unit: 'kilometer-per-hour',
+  unitDisplay: 'short',
+});
+console.log(speedFormat.format(120)); // "120 km/sa"
+
+// Compact notation (kısa gösterim)
+const compactFormat = new Intl.NumberFormat('tr-TR', {
+  notation: 'compact',
+  compactDisplay: 'short',
+});
+console.log(compactFormat.format(1500000)); // "1,5 Mn"
+console.log(compactFormat.format(2300));    // "2,3 B"</code></pre>
+
+<h3>Intl.DateTimeFormat: Tarih/Saat Formatlama</h3>
+
+<pre><code>const date = new Date('2025-12-31T14:30:00');
+
+// Temel tarih formatlama
+const trDate = new Intl.DateTimeFormat('tr-TR');
+console.log(trDate.format(date)); // "31.12.2025"
+
+// Detaylı format
+const detailedFormat = new Intl.DateTimeFormat('tr-TR', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+console.log(detailedFormat.format(date)); // "31 Aralık 2025 Çarşamba"
+
+// Saat dahil
+const dateTimeFormat = new Intl.DateTimeFormat('tr-TR', {
+  dateStyle: 'full',
+  timeStyle: 'short',
+});
+console.log(dateTimeFormat.format(date)); // "31 Aralık 2025 Çarşamba 14:30"
+
+// Zaman dilimi
+const tokyoFormat = new Intl.DateTimeFormat('ja-JP', {
+  timeZone: 'Asia/Tokyo',
+  dateStyle: 'long',
+  timeStyle: 'long',
+});
+console.log(tokyoFormat.format(date));
+
+// formatToParts: Parçalara ayırma
+const parts = new Intl.DateTimeFormat('tr-TR', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).formatToParts(date);
+
+console.log(parts);
+// [
+//   { type: 'day', value: '31' },
+//   { type: 'literal', value: ' ' },
+//   { type: 'month', value: 'Aralık' },
+//   { type: 'literal', value: ' ' },
+//   { type: 'year', value: '2025' }
+// ]</code></pre>
+
+<h3>Intl.RelativeTimeFormat: Göreli Zaman</h3>
+
+<pre><code>const rtf = new Intl.RelativeTimeFormat('tr-TR', {
+  numeric: 'auto',
+});
+
+console.log(rtf.format(-1, 'day'));     // "dün"
+console.log(rtf.format(0, 'day'));      // "bugün"
+console.log(rtf.format(1, 'day'));      // "yarın"
+console.log(rtf.format(-3, 'hour'));    // "3 saat önce"
+console.log(rtf.format(2, 'week'));     // "2 hafta sonra"
+console.log(rtf.format(-1, 'month'));   // "geçen ay"
+
+// Yardımcı fonksiyon: Otomatik birim seçimi
+function timeAgo(date) {
+  const rtf = new Intl.RelativeTimeFormat('tr-TR', { numeric: 'auto' });
+  const diff = date - new Date();
+  const seconds = Math.round(diff / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+  const months = Math.round(days / 30);
+  const years = Math.round(days / 365);
+
+  if (Math.abs(years) &gt;= 1) return rtf.format(years, 'year');
+  if (Math.abs(months) &gt;= 1) return rtf.format(months, 'month');
+  if (Math.abs(days) &gt;= 1) return rtf.format(days, 'day');
+  if (Math.abs(hours) &gt;= 1) return rtf.format(hours, 'hour');
+  if (Math.abs(minutes) &gt;= 1) return rtf.format(minutes, 'minute');
+  return rtf.format(seconds, 'second');
+}
+
+console.log(timeAgo(new Date(Date.now() - 3600000))); // "1 saat önce"</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>numeric: 'auto'</code> seçeneği, "1 gün önce" yerine "dün" gibi daha doğal ifadeler üretir.
+</div>
+
+<h3>Intl.Collator: Metin Sıralama</h3>
+
+<pre><code>// Türkçe karakterlerle doğru sıralama
+const names = ['Çetin', 'Ali', 'Ömer', 'Şule', 'İrem', 'Ünal', 'Gül'];
+
+// Yanlış: localeCompare olmadan
+console.log([...names].sort());
+// ['Ali', 'Gül', 'Çetin', 'İrem', 'Ömer', 'Ünal', 'Şule']
+
+// Doğru: Intl.Collator ile
+const collator = new Intl.Collator('tr-TR');
+console.log([...names].sort(collator.compare));
+// ['Ali', 'Çetin', 'Gül', 'İrem', 'Ömer', 'Şule', 'Ünal']
+
+// Büyük/küçük harf duyarsız arama
+const searchCollator = new Intl.Collator('tr-TR', {
+  sensitivity: 'base',
+});
+
+console.log(searchCollator.compare('istanbul', 'İstanbul')); // 0 (eşit)
+console.log(searchCollator.compare('çay', 'Çay'));           // 0 (eşit)</code></pre>
+
+<h3>Intl.ListFormat: Liste Formatlama</h3>
+
+<pre><code>// Ve bağlacı ile
+const andFormat = new Intl.ListFormat('tr-TR', {
+  style: 'long',
+  type: 'conjunction',
+});
+console.log(andFormat.format(['React', 'Vue', 'Angular']));
+// "React, Vue ve Angular"
+
+// Veya bağlacı ile
+const orFormat = new Intl.ListFormat('tr-TR', {
+  style: 'long',
+  type: 'disjunction',
+});
+console.log(orFormat.format(['PDF', 'Word', 'Excel']));
+// "PDF, Word veya Excel"
+
+// Birim stili
+const unitFormat = new Intl.ListFormat('tr-TR', {
+  style: 'narrow',
+  type: 'unit',
+});
+console.log(unitFormat.format(['3 saat', '15 dakika']));
+// "3 saat 15 dakika"</code></pre>
+
+<h3>Intl.PluralRules: Çoğul Kuralları</h3>
+
+<pre><code>const pr = new Intl.PluralRules('tr-TR');
+
+console.log(pr.select(0));  // "other"
+console.log(pr.select(1));  // "one"
+console.log(pr.select(5));  // "other"
+
+// Çoğul mesaj yardımcısı
+function pluralize(count, forms) {
+  const pr = new Intl.PluralRules('tr-TR');
+  const rule = pr.select(count);
+  return forms[rule] || forms.other;
+}
+
+console.log(pluralize(1, { one: '1 yorum', other: `${5} yorum` }));
+// "1 yorum"</code></pre>
+
+<h3>Intl.Segmenter: Metin Bölümleme</h3>
+
+<pre><code>// Kelime bazlı bölümleme
+const segmenter = new Intl.Segmenter('tr-TR', {
+  granularity: 'word',
+});
+
+const text = 'TypeScript ile güvenli kod yazın.';
+const segments = [...segmenter.segment(text)];
+
+const words = segments
+  .filter(s =&gt; s.isWordLike)
+  .map(s =&gt; s.segment);
+
+console.log(words);
+// ['TypeScript', 'ile', 'güvenli', 'kod', 'yazın']
+
+// Cümle bazlı bölümleme
+const sentenceSegmenter = new Intl.Segmenter('tr-TR', {
+  granularity: 'sentence',
+});
+
+const paragraph = 'Merhaba dünya. TypeScript harika. JavaScript de güzel.';
+const sentences = [...sentenceSegmenter.segment(paragraph)]
+  .map(s =&gt; s.segment.trim());
+
+console.log(sentences);
+// ['Merhaba dünya.', 'TypeScript harika.', 'JavaScript de güzel.']</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>Intl.Segmenter</code>, özellikle Çince, Japonca, Tayca gibi kelimeler arası boşluk bulunmayan dillerde metin bölümlemesi için kritik bir araçtır.
+</div>
+
+<h3>React ile Intl Kullanımı</h3>
+
+<pre><code>// hooks/useIntl.ts
+import { useMemo } from 'react';
+
+export function useNumberFormat(
+  locale: string,
+  options?: Intl.NumberFormatOptions
+) {
+  const formatter = useMemo(
+    () =&gt; new Intl.NumberFormat(locale, options),
+    [locale, JSON.stringify(options)]
+  );
+  return formatter;
+}
+
+export function useDateFormat(
+  locale: string,
+  options?: Intl.DateTimeFormatOptions
+) {
+  const formatter = useMemo(
+    () =&gt; new Intl.DateTimeFormat(locale, options),
+    [locale, JSON.stringify(options)]
+  );
+  return formatter;
+}
+
+// Kullanım
+function PriceTag({ amount }: { amount: number }) {
+  const formatter = useNumberFormat('tr-TR', {
+    style: 'currency',
+    currency: 'TRY',
+  });
+
+  return &lt;span&gt;{formatter.format(amount)}&lt;/span&gt;;
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Intl formatter'ları oluşturma maliyetlidir. Aynı format seçenekleriyle tekrar tekrar <code>new Intl.NumberFormat()</code> çağırmak yerine, formatter'ı bir değişkende saklayın veya React'te <code>useMemo</code> kullanın.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>JavaScript Intl API, uluslararasılaştırma ihtiyaçlarının büyük bölümünü harici kütüphanelere gerek kalmadan karşılar. Sayı, tarih, para birimi, göreli zaman, liste ve metin formatlama gibi temel yerelleştirme görevleri için tarayıcıların yerleşik desteğinden yararlanın. Intl API performanslıdır, standartlara uygundur ve tüm modern tarayıcılarda desteklenir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl" target="_blank" rel="noopener noreferrer">MDN - Intl</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter" target="_blank" rel="noopener noreferrer">MDN - Intl.Segmenter</a></li>
+  <li><a href="https://v8.dev/blog/intl" target="_blank" rel="noopener noreferrer">V8 Blog - Intl</a></li>
+  <li><a href="https://tc39.es/ecma402/" target="_blank" rel="noopener noreferrer">ECMA-402 Internationalization API</a></li>
+  <li><a href="https://developer.chrome.com/blog/intl-segmenter" target="_blank" rel="noopener noreferrer">Chrome Blog - Intl.Segmenter</a></li>
+</ul>

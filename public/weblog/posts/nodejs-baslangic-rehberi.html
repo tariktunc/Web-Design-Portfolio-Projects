@@ -1,0 +1,201 @@
+<h2>Node.js Başlangıç Rehberi: Sunucu Tarafı JavaScript</h2>
+
+<p>Node.js, Chrome'un V8 JavaScript motorunu kullanarak sunucu tarafında JavaScript çalıştırmanızı sağlayan açık kaynaklı bir runtime ortamıdır. 2009 yılında Ryan Dahl tarafından oluşturulan Node.js, non-blocking I/O modeli ve event-driven mimarisi sayesinde yüksek performanslı, ölçeklenebilir ağ uygulamaları geliştirmek için ideal bir platformdur. Bu rehberde Node.js'in temellerini, kurulumunu, çalışma prensiplerini ve ilk uygulamanızı nasıl oluşturacağınızı adım adım inceleyeceğiz.</p>
+
+<h3>1. Node.js Nedir ve Neden Kullanmalıyız?</h3>
+
+<p>Node.js, geleneksel web sunucularından farklı olarak tek iş parçacıklı (single-threaded) bir event loop üzerinde çalışır. Bu mimari, binlerce eşzamanlı bağlantıyı minimum kaynak tüketimi ile yönetebilmenizi sağlar. Özellikle I/O yoğun uygulamalarda — API sunucuları, gerçek zamanlı chat uygulamaları, streaming servisleri — Node.js mükemmel performans sunar.</p>
+
+<p>Node.js'in öne çıkan avantajları şunlardır: hem frontend hem backend için aynı dili (JavaScript) kullanabilirsiniz, NPM ekosistemi ile milyonlarca hazır pakete erişebilirsiniz, non-blocking yapısı sayesinde yüksek throughput elde edebilirsiniz ve JSON tabanlı veri alışverişi doğal olarak desteklenir.</p>
+
+<div class="info">
+  <strong>Bilgi:</strong> Node.js, CPU yoğun işlemler (karmaşık hesaplamalar, görüntü işleme) için ideal değildir. Bu tür işlemler event loop'u bloke eder ve uygulamanın yanıt veremez hale gelmesine neden olabilir. Worker Threads veya child process'ler bu durumda kullanılmalıdır.
+</div>
+
+<h3>2. Node.js Kurulumu ve Ortam Hazırlığı</h3>
+
+<p>Node.js'i kurmak için resmi web sitesinden LTS (Long Term Support) sürümünü indirmeniz önerilir. LTS sürümleri production ortamları için stabilite ve uzun vadeli destek sunar. Alternatif olarak, birden fazla Node.js sürümünü yönetmek için NVM (Node Version Manager) kullanabilirsiniz.</p>
+
+<pre><code># NVM ile Node.js kurulumu (Linux/macOS)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Node.js LTS sürümünü yükle
+nvm install --lts
+nvm use --lts
+
+# Sürümü kontrol et
+node --version    # v20.x.x
+npm --version     # 10.x.x
+
+# Yeni bir proje başlat
+mkdir my-first-node-app
+cd my-first-node-app
+npm init -y
+
+# package.json oluşturuldu
+cat package.json</code></pre>
+
+<p>npm init komutu, projenizin temel bilgilerini içeren package.json dosyasını oluşturur. Bu dosya, projenizin bağımlılıklarını, script'lerini ve meta verilerini yönetir. -y parametresi varsayılan değerlerle otomatik oluşturma sağlar.</p>
+
+<div class="tip">
+  <strong>İpucu:</strong> Windows kullanıcıları için nvm-windows alternatifi mevcuttur. Ayrıca fnm (Fast Node Manager) da hızlı ve modern bir alternatiftir. Production ortamlarında her zaman LTS sürümünü tercih edin.
+</div>
+
+<h3>3. İlk HTTP Sunucusu Oluşturma</h3>
+
+<p>Node.js'in yerleşik http modülü ile herhangi bir framework kullanmadan basit bir web sunucusu oluşturabilirsiniz. Bu, Node.js'in temel çalışma prensiplerini anlamak için önemli bir adımdır. Aşağıdaki örnekte basit bir HTTP sunucusu oluşturup farklı route'ları yönetiyoruz.</p>
+
+<pre><code>const http = require('http');
+
+const hostname = '127.0.0.1';
+const port = 3000;
+
+const server = http.createServer((req, res) => {
+  // İstek URL'ine göre yönlendirme
+  if (req.url === '/' && req.method === 'GET') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.end(JSON.stringify({
+      mesaj: 'Merhaba Node.js!',
+      zaman: new Date().toISOString(),
+      platform: process.platform,
+      nodeVersion: process.version
+    }));
+  } else if (req.url === '/health' && req.method === 'GET') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ status: 'OK', uptime: process.uptime() }));
+  } else {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ hata: 'Sayfa bulunamadı' }));
+  }
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Sunucu http://${hostname}:${port} adresinde çalışıyor`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM sinyali alındı. Sunucu kapatılıyor...');
+  server.close(() => {
+    console.log('Sunucu kapatıldı.');
+    process.exit(0);
+  });
+});</code></pre>
+
+<p>Bu örnekte http.createServer ile bir sunucu oluşturuyor, gelen istekleri URL ve HTTP metoduna göre yönlendiriyoruz. res.end() ile yanıtı tamamlıyor ve JSON formatında veri döndürüyoruz. process.on('SIGTERM') ile graceful shutdown mekanizması ekliyoruz; bu production ortamlarında önemlidir çünkü mevcut isteklerin tamamlanmasını bekleyerek sunucuyu güvenli bir şekilde kapatır.</p>
+
+<h3>4. Modül Sistemi: CommonJS ve ES Modules</h3>
+
+<p>Node.js iki farklı modül sistemini destekler: CommonJS (require/module.exports) ve ES Modules (import/export). CommonJS, Node.js'in orijinal modül sistemidir ve hala yaygın olarak kullanılır. ES Modules ise modern JavaScript standardıdır ve Node.js 14+ sürümlerde stabil olarak desteklenir.</p>
+
+<pre><code>// ===== CommonJS Modül Sistemi =====
+// utils.js
+function formatDate(date) {
+  return new Intl.DateTimeFormat('tr-TR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(date);
+}
+
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/ğ/g, 'g').replace(/ü/g, 'u')
+    .replace(/ş/g, 's').replace(/ı/g, 'i')
+    .replace(/ö/g, 'o').replace(/ç/g, 'c')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+module.exports = { formatDate, slugify };
+
+// app.js
+const { formatDate, slugify } = require('./utils');
+console.log(formatDate(new Date()));
+console.log(slugify('Node.js Başlangıç Rehberi'));
+
+// ===== ES Modules (package.json'da "type": "module" gerekli) =====
+// helpers.mjs
+export const calculateAge = (birthYear) => new Date().getFullYear() - birthYear;
+export default class Logger {
+  static info(msg) { console.log(`[INFO] ${new Date().toISOString()}: ${msg}`); }
+  static error(msg) { console.error(`[ERROR] ${new Date().toISOString()}: ${msg}`); }
+}
+
+// main.mjs
+import Logger, { calculateAge } from './helpers.mjs';
+Logger.info('Uygulama başlatıldı');
+console.log(calculateAge(1995));</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> CommonJS ve ES Modules'u aynı projede karıştırırken dikkatli olun. ES Modules, CommonJS modüllerini import edebilir ancak CommonJS, ES Modules'u doğrudan require ile yükleyemez. Yeni projelerde ES Modules tercih etmeniz önerilir.
+</div>
+
+<h3>5. NPM ve Paket Yönetimi</h3>
+
+<p>NPM (Node Package Manager), Node.js ile birlikte gelen varsayılan paket yöneticisidir. Dünya'nın en büyük yazılım registry'si olan npmjs.com üzerinden milyonlarca pakete erişim sağlar. Paketleri yüklemek, güncellemek ve yönetmek için kullandığınız temel komutları bilmek, verimli bir Node.js geliştirme deneyimi için şarttır.</p>
+
+<pre><code># Paket yükleme komutları
+npm install express           # Production bağımlılığı
+npm install -D nodemon        # Development bağımlılığı
+npm install -g typescript     # Global kurulum
+
+# Faydalı NPM komutları
+npm list --depth=0            # Yüklü paketleri listele
+npm outdated                  # Güncellenebilir paketleri göster
+npm audit                     # Güvenlik açıklarını tara
+npm audit fix                 # Güvenlik açıklarını otomatik düzelt
+
+# package.json scripts
+{
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --coverage",
+    "lint": "eslint src/",
+    "build": "tsc"
+  }
+}
+
+# Script çalıştırma
+npm run dev
+npm test                      # test ve start için "run" gerekmez
+npm start</code></pre>
+
+<p>package-lock.json dosyası, paketlerin tam sürümlerini kilitleyerek farklı ortamlarda aynı bağımlılıkların yüklenmesini garanti eder. Bu dosyayı versiyon kontrol sistemine eklemeniz ve CI/CD pipeline'larında npm ci komutunu kullanmanız önerilir.</p>
+
+<h3>6. Asenkron Programlama: Callback, Promise ve Async/Await</h3>
+
+<p>Node.js'in en güçlü yönlerinden biri asenkron programlama modelidir. Dosya okuma, veritabanı sorguları ve API çağrıları gibi I/O işlemleri asenkron olarak gerçekleştirilir. Bu sayede ana iş parçacığı bloke olmaz ve uygulama diğer istekleri işlemeye devam edebilir. Asenkron programlama, callback'lerden başlayarak Promise'lere ve nihayetinde async/await syntax'ına evrilmiştir.</p>
+
+<p>Callback pattern'i, bir fonksiyona argüman olarak başka bir fonksiyon geçirerek asenkron işlemin tamamlanmasını yönetir. Ancak iç içe callback'ler (callback hell) kodun okunabilirliğini ciddi şekilde düşürür. Promise, asenkron işlemin sonucunu temsil eden bir nesnedir ve .then()/.catch() zinciri ile daha temiz bir yapı sunar. Async/await ise Promise tabanlı kodu senkron görünümlü yazmanızı sağlayan modern bir syntax'tır.</p>
+
+<div class="tip">
+  <strong>İpucu:</strong> Yeni projelerde her zaman async/await kullanın. try/catch blokları ile hata yönetimi yapın. Promise.all() ile paralel asenkron işlemleri yönetebilir, Promise.allSettled() ile tüm işlemlerin sonuçlarını (başarılı veya başarısız) toplayabilirsiniz.
+</div>
+
+<h3>7. Ortam Değişkenleri ve Yapılandırma</h3>
+
+<p>Production uygulamalarında veritabanı bağlantı bilgileri, API anahtarları ve port numaraları gibi yapılandırma değerlerini kaynak kodunun dışında tutmak kritik bir güvenlik uygulamasıdır. dotenv paketi, .env dosyasından ortam değişkenlerini yükleyerek bu sorunu çözer. Farklı ortamlar (development, staging, production) için farklı yapılandırma dosyaları kullanabilirsiniz.</p>
+
+<div class="warning">
+  <strong>Uyarı:</strong> .env dosyasını asla Git repository'sine eklemeyin. .gitignore dosyasına .env satırını ekleyin. Hassas bilgiler (API anahtarları, veritabanı şifreleri) production ortamlarında environment variable olarak veya secret management servisleri aracılığıyla yönetilmelidir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Node.js, modern web geliştirme dünyasında vazgeçilmez bir araç haline gelmiştir. Sunucu tarafı JavaScript, non-blocking I/O modeli, zengin NPM ekosistemi ve aktif topluluk desteği ile Node.js, hızlı ve ölçeklenebilir uygulamalar geliştirmek için güçlü bir platform sunar. Bu rehberdeki temel kavramları — HTTP sunucusu oluşturma, modül sistemi, asenkron programlama ve paket yönetimi — öğrendikten sonra Express.js gibi framework'ler ile daha karmaşık uygulamalar geliştirmeye hazırsınız.</p>
+
+<p>Node.js öğrenme yolculuğunuzda bir sonraki adım olarak Express.js ile REST API oluşturmayı, veritabanı entegrasyonlarını ve authentication mekanizmalarını incelemenizi öneriyorum. Ayrıca Node.js'in resmi dokümantasyonunu düzenli olarak takip etmek, yeni özellikler ve best practice'ler hakkında güncel kalmanızı sağlayacaktır.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+  <li><a href="https://nodejs.org/en/docs" target="_blank" rel="noopener noreferrer">Node.js Resmi Dokümantasyonu</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Node_server_without_framework" target="_blank" rel="noopener noreferrer">MDN - Node.js Server Without Framework</a></li>
+  <li><a href="https://github.com/goldbergyoni/nodebestpractices" target="_blank" rel="noopener noreferrer">Node.js Best Practices GitHub Repository</a></li>
+  <li><a href="https://www.npmjs.com/" target="_blank" rel="noopener noreferrer">NPM Registry</a></li>
+</ul>

@@ -1,0 +1,269 @@
+<h2>React'te Event Handling: Olay Yönetimi Rehberi</h2>
+
+<p>Event handling (olay yönetimi), kullanıcı etkileşimlerini yakalamak ve yanıt vermek için her web uygulamasının temel taşıdır. React'te event handling, native DOM event'lerinden farklı bir mekanizma kullanır: <strong>Synthetic Events</strong> (Sentetik Olaylar). Bu rehberde React'te event handling'in nasıl çalıştığını, yaygın olay türlerini ve ileri seviye teknikleri detaylı olarak ele alacağız.</p>
+
+<h3>Synthetic Events (Sentetik Olaylar)</h3>
+
+<p>React, tarayıcılar arası tutarlılık sağlamak için native DOM event'lerini sarmalayan bir SyntheticEvent sistemi kullanır. Bu sistem, tüm tarayıcılarda aynı API'yi sunar:</p>
+
+<pre><code>function EventDemo() {
+  const handleClick = (event) =&gt; {
+    // event bir SyntheticEvent'tir
+    console.log('Event tipi:', event.type);           // 'click'
+    console.log('Hedef eleman:', event.target);        // tıklanan element
+    console.log('Geçerli hedef:', event.currentTarget); // handler'ın bağlı olduğu element
+    console.log('Zaman damgası:', event.timeStamp);
+
+    // Native event'e erişim (nadiren gerekli)
+    console.log('Native event:', event.nativeEvent);
+  };
+
+  return &lt;button onClick={handleClick}&gt;Tıkla&lt;/button&gt;;
+}</code></pre>
+
+<blockquote>React event handler'ları HTML attribute'larından farklı olarak <strong>camelCase</strong> yazılır: <code>onclick</code> yerine <code>onClick</code>, <code>onchange</code> yerine <code>onChange</code>. Handler olarak string değil, fonksiyon referansı verilir.</blockquote>
+
+<h3>Yaygın Event Türleri</h3>
+
+<h4>Mouse Events</h4>
+
+<pre><code>function MouseEvents() {
+  return (
+    &lt;div
+      onClick={(e) =&gt; console.log('Tıklandı', e.clientX, e.clientY)}
+      onDoubleClick={() =&gt; console.log('Çift tıklandı')}
+      onMouseEnter={() =&gt; console.log('Mouse girdi')}
+      onMouseLeave={() =&gt; console.log('Mouse çıktı')}
+      onContextMenu={(e) =&gt; {
+        e.preventDefault(); // Sağ tık menüsünü engelle
+        console.log('Sağ tıklama');
+      }}
+      style={{ padding: '40px', backgroundColor: '#f0f0f0' }}
+    &gt;
+      Mouse event alanı
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h4>Form Events</h4>
+
+<pre><code>function FormEvents() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    bio: '',
+    role: 'user'
+  });
+
+  // Tüm input'lar için tek handler
+  const handleChange = (e) =&gt; {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev =&gt; ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = (e) =&gt; {
+    e.preventDefault(); // Sayfa yenilenmesini engelle
+    console.log('Form verileri:', formData);
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input
+        name="username"
+        value={formData.username}
+        onChange={handleChange}
+        onFocus={() =&gt; console.log('Input odaklandı')}
+        onBlur={() =&gt; console.log('Input odağı kaybetti')}
+        placeholder="Kullanıcı adı"
+      /&gt;
+
+      &lt;input
+        name="email"
+        type="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="E-posta"
+      /&gt;
+
+      &lt;textarea
+        name="bio"
+        value={formData.bio}
+        onChange={handleChange}
+        placeholder="Biyografi"
+      /&gt;
+
+      &lt;select name="role" value={formData.role} onChange={handleChange}&gt;
+        &lt;option value="user"&gt;Kullanıcı&lt;/option&gt;
+        &lt;option value="admin"&gt;Yönetici&lt;/option&gt;
+        &lt;option value="editor"&gt;Editör&lt;/option&gt;
+      &lt;/select&gt;
+
+      &lt;button type="submit"&gt;Kaydet&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+<h4>Keyboard Events</h4>
+
+<pre><code>function KeyboardShortcuts() {
+  const [output, setOutput] = useState('');
+
+  const handleKeyDown = (e) =&gt; {
+    // Ctrl+Enter ile gönder
+    if (e.key === 'Enter' &amp;&amp; (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      console.log('Ctrl+Enter: Gönder');
+      return;
+    }
+
+    // Escape ile temizle
+    if (e.key === 'Escape') {
+      setOutput('');
+      return;
+    }
+
+    // Ctrl+B ile kalın yazı toggle
+    if (e.key === 'b' &amp;&amp; (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      console.log('Ctrl+B: Kalın yazı');
+    }
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;textarea
+        value={output}
+        onChange={(e) =&gt; setOutput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Ctrl+Enter: Gönder | Esc: Temizle"
+        rows={5}
+      /&gt;
+      &lt;p&gt;Karakter sayısı: {output.length}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <p><strong>İpucu:</strong> <code>onKeyDown</code> ve <code>onKeyUp</code> arasında önemli bir fark vardır. onKeyDown tuşa basıldığında (karakter ekranda görünmeden önce), onKeyUp tuş bırakıldığında tetiklenir. Form validasyonu ve kısayollar için genellikle onKeyDown tercih edilir.</p>
+</div>
+
+<h3>Event Delegation ve Propagation</h3>
+
+<pre><code>function EventPropagation() {
+  const handleParentClick = () =&gt; {
+    console.log('Parent tıklandı');
+  };
+
+  const handleChildClick = (e) =&gt; {
+    // Olayın üst elemanlara yayılmasını durdur
+    e.stopPropagation();
+    console.log('Child tıklandı');
+  };
+
+  return (
+    &lt;div onClick={handleParentClick} style={{ padding: '20px', backgroundColor: '#eee' }}&gt;
+      &lt;p&gt;Parent alan - tıklayın&lt;/p&gt;
+      &lt;button onClick={handleChildClick}&gt;
+        Child buton (stopPropagation)
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+
+// Event delegation pattern - liste için tek handler
+function TaskList({ tasks, onToggle, onDelete }) {
+  const handleClick = (e) =&gt; {
+    const { action, taskId } = e.target.dataset;
+    if (!action) return;
+
+    const id = Number(taskId);
+    if (action === 'toggle') onToggle(id);
+    if (action === 'delete') onDelete(id);
+  };
+
+  return (
+    &lt;ul onClick={handleClick}&gt;
+      {tasks.map(task =&gt; (
+        &lt;li key={task.id}&gt;
+          &lt;span data-action="toggle" data-task-id={task.id}&gt;
+            {task.done ? '✓' : '○'} {task.text}
+          &lt;/span&gt;
+          &lt;button data-action="delete" data-task-id={task.id}&gt;Sil&lt;/button&gt;
+        &lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+
+<h3>Drag and Drop Events</h3>
+
+<pre><code>function DragDropList() {
+  const [items, setItems] = useState(['React', 'Vue', 'Angular', 'Svelte']);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+
+  const handleDragStart = (e, index) =&gt; {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) =&gt; {
+    e.preventDefault();
+    if (draggedIndex === index) return;
+
+    setItems(prev =&gt; {
+      const updated = [...prev];
+      const [removed] = updated.splice(draggedIndex, 1);
+      updated.splice(index, 0, removed);
+      return updated;
+    });
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () =&gt; {
+    setDraggedIndex(null);
+  };
+
+  return (
+    &lt;ul className="drag-list"&gt;
+      {items.map((item, index) =&gt; (
+        &lt;li
+          key={item}
+          draggable
+          onDragStart={(e) =&gt; handleDragStart(e, index)}
+          onDragOver={(e) =&gt; handleDragOver(e, index)}
+          onDragEnd={handleDragEnd}
+          style={{
+            opacity: draggedIndex === index ? 0.5 : 1,
+            cursor: 'grab',
+            padding: '8px',
+            margin: '4px 0',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '4px'
+          }}
+        &gt;
+          {item}
+        &lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <p><strong>Uyarı:</strong> Event handler'larda doğrudan <code>setState</code> yerine inline arrow function kullanımı (<code>onClick={() =&gt; handleClick(id)}</code>) her render'da yeni bir fonksiyon oluşturur. Bu, <code>React.memo</code> ile sarılmış bileşenlerde gereksiz re-render'lara yol açabilir. Performans kritik durumlarda <code>useCallback</code> kullanın.</p>
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React'te event handling, Synthetic Events sistemi sayesinde tarayıcılar arası tutarlı ve güvenli bir deneyim sunar. Form yönetimi, klavye kısayolları, drag-and-drop ve event delegation gibi pattern'leri doğru kullanarak etkileşimli ve performanslı uygulamalar oluşturabilirsiniz. preventDefault ve stopPropagation'ı bilinçli kullanın, gereksiz re-render'ları önlemek için handler fonksiyonlarınızı optimize edin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/learn/responding-to-events" target="_blank" rel="noopener noreferrer">React Docs - Responding to Events</a></li>
+  <li><a href="https://react.dev/reference/react-dom/components/common#react-event-object" target="_blank" rel="noopener noreferrer">React Docs - SyntheticEvent</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Event" target="_blank" rel="noopener noreferrer">MDN - Event API</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API" target="_blank" rel="noopener noreferrer">MDN - HTML Drag and Drop API</a></li>
+</ul>

@@ -1,0 +1,245 @@
+<h2>E-E-A-T SEO Stratejisi: Deneyim, Uzmanlık, Otorite, Güven</h2>
+
+<p>E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness), Google'ın içerik kalitesini değerlendirmek için kullandığı temel çerçevedir. 2022 yılında "Deneyim" (Experience) boyutunun eklenmesiyle E-A-T'den E-E-A-T'ye evrilmiştir. Bu rehberde E-E-A-T kavramını derinlemesine inceleyecek, web geliştiricilerin ve içerik üreticilerin uygulayabileceği somut stratejileri adım adım ele alacağız.</p>
+
+<h3>1. E-E-A-T Nedir?</h3>
+
+<p>E-E-A-T, Google'ın Search Quality Rater Guidelines'da tanımladığı bir kalite değerlendirme çerçevesidir. Doğrudan bir sıralama algoritması değildir, ancak algoritmayı eğitmek için kullanılan kalite değerlendirmecilerinin (quality raters) rehberidir.</p>
+
+<table>
+<tr><th>Bileşen</th><th>İngilizce</th><th>Açıklama</th></tr>
+<tr><td><strong>E</strong> — Deneyim</td><td>Experience</td><td>İçerik üreticisinin konuyla ilgili birinci elden deneyimi</td></tr>
+<tr><td><strong>E</strong> — Uzmanlık</td><td>Expertise</td><td>İçerik üreticisinin konu alanındaki bilgi ve beceri düzeyi</td></tr>
+<tr><td><strong>A</strong> — Otorite</td><td>Authoritativeness</td><td>İçerik üreticisinin ve sitenin konu alanındaki tanınırlığı</td></tr>
+<tr><td><strong>T</strong> — Güven</td><td>Trustworthiness</td><td>Sitenin ve içeriğin güvenilirliği (en önemli bileşen)</td></tr>
+</table>
+
+<div class="info">
+<strong>Bilgi:</strong> Google, Güven'i (Trustworthiness) E-E-A-T'nin merkezine yerleştirir. Deneyim, Uzmanlık ve Otorite, Güven'i destekleyen unsurlardır.
+</div>
+
+<h3>2. Deneyim (Experience) Sinyalleri</h3>
+
+<p>Google, içerik üreticisinin konuyu birinci elden deneyimlemiş olmasına değer verir. "Bunu ben kullandım ve sonuçlarım şöyle oldu" tarzı içerikler deneyim sinyali taşır.</p>
+
+<h4>Teknik Uygulama</h4>
+
+<pre><code>&lt;!-- Yazar deneyim bilgisi --&gt;
+&lt;article&gt;
+  &lt;header&gt;
+    &lt;h1&gt;Next.js ile E-ticaret Projesi Deneyimim&lt;/h1&gt;
+    &lt;div class="author-info"&gt;
+      &lt;img src="/authors/tarik.jpg" alt="Tarık Tunç" width="48" height="48"&gt;
+      &lt;div&gt;
+        &lt;strong&gt;Tarık Tunç&lt;/strong&gt;
+        &lt;p&gt;5 yıllık web geliştirme deneyimi | 10+ Next.js projesi&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;time datetime="2026-03-15"&gt;15 Mart 2026&lt;/time&gt;
+  &lt;/header&gt;
+  &lt;p&gt;Bu projede Next.js App Router kullandığımda ilk karşılaştığım sorun şuydu...&lt;/p&gt;
+&lt;/article&gt;</code></pre>
+
+<pre><code>// Yazar sayfası structured data
+const authorSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Tarık Tunç',
+  url: 'https://www.example.com/yazar/tarik-tunc',
+  jobTitle: 'Senior Web Developer',
+  description: '5+ yıl web geliştirme deneyimi...',
+  sameAs: [
+    'https://github.com/tarik-tunc',
+    'https://linkedin.com/in/tarik-tunc',
+    'https://twitter.com/tarik_tunc',
+  ],
+  knowsAbout: ['Next.js', 'React', 'Node.js', 'TypeScript', 'SEO'],
+};</code></pre>
+
+<h3>3. Uzmanlık (Expertise) Sinyalleri</h3>
+
+<ul>
+<li><strong>Detaylı teknik içerik:</strong> Konuyu derinlemesine ele alın, yüzeysel bilgilerden kaçının</li>
+<li><strong>Doğru ve güncel bilgi:</strong> Kaynaklarınızı belirtin, tarihleri güncelleyin</li>
+<li><strong>Yazar biyografileri:</strong> Her yazarın uzmanlık alanını ve kimlik bilgilerini gösterin</li>
+<li><strong>Konuyla ilgili yayınlar:</strong> Aynı konuda birden fazla detaylı içerik üretin (topic cluster)</li>
+</ul>
+
+<pre><code>&lt;!-- Uzmanlık sinyali — Yazar sayfası --&gt;
+&lt;div class="author-profile"&gt;
+  &lt;h2&gt;Tarık Tunç Hakkında&lt;/h2&gt;
+  &lt;p&gt;10 yılı aşkın yazılım geliştirme deneyimine sahip Full-Stack
+  Web Developer. React, Next.js ve Node.js alanlarında uzmanlaşmıştır.
+  Birçok açık kaynak projeye katkıda bulunmuştur.&lt;/p&gt;
+
+  &lt;h3&gt;Sertifikalar ve Başarılar&lt;/h3&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Google Cloud Professional Developer&lt;/li&gt;
+    &lt;li&gt;AWS Solutions Architect&lt;/li&gt;
+    &lt;li&gt;100+ açık kaynak katkı&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;h3&gt;Bu Yazarın Diğer Yazıları&lt;/h3&gt;
+&lt;/div&gt;</code></pre>
+
+<h3>4. Otorite (Authoritativeness) Sinyalleri</h3>
+
+<p>Otorite, sitenizin ve içeriğinizin dış dünya tarafından tanınması ve referans gösterilmesiyle oluşur.</p>
+
+<h4>Teknik Otorite Sinyalleri</h4>
+
+<pre><code>// Organization schema — site otoritesi
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Site Adı',
+  url: 'https://www.example.com',
+  logo: 'https://www.example.com/logo.png',
+  foundingDate: '2020',
+  description: 'Web geliştirme konusunda uzman içerik platformu',
+  sameAs: [
+    'https://twitter.com/sitehandle',
+    'https://github.com/sitehandle',
+    'https://linkedin.com/company/sitehandle',
+  ],
+};
+
+// WebSite schema — site geneli
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Site Adı',
+  url: 'https://www.example.com',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://www.example.com/search?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+};</code></pre>
+
+<h4>Link Profili ve Otorite</h4>
+
+<ul>
+<li>Alanında otorite sayılan sitelerden backlink almak</li>
+<li>Konferanslarda konuşma ve yayın yapma</li>
+<li>Açık kaynak projelere katkı</li>
+<li>Diğer otorite sitelerinde misafir yazarlık</li>
+<li>Sosyal medyada aktif ve etkileşimli olma</li>
+</ul>
+
+<h3>5. Güven (Trustworthiness) Sinyalleri</h3>
+
+<p>Güven, E-E-A-T'nin en kritik bileşenidir. Teknik ve içeriksel sinyallerle güven oluşturulur.</p>
+
+<pre><code>&lt;!-- Güven sinyalleri --&gt;
+
+&lt;!-- 1. HTTPS zorunlu --&gt;
+&lt;!-- Tüm site HTTPS üzerinden sunulmalı --&gt;
+
+&lt;!-- 2. İletişim bilgileri --&gt;
+&lt;footer&gt;
+  &lt;address&gt;
+    &lt;strong&gt;İletişim&lt;/strong&gt;
+    &lt;p&gt;Email: info@example.com&lt;/p&gt;
+    &lt;p&gt;Adres: İstanbul, Türkiye&lt;/p&gt;
+  &lt;/address&gt;
+&lt;/footer&gt;
+
+&lt;!-- 3. Gizlilik politikası ve yasal sayfalar --&gt;
+&lt;nav aria-label="Yasal"&gt;
+  &lt;a href="/gizlilik-politikasi"&gt;Gizlilik Politikası&lt;/a&gt;
+  &lt;a href="/kullanim-kosullari"&gt;Kullanım Koşulları&lt;/a&gt;
+  &lt;a href="/cerez-politikasi"&gt;Çerez Politikası&lt;/a&gt;
+&lt;/nav&gt;
+
+&lt;!-- 4. İçerik tarihleri --&gt;
+&lt;article&gt;
+  &lt;time datetime="2026-03-15"&gt;Yayınlanma: 15 Mart 2026&lt;/time&gt;
+  &lt;time datetime="2026-03-20"&gt;Son Güncelleme: 20 Mart 2026&lt;/time&gt;
+&lt;/article&gt;
+
+&lt;!-- 5. Kaynak referansları --&gt;
+&lt;section class="references"&gt;
+  &lt;h3&gt;Kaynaklar&lt;/h3&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="https://..." rel="nofollow"&gt;Google Quality Rater Guidelines&lt;/a&gt;&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/section&gt;</code></pre>
+
+<h3>6. YMYL İçerikler ve E-E-A-T</h3>
+
+<p>YMYL (Your Money or Your Life) kategorisindeki içerikler — sağlık, finans, hukuk, güvenlik — en yüksek E-E-A-T standardını gerektirir.</p>
+
+<pre><code>// Sağlık içeriği için ek güven sinyalleri
+const medicalArticleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalWebPage',
+  name: 'Makale Başlığı',
+  lastReviewed: '2026-03-01',
+  reviewedBy: {
+    '@type': 'Person',
+    name: 'Dr. Uzman Adı',
+    jobTitle: 'Uzman Doktor',
+    memberOf: {
+      '@type': 'Organization',
+      name: 'Hastane/Kurum Adı',
+    },
+  },
+};</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> YMYL konularında içerik üretiyorsanız, mutlaka alanında uzman kişiler tarafından incelenmiş ve doğrulanmış içerikler yayınlayın. Yanlış bilgi ciddi sonuçlara yol açabilir.
+</div>
+
+<h3>7. Topic Cluster Stratejisi</h3>
+
+<pre><code>&lt;!-- Pillar page (ana sayfa) ve cluster sayfaları --&gt;
+&lt;!-- Pillar: /nodejs-rehberi (kapsamlı ana rehber) --&gt;
+&lt;!-- Cluster sayfaları: --&gt;
+&lt;!-- /nodejs-express-api --&gt;
+&lt;!-- /nodejs-authentication --&gt;
+&lt;!-- /nodejs-testing --&gt;
+&lt;!-- /nodejs-deployment --&gt;
+
+&lt;!-- İç linkleme yapısı --&gt;
+&lt;nav aria-label="İlgili konular"&gt;
+  &lt;h3&gt;Bu Serinin Diğer Yazıları&lt;/h3&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="/nodejs-rehberi"&gt;Node.js Tam Rehber (Ana Sayfa)&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/nodejs-express-api"&gt;Express ile API Geliştirme&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/nodejs-testing"&gt;Node.js Test Yazımı&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</code></pre>
+
+<h3>8. E-E-A-T Kontrol Listesi</h3>
+
+<ul>
+<li><strong>Deneyim:</strong> Kişisel deneyim ve vaka çalışmaları paylaşın</li>
+<li><strong>Deneyim:</strong> "Ben denedim ve sonuç şu oldu" tarzı içerikler üretin</li>
+<li><strong>Uzmanlık:</strong> Detaylı yazar biyografileri ekleyin</li>
+<li><strong>Uzmanlık:</strong> Konuyu derinlemesine ele alın</li>
+<li><strong>Otorite:</strong> Schema markup kullanın (Person, Organization)</li>
+<li><strong>Otorite:</strong> Sosyal profilleri bağlayın</li>
+<li><strong>Güven:</strong> HTTPS, iletişim bilgileri, yasal sayfalar</li>
+<li><strong>Güven:</strong> Kaynakları belirtin ve güncel tutun</li>
+<li><strong>Güven:</strong> İçerik tarihlerini gösterin ve güncelleyin</li>
+<li><strong>Genel:</strong> Topic cluster ile konu otoritesi oluşturun</li>
+<li><strong>Genel:</strong> Düzenli olarak içerik güncelleyin</li>
+</ul>
+
+<div class="tip">
+<strong>İpucu:</strong> E-E-A-T bir gecede oluşmaz. Tutarlı ve kaliteli içerik üretimi, aktif topluluk katılımı ve zaman içinde otorite inşa etme uzun vadeli bir stratejidir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>E-E-A-T, Google'ın içerik kalitesini değerlendirmesinin temel çerçevesidir. Deneyim, uzmanlık, otorite ve güven sinyallerini sistematik olarak uygulamak, arama motoru sıralamanızı ve kullanıcı güvenini artırır. Teknik uygulamalar (structured data, yazar sayfaları, HTTPS) ile içerik stratejisi (topic cluster, kişisel deneyim paylaşımı, kaynak referansları) birlikte çalışmalıdır. YMYL konularında E-E-A-T standartları özellikle kritiktir. Unutmayın: gerçek uzmanlık ve deneyim, hiçbir SEO tekniğiyle taklit edilemez.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://developers.google.com/search/docs/fundamentals/creating-helpful-content" target="_blank">Google — Faydalı İçerik Oluşturma</a></li>
+<li><a href="https://static.googleusercontent.com/media/guidelines.raterhub.com/en//searchqualityevaluatorguidelines.pdf" target="_blank">Google Search Quality Rater Guidelines</a></li>
+<li><a href="https://developers.google.com/search/blog/2022/12/google-raters-guidelines-e-e-a-t" target="_blank">Google — E-E-A-T Güncellemesi</a></li>
+<li><a href="https://schema.org/Person" target="_blank">Schema.org — Person</a></li>
+<li><a href="https://ahrefs.com/blog/eat-seo/" target="_blank">Ahrefs — E-E-A-T SEO Guide</a></li>
+</ul>

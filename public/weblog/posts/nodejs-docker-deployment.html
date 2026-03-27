@@ -1,0 +1,321 @@
+<h2>Node.js Docker: Container ile Deployment</h2>
+
+<p>Docker, uygulamaları izole container'lar içinde çalıştırarak tutarlı deployment ortamları oluşturmanın standart yoludur. Node.js uygulamalarını Docker ile containerize etmek, geliştirme ortamından production'a sorunsuz geçiş sağlar. Bu rehberde Node.js uygulamalarını Docker ile paketleme, optimize etme ve deploy etme sürecini adım adım inceleyeceğiz.</p>
+
+<h3>1. Docker Temel Kavramlar</h3>
+
+<ul>
+<li><strong>Image:</strong> Uygulamanın çalışması için gereken her şeyi içeren salt-okunur şablon</li>
+<li><strong>Container:</strong> Image'dan oluşturulan çalışan örnek</li>
+<li><strong>Dockerfile:</strong> Image oluşturma talimatlarını içeren dosya</li>
+<li><strong>Docker Compose:</strong> Çoklu container'ı yönetmek için araç</li>
+</ul>
+
+<h3>2. Temel Dockerfile</h3>
+
+<pre><code># Dockerfile
+FROM node:20-alpine
+
+# Çalışma dizinini ayarla
+WORKDIR /app
+
+# Bağımlılık dosyalarını kopyala
+COPY package*.json ./
+
+# Bağımlılıkları yükle
+RUN npm ci --only=production
+
+# Uygulama dosyalarını kopyala
+COPY . .
+
+# Port tanımla
+EXPOSE 3000
+
+# Uygulamayı başlat
+CMD ["node", "server.js"]</code></pre>
+
+<pre><code># .dockerignore
+node_modules
+npm-debug.log
+Dockerfile
+docker-compose.yml
+.git
+.gitignore
+.env
+README.md
+tests/
+coverage/
+.nyc_output</code></pre>
+
+<h3>3. Optimize Edilmiş Multi-Stage Build</h3>
+
+<p>Multi-stage build, image boyutunu küçültmek ve güvenliği artırmak için kritik bir tekniktir.</p>
+
+<pre><code># Dockerfile — Multi-stage build
+# === Build aşaması ===
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+
+# TypeScript derleme veya build adımı
+RUN npm run build
+
+# Test çalıştır (opsiyonel)
+RUN npm run test
+
+# Gereksiz devDependencies temizle
+RUN npm prune --production
+
+# === Production aşaması ===
+FROM node:20-alpine AS production
+
+# Güvenlik: non-root kullanıcı
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodeapp -u 1001
+
+WORKDIR /app
+
+# Sadece gerekli dosyaları kopyala
+COPY --from=builder --chown=nodeapp:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodeapp:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodeapp:nodejs /app/package.json ./
+
+# Non-root kullanıcıya geç
+USER nodeapp
+
+# Environment
+ENV NODE_ENV=production
+ENV PORT=3000
+
+EXPOSE 3000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+CMD ["node", "dist/server.js"]</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Alpine tabanlı image'lar (<code>node:20-alpine</code>) standart image'lara göre 5-10 kat daha küçüktür. 900MB yerine yaklaşık 120MB boyutundadır.
+</div>
+
+<h3>4. Docker Compose ile Tam Ortam</h3>
+
+<pre><code># docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:pass@db:5432/myapp
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: myapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d myapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge</code></pre>
+
+<h3>5. Docker Komutları</h3>
+
+<pre><code># Image oluştur
+docker build -t my-node-app:1.0 .
+
+# Container çalıştır
+docker run -d --name my-app -p 3000:3000 \
+  -e NODE_ENV=production \
+  my-node-app:1.0
+
+# Docker Compose ile başlat
+docker compose up -d
+
+# Logları görüntüle
+docker compose logs -f app
+
+# Container'a bağlan
+docker exec -it my-app sh
+
+# Durdur ve temizle
+docker compose down
+docker compose down -v  # Volume'ları da sil</code></pre>
+
+<h3>6. Nginx Reverse Proxy</h3>
+
+<pre><code># nginx.conf
+events {
+  worker_connections 1024;
+}
+
+http {
+  upstream node_app {
+    server app:3000;
+  }
+
+  server {
+    listen 80;
+    server_name example.com;
+
+    # Gzip sıkıştırma
+    gzip on;
+    gzip_types text/plain application/json application/javascript text/css;
+
+    # Proxy ayarları
+    location / {
+      proxy_pass http://node_app;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection 'upgrade';
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_cache_bypass $http_upgrade;
+    }
+
+    # Statik dosyalar
+    location /static/ {
+      alias /app/public/;
+      expires 30d;
+      add_header Cache-Control "public, immutable";
+    }
+  }
+}</code></pre>
+
+<h3>7. Production Best Practices</h3>
+
+<pre><code># Graceful shutdown desteği
+// server.js
+const app = require('./app');
+
+const server = app.listen(process.env.PORT || 3000, () => {
+  console.log(`Server ${process.env.PORT || 3000} portunda çalışıyor`);
+});
+
+// Graceful shutdown
+function shutdown(signal) {
+  console.log(`${signal} sinyali alındı. Kapatılıyor...`);
+  server.close(() => {
+    console.log('HTTP sunucusu kapatıldı');
+    // DB bağlantılarını kapat
+    process.exit(0);
+  });
+
+  // 10 saniye içinde kapanmazsa zorla kapat
+  setTimeout(() => {
+    console.error('Zorla kapatılıyor');
+    process.exit(1);
+  }, 10000);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));</code></pre>
+
+<pre><code># Docker'da process yönetimi — tini kullanımı
+FROM node:20-alpine
+
+# tini — PID 1 sorunu çözümü
+RUN apk add --no-cache tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+
+USER node
+CMD ["node", "server.js"]</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> Docker container içinde <code>npm start</code> yerine doğrudan <code>node server.js</code> kullanın. npm, SIGTERM sinyalini Node.js sürecine iletmez ve graceful shutdown çalışmaz.
+</div>
+
+<h3>8. CI/CD Pipeline ile Deploy</h3>
+
+<pre><code># .github/workflows/deploy.yml
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker image oluştur
+        run: docker build -t myapp:${{ github.sha }} .
+
+      - name: Registry'ye push
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker tag myapp:${{ github.sha }} myregistry/myapp:latest
+          docker push myregistry/myapp:latest</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>Docker ile Node.js deployment, uygulamanızı her ortamda tutarlı şekilde çalıştırmanın en güvenilir yoludur. Multi-stage build ile image boyutunu küçültün, non-root kullanıcı ile güvenliği artırın ve Docker Compose ile tam geliştirme ortamı oluşturun. Graceful shutdown, healthcheck ve tini gibi pratiklerle production-ready container'lar hazırlayın. CI/CD pipeline'a entegre ederek otomatik deployment sürecini tamamlayın.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://docs.docker.com/guides/nodejs/containerize/" target="_blank">Docker — Node.js Containerize Rehberi</a></li>
+<li><a href="https://nodejs.org/en/docs/guides/nodejs-docker-webapp" target="_blank">Node.js — Docker Web App</a></li>
+<li><a href="https://docs.docker.com/compose/" target="_blank">Docker Compose Dokümantasyonu</a></li>
+<li><a href="https://snyk.io/blog/10-best-practices-to-containerize-nodejs-web-applications-with-docker/" target="_blank">Snyk — Docker Best Practices</a></li>
+<li><a href="https://github.com/krallin/tini" target="_blank">Tini — Container Init</a></li>
+</ul>

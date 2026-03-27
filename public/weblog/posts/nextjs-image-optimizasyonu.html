@@ -1,0 +1,280 @@
+<h2>Next.js Image Optimizasyonu: next/image Rehberi</h2>
+
+<p>Görseller, web sayfalarının en ağır bileşenleridir ve optimize edilmediğinde sayfa performansını ciddi şekilde etkiler. Next.js'in <strong>next/image</strong> bileşeni, otomatik boyutlandırma, lazy loading, format dönüşümü ve responsive tasarım gibi optimizasyonları yerleşik olarak sunar. Bu rehberde next/image'ın tüm özelliklerini ve en iyi kullanım pratiklerini inceleyeceğiz.</p>
+
+<h3>Temel Kullanım</h3>
+
+<p>next/image bileşeni, standart HTML <code>&lt;img&gt;</code> etiketinin gelişmiş bir versiyonudur:</p>
+
+<pre><code>import Image from 'next/image';
+
+export default function Hero() {
+  return (
+    &lt;div className="relative h-[500px]"&gt;
+      &lt;Image
+        src="/images/hero-banner.jpg"
+        alt="Ana sayfa banner görseli"
+        fill
+        priority
+        className="object-cover"
+      /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Lokal ve Remote Görseller</h3>
+
+<pre><code>import Image from 'next/image';
+import profilePic from '@/public/images/profile.jpg'; // Statik import
+
+export default function Profile() {
+  return (
+    &lt;div&gt;
+      {/* Statik import — boyutlar otomatik belirlenir */}
+      &lt;Image
+        src={profilePic}
+        alt="Profil fotoğrafı"
+        placeholder="blur" // Statik import'ta otomatik blur
+      /&gt;
+
+      {/* Remote görsel — boyut belirtmek zorunlu */}
+      &lt;Image
+        src="https://example.com/photo.jpg"
+        alt="Remote görsel"
+        width={800}
+        height={600}
+      /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Remote Pattern Konfigürasyonu</h3>
+
+<p>Remote görselleri kullanmak için <code>next.config.js</code>'te izin verilen domain'leri tanımlayın:</p>
+
+<pre><code>// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.example.com',
+        pathname: '/images/**',
+      },
+    ],
+  },
+};
+
+module.exports = nextConfig;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Remote görselleri tanımlarken wildcard (<code>*</code>) kullanımına dikkat edin. Güvenlik için mümkün olduğunca spesifik pattern'ler tanımlayın.
+</div>
+
+<h3>Fill Mode ve Responsive Görseller</h3>
+
+<pre><code>import Image from 'next/image';
+
+// Fill mode — parent container'ı doldurur
+export function HeroImage() {
+  return (
+    &lt;div className="relative w-full h-[400px]"&gt;
+      &lt;Image
+        src="/images/hero.jpg"
+        alt="Hero"
+        fill
+        sizes="100vw"
+        className="object-cover rounded-lg"
+        priority
+      /&gt;
+    &lt;/div&gt;
+  );
+}
+
+// Responsive grid görselleri
+export function ImageGrid({ images }: { images: ImageType[] }) {
+  return (
+    &lt;div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"&gt;
+      {images.map((img) =&gt; (
+        &lt;div key={img.id} className="relative aspect-video"&gt;
+          &lt;Image
+            src={img.url}
+            alt={img.alt}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover rounded-lg"
+          /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>sizes</code> prop'u, tarayıcıya hangi genişlikte hangi boyutta görsel kullanacağını söyler. Doğru <code>sizes</code> değeri, gereksiz büyük görsellerin indirilmesini önler.
+</div>
+
+<h3>Priority ve Lazy Loading</h3>
+
+<pre><code>import Image from 'next/image';
+
+export default function Page() {
+  return (
+    &lt;&gt;
+      {/* LCP görseli — priority ile preload edilir */}
+      &lt;Image
+        src="/images/above-fold.jpg"
+        alt="Ana görsel"
+        width={1200}
+        height={600}
+        priority // Lazy loading devre dışı, preload eklenir
+      /&gt;
+
+      {/* Sayfa aşağısındaki görseller — varsayılan lazy loading */}
+      &lt;Image
+        src="/images/below-fold.jpg"
+        alt="Alt görsel"
+        width={800}
+        height={400}
+        loading="lazy" // Varsayılan
+      /&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+
+<h3>Placeholder ve Blur Effect</h3>
+
+<pre><code>import Image from 'next/image';
+
+// Statik import ile otomatik blur
+import heroImage from '@/public/hero.jpg';
+
+export function BlurExample() {
+  return (
+    &lt;Image
+      src={heroImage}
+      alt="Blur placeholder örneği"
+      placeholder="blur" // Otomatik blur data URL oluşturulur
+    /&gt;
+  );
+}
+
+// Remote görsel için manuel blurDataURL
+export function RemoteBlurExample() {
+  return (
+    &lt;Image
+      src="https://example.com/photo.jpg"
+      alt="Remote blur"
+      width={800}
+      height={600}
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+    /&gt;
+  );
+}
+
+// Renk placeholder
+export function ColorPlaceholder() {
+  return (
+    &lt;div className="relative aspect-video bg-gray-200"&gt;
+      &lt;Image
+        src="/images/photo.jpg"
+        alt="Renk placeholder"
+        fill
+        placeholder="empty" // Varsayılan — placeholder yok
+      /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Image Konfigürasyonu</h3>
+
+<pre><code>// next.config.js
+const nextConfig = {
+  images: {
+    // Desteklenen formatlar
+    formats: ['image/avif', 'image/webp'],
+
+    // Üretilecek boyutlar
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+
+    // Cache süresi (saniye)
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 gün
+
+    // Harici loader (Cloudinary, Imgix vb.)
+    // loader: 'custom',
+    // loaderFile: './lib/image-loader.ts',
+
+    // Optimizasyonu devre dışı bırak (önerilmez)
+    // unoptimized: true,
+  },
+};</code></pre>
+
+<h3>Custom Image Loader</h3>
+
+<pre><code>// lib/image-loader.ts
+export default function cloudinaryLoader({
+  src,
+  width,
+  quality,
+}: {
+  src: string;
+  width: number;
+  quality?: number;
+}) {
+  const params = [
+    `f_auto`,
+    `c_limit`,
+    `w_${width}`,
+    `q_${quality || 'auto'}`,
+  ];
+  return `https://res.cloudinary.com/demo/image/upload/${params.join(',')}${src}`;
+}
+
+// Kullanım
+import Image from 'next/image';
+
+&lt;Image
+  loader={cloudinaryLoader}
+  src="/my-image.jpg"
+  alt="Cloudinary görsel"
+  width={800}
+  height={600}
+/&gt;</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Next.js, görselleri varsayılan olarak WebP veya AVIF formatına dönüştürür. Bu formatlar JPEG'e göre %25-50 daha küçüktür ve görsel kaliteyi korur.
+</div>
+
+<h3>Performans İpuçları</h3>
+
+<ul>
+  <li>Above-the-fold görsellere <code>priority</code> ekleyin</li>
+  <li>Her zaman <code>alt</code> text kullanın (erişilebilirlik ve SEO)</li>
+  <li><code>sizes</code> prop'unu doğru ayarlayın</li>
+  <li>Statik görseller için import kullanarak otomatik blur placeholder alın</li>
+  <li>Dekoratif görsellerde <code>alt=""</code> kullanın</li>
+  <li>Büyük görselleri <code>fill</code> mode ile responsive yapın</li>
+</ul>
+
+<h3>Sonuç</h3>
+
+<p>Next.js next/image bileşeni, görsel optimizasyonunu otomatikleştirerek Core Web Vitals skorlarını önemli ölçüde iyileştirir. Lazy loading, format dönüşümü, responsive boyutlandırma ve cache mekanizması gibi özelliklerle minimum çabayla maksimum performans elde edersiniz. Priority ve sizes prop'larını doğru kullanmak, LCP metriğinizi doğrudan etkiler.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/optimizing/images" target="_blank" rel="noopener noreferrer">Next.js Image Optimization</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/components/image" target="_blank" rel="noopener noreferrer">next/image API Reference</a></li>
+  <li><a href="https://web.dev/articles/lcp" target="_blank" rel="noopener noreferrer">Largest Contentful Paint (LCP)</a></li>
+</ul>

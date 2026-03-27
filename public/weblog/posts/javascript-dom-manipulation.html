@@ -1,0 +1,208 @@
+<h2>JavaScript DOM Manipulation: Modern Yöntemler</h2>
+
+<p>DOM (Document Object Model), HTML belgelerini ağaç yapısında temsil eden programlama arayüzüdür. Modern JavaScript, jQuery'ye gerek kalmadan DOM ile etkileşim kurmak için güçlü API'ler sunar. Bu rehberde eleman seçme, oluşturma, değiştirme, olay yönetimi ve performans optimizasyonu konularını ele alıyoruz.</p>
+
+<h3>1. Eleman Seçme</h3>
+
+<p>Modern JavaScript, CSS seçici sözdizimi ile DOM elemanlarına erişmek için <code>querySelector</code> ve <code>querySelectorAll</code> metotlarını sunar.</p>
+
+<pre><code>// Tek eleman seçme
+const baslik = document.querySelector("h1");
+const ilkKart = document.querySelector(".card");
+const form = document.querySelector("#kayit-formu");
+const aktifSekme = document.querySelector('[data-tab="aktif"]');
+
+// Birden fazla eleman seçme
+const tumKartlar = document.querySelectorAll(".card");
+const listeler = document.querySelectorAll("ul > li:nth-child(odd)");
+
+// NodeList üzerinde iterasyon
+tumKartlar.forEach((kart, index) => {
+  console.log(`Kart ${index}:`, kart.textContent);
+});
+
+// NodeList'i Array'e dönüştürme
+const kartArray = [...tumKartlar];
+const filtrelenmis = kartArray.filter(k => k.classList.contains("aktif"));
+
+// Yakın eleman arama
+const buton = document.querySelector(".sil-btn");
+const yakinKart = buton.closest(".card");      // Üst ağaçta en yakın .card
+const altBaslik = yakinKart.querySelector("h3"); // Alt ağaçta ilk h3
+
+// matches() — CSS seçici kontrolü
+if (buton.matches(".btn.btn-danger")) {
+  console.log("Tehlike butonu");
+}
+
+// Geleneksel metotlar (hâlâ geçerli)
+const elemanById = document.getElementById("ana-icerik");
+const elemanlarByClass = document.getElementsByClassName("card"); // Canlı koleksiyon
+const elemanlarByTag = document.getElementsByTagName("p");        // Canlı koleksiyon</code></pre>
+
+<h3>2. Eleman Oluşturma ve Yerleştirme</h3>
+
+<p>Yeni DOM elemanları oluşturmak ve sayfaya eklemek için modern API'ler, eski <code>innerHTML</code> yaklaşımından çok daha güvenli ve esnektir.</p>
+
+<pre><code>// createElement ile eleman oluşturma
+function kartOlustur({ baslik, icerik, resimUrl, etiketler }) {
+  const kart = document.createElement("div");
+  kart.className = "card";
+
+  const img = document.createElement("img");
+  img.src = resimUrl;
+  img.alt = baslik;
+  img.loading = "lazy";
+
+  const h3 = document.createElement("h3");
+  h3.textContent = baslik; // XSS güvenli (innerHTML yerine)
+
+  const p = document.createElement("p");
+  p.textContent = icerik;
+
+  const etiketDiv = document.createElement("div");
+  etiketDiv.className = "etiketler";
+  etiketler.forEach(e => {
+    const span = document.createElement("span");
+    span.className = "etiket";
+    span.textContent = e;
+    etiketDiv.appendChild(span);
+  });
+
+  kart.append(img, h3, p, etiketDiv);
+  return kart;
+}
+
+// DocumentFragment ile toplu ekleme (performans)
+function listeOlustur(veriler) {
+  const fragment = document.createDocumentFragment();
+
+  veriler.forEach(veri => {
+    const li = document.createElement("li");
+    li.textContent = veri.ad;
+    li.dataset.id = veri.id;
+    fragment.appendChild(li);
+  });
+
+  document.querySelector("#liste").appendChild(fragment);
+}
+
+// insertAdjacentHTML — konumlu ekleme
+const hedef = document.querySelector("#icerik");
+hedef.insertAdjacentHTML("beforebegin", "&lt;p&gt;Öncesine&lt;/p&gt;");
+hedef.insertAdjacentHTML("afterbegin", "&lt;p&gt;İlk çocuk&lt;/p&gt;");
+hedef.insertAdjacentHTML("beforeend", "&lt;p&gt;Son çocuk&lt;/p&gt;");
+hedef.insertAdjacentHTML("afterend", "&lt;p&gt;Sonrasına&lt;/p&gt;");
+
+// Modern yerleştirme metotları
+const referans = document.querySelector("#referans");
+referans.before(yeniEleman);      // Öncesine
+referans.after(yeniEleman);       // Sonrasına
+referans.prepend(yeniEleman);     // İlk çocuk olarak
+referans.append(yeniEleman);      // Son çocuk olarak
+referans.replaceWith(yeniEleman); // Yerini al</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> Çok sayıda eleman eklerken <code>DocumentFragment</code> kullanın. Her <code>appendChild</code> çağrısı DOM'u yeniden hesaplar (reflow). Fragment ile tüm elemanları tek seferde ekleyerek performansı artırabilirsiniz.
+</div>
+
+<h3>3. Olay Yönetimi (Event Handling)</h3>
+
+<p>Modern JavaScript'te olay yönetimi, <code>addEventListener</code> ile yapılır. Event delegation, custom event'ler ve AbortController ile profesyonel olay yönetimi gerçekleştirilir.</p>
+
+<pre><code>// Temel event listener
+const buton = document.querySelector("#gonder-btn");
+buton.addEventListener("click", (e) => {
+  e.preventDefault();
+  console.log("Tıklandı:", e.target);
+});
+
+// Event delegation — tek listener ile birden fazla eleman
+const liste = document.querySelector("#gorev-listesi");
+liste.addEventListener("click", (e) => {
+  const hedef = e.target;
+
+  if (hedef.matches(".sil-btn")) {
+    hedef.closest("li").remove();
+  } else if (hedef.matches(".tamamla-btn")) {
+    hedef.closest("li").classList.toggle("tamamlandi");
+  }
+});
+
+// AbortController ile temizleme
+const controller = new AbortController();
+
+document.addEventListener("scroll", () => {
+  console.log("Kaydırılıyor...");
+}, { signal: controller.signal });
+
+document.addEventListener("resize", () => {
+  console.log("Boyut değişti...");
+}, { signal: controller.signal });
+
+// Tek çağrı ile tüm listener'ları kaldır
+function temizle() {
+  controller.abort();
+}
+
+// Custom event
+const sepetEvent = new CustomEvent("urunEklendi", {
+  detail: { urunId: 42, ad: "Laptop", fiyat: 25000 },
+  bubbles: true
+});
+
+document.querySelector("#sepet").dispatchEvent(sepetEvent);
+
+document.addEventListener("urunEklendi", (e) => {
+  console.log("Sepete eklendi:", e.detail);
+});</code></pre>
+
+<h3>4. Stil ve Sınıf Yönetimi</h3>
+
+<pre><code>const eleman = document.querySelector(".kutu");
+
+// classList API
+eleman.classList.add("aktif", "animasyonlu");
+eleman.classList.remove("gizli");
+eleman.classList.toggle("acik");
+eleman.classList.replace("eski-tema", "yeni-tema");
+console.log(eleman.classList.contains("aktif")); // true
+
+// Inline stil
+eleman.style.backgroundColor = "#f0f0f0";
+eleman.style.setProperty("--ana-renk", "#3498db");
+
+// Computed style okuma
+const stil = getComputedStyle(eleman);
+console.log(stil.fontSize);    // "16px"
+console.log(stil.getPropertyValue("--ana-renk"));
+
+// data-* attribute'ları
+eleman.dataset.kullaniciId = "42";
+eleman.dataset.aktifSayfa = "3";
+console.log(eleman.dataset.kullaniciId); // "42"
+// HTML: &lt;div data-kullanici-id="42" data-aktif-sayfa="3"&gt;
+
+// Toplu stil değişikliği (CSS class ile)
+function temaUygula(temaAdi) {
+  document.documentElement.setAttribute("data-tema", temaAdi);
+}</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> <code>innerHTML</code> kullanıcı girdisi ile kullanıldığında XSS (Cross-Site Scripting) açığına neden olur. Kullanıcı girdisi içeren içerikler için her zaman <code>textContent</code> veya DOM API metotları kullanın.
+</div>
+
+<div class="info">
+<strong>Bilgi:</strong> <code>querySelectorAll</code> statik bir NodeList döner (anlık görüntü), <code>getElementsByClassName</code> ise canlı bir HTMLCollection döner (DOM değişikliklerini otomatik yansıtır). Performans açısından kritik durumlarda bu farkı göz önünde bulundurun.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Modern JavaScript DOM API'leri, jQuery benzeri kütüphanelere ihtiyaç duymadan güçlü ve verimli DOM manipülasyonu yapmayı mümkün kılar. querySelector/querySelectorAll ile eleman seçme, DocumentFragment ile performanslı ekleme, event delegation ile verimli olay yönetimi ve classList API ile kolay stil kontrolü, modern web geliştirmenin temel araçlarıdır.</p>
+
+<h4>Kaynaklar</h4>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" target="_blank" rel="noopener noreferrer">MDN — DOM API</a></li>
+  <li><a href="https://javascript.info/document" target="_blank" rel="noopener noreferrer">JavaScript.info — Document</a></li>
+  <li><a href="https://web.dev/articles/dom" target="_blank" rel="noopener noreferrer">web.dev — DOM Performance</a></li>
+</ul>

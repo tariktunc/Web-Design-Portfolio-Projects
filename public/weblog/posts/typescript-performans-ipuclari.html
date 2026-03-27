@@ -1,0 +1,282 @@
+<h2>TypeScript Performans İpuçları ve Best Practices</h2>
+
+<p>TypeScript projeleri büyüdükçe derleme süreleri artabilir ve IDE deneyimi yavaşlayabilir. Doğru yapılandırma ve tip tasarımı ile hem derleme performansını hem de runtime verimliliğini optimize edebilirsiniz. Bu rehberde TypeScript projelerinizi hızlandırmak için derleme zamanı optimizasyonları, tip tasarımı stratejileri ve runtime performans ipuçlarını inceleyeceğiz.</p>
+
+<h3>Derleme Performansı Optimizasyonu</h3>
+
+<h4>tsconfig.json Ayarları</h4>
+
+<pre><code>// tsconfig.json - Performans odaklı ayarlar
+{
+  "compilerOptions": {
+    // Incremental build: Önceki derleme sonuçlarını cache'ler
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+
+    // Module resolution hızlandırma
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+
+    // Gereksiz emit'i önle
+    "isolatedModules": true,
+
+    // Composite projeler (monorepo)
+    "composite": true,
+    "declarationMap": true
+  },
+  // Gereksiz dosyaları exclude et
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__/**"
+  ]
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> <code>incremental: true</code> ayarı, değişmeyen dosyaları yeniden derlemez ve büyük projelerde derleme süresini %40-70 oranında kısaltabilir.
+</div>
+
+<h3>Project References ile Monorepo Optimizasyonu</h3>
+
+<pre><code>// tsconfig.json (root)
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/ui" },
+    { "path": "./apps/web" }
+  ]
+}
+
+// packages/shared/tsconfig.json
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"]
+}
+
+// Build komutu
+// tsc --build (veya tsc -b) kullanın
+// Bu, bağımlılık sırasına göre derler ve cache kullanır</code></pre>
+
+<h3>Tip Tasarımı ile Performans</h3>
+
+<h4>Interface vs Type Alias</h4>
+
+<pre><code>// Interface: Derleme zamanında daha performanslı (cache'lenebilir)
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+// Genişletme: Interface extend daha hızlı
+interface AdminUser extends User {
+  role: 'admin';
+  permissions: string[];
+}
+
+// Type intersection daha yavaş olabilir (büyük tiplerde)
+type AdminUserType = User &amp; {
+  role: 'admin';
+  permissions: string[];
+};
+
+// Tercih: Obje tipleri için interface, union/intersection için type kullanın</code></pre>
+
+<h4>Conditional Types Optimizasyonu</h4>
+
+<pre><code>// Kötü: Derin iç içe conditional type (yavaş)
+type DeepPartial&lt;T&gt; = T extends object
+  ? { [K in keyof T]?: DeepPartial&lt;T[K]&gt; }
+  : T;
+
+// İyi: Derinlik sınırı ile
+type DeepPartialWithLimit&lt;T, Depth extends number = 5&gt; =
+  Depth extends 0
+    ? T
+    : T extends object
+    ? { [K in keyof T]?: DeepPartialWithLimit&lt;T[K], Prev[Depth]&gt; }
+    : T;
+
+type Prev = [never, 0, 1, 2, 3, 4, 5];
+
+// Kötü: Gereksiz karmaşık mapped type
+type AllOptional&lt;T&gt; = {
+  [K in keyof T as T[K] extends undefined ? never : K]?: T[K];
+};
+
+// İyi: Basit Partial kullanımı
+type AllOptional2&lt;T&gt; = Partial&lt;T&gt;;</code></pre>
+
+<h4>Template Literal Types Dikkatli Kullanımı</h4>
+
+<pre><code>// Dikkat: Çok fazla kombinasyon performansı düşürür
+type Color = 'red' | 'blue' | 'green' | 'yellow' | 'purple';
+type Size = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+type Weight = 'light' | 'normal' | 'bold';
+
+// Bu 5 * 5 * 3 = 75 kombinasyon üretir
+type ClassName = `${Color}-${Size}-${Weight}`;
+
+// Daha iyi yaklaşım: Ayrı tipler kullanın
+interface StyleProps {
+  color: Color;
+  size: Size;
+  weight: Weight;
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Template literal types ile oluşturulan union tipleri, kombinasyon sayısı arttıkça derleme süresini dramatik şekilde artırabilir. 1000+ kombinasyondan kaçının.
+</div>
+
+<h3>Import ve Module Optimizasyonu</h3>
+
+<pre><code>// Kötü: Tüm modülü import etme (tree-shaking'i zorlaştırır)
+import * as _ from 'lodash';
+_.map(items, fn);
+
+// İyi: Spesifik import
+import map from 'lodash/map';
+map(items, fn);
+
+// Kötü: Barrel file'dan her şeyi export etme
+// index.ts
+export * from './user';
+export * from './post';
+export * from './comment';
+// Bu, tüm modüllerin parse edilmesine neden olur
+
+// İyi: Doğrudan import
+import { User } from './models/user';
+import { Post } from './models/post';
+
+// Type-only import (runtime'da kaldırılır)
+import type { User } from './models/user';
+import { type Post, createPost } from './models/post';</code></pre>
+
+<h3>SWC ve esbuild ile Hızlı Derleme</h3>
+
+<pre><code>// Next.js: SWC varsayılan olarak aktif
+// next.config.js
+const nextConfig = {
+  swcMinify: true, // Next.js 15'te varsayılan
+};
+
+// ts-node yerine tsx kullanın (esbuild tabanlı)
+// npm install -D tsx
+// package.json
+{
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
+  }
+}
+
+// Vitest: esbuild ile otomatik TypeScript derleme
+// Jest: @swc/jest ile hızlandırma
+// jest.config.ts
+{
+  transform: {
+    '^.+\\.tsx?$': ['@swc/jest']
+  }
+}</code></pre>
+
+<h3>Runtime Performans İpuçları</h3>
+
+<h4>Enum Yerine Const Object</h4>
+
+<pre><code>// Enum: Runtime'da JavaScript objesine dönüşür
+enum Status {
+  Active = 'active',
+  Inactive = 'inactive',
+  Pending = 'pending',
+}
+// Derlenmiş JS boyutu daha büyük
+
+// Const object: Daha küçük output
+const Status = {
+  Active: 'active',
+  Inactive: 'inactive',
+  Pending: 'pending',
+} as const;
+
+type Status = typeof Status[keyof typeof Status];
+// 'active' | 'inactive' | 'pending'
+
+// Const enum: Inline edilir (isolatedModules ile uyumsuz)
+const enum Direction {
+  Up = 'UP',
+  Down = 'DOWN',
+}</code></pre>
+
+<h4>Assertion Functions Performansı</h4>
+
+<pre><code>// Type assertion ile gereksiz runtime kontrolünden kaçının
+// Kötü: Her çağrıda kontrol
+function processUser(user: User | null) {
+  if (!user) throw new Error('User required');
+  // user: User
+  return user.name;
+}
+
+// İyi: Assertion function (bir kez kontrol, sonra güvenli)
+function assertDefined&lt;T&gt;(
+  value: T | null | undefined,
+  name: string
+): asserts value is T {
+  if (value == null) {
+    throw new Error(`${name} is required`);
+  }
+}
+
+function processData(user: User | null, settings: Settings | null) {
+  assertDefined(user, 'User');
+  assertDefined(settings, 'Settings');
+  // Artık her ikisi de non-null
+  return `${user.name}: ${settings.theme}`;
+}</code></pre>
+
+<h3>TypeScript Performans Analizi</h3>
+
+<pre><code># Derleme performansını analiz et
+tsc --generateTrace ./trace
+# Chrome DevTools Performance sekmesinde trace dosyasını açın
+
+# Derleme süresini ölç
+tsc --diagnostics
+# veya detaylı
+tsc --extendedDiagnostics
+
+# Çıktı örneği:
+# Files:           1234
+# Lines:           98765
+# Nodes:          456789
+# Check time:      4.21s
+# Emit time:       1.05s
+# Total time:      6.82s</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>tsc --generateTrace</code> ile oluşturulan trace dosyasını Chrome DevTools'un Performance sekmesinde açarak hangi tiplerin derleme süresini artırdığını tespit edebilirsiniz.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript performansı, doğru yapılandırma ve bilinçli tip tasarımı ile önemli ölçüde iyileştirilebilir. Incremental build ve project references ile derleme sürelerini kısaltın, interface tercih edin, gereksiz tip karmaşıklığından kaçının ve SWC/esbuild gibi hızlı derleyiciler kullanın. <code>tsc --generateTrace</code> ile darboğazları tespit edip hedefli optimizasyon yapın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://github.com/microsoft/TypeScript/wiki/Performance" target="_blank" rel="noopener noreferrer">TypeScript Wiki - Performance</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/project-references.html" target="_blank" rel="noopener noreferrer">TypeScript - Project References</a></li>
+  <li><a href="https://swc.rs/" target="_blank" rel="noopener noreferrer">SWC - Rust-based TypeScript Compiler</a></li>
+  <li><a href="https://esbuild.github.io/" target="_blank" rel="noopener noreferrer">esbuild - Fast JavaScript Bundler</a></li>
+  <li><a href="https://www.totaltypescript.com/tips" target="_blank" rel="noopener noreferrer">Total TypeScript - Tips</a></li>
+</ul>

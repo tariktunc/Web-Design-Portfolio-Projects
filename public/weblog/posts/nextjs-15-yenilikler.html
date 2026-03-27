@@ -1,0 +1,278 @@
+<h2>Next.js 15 Yenilikleri: Kapsamlı İnceleme</h2>
+
+<p>Next.js 15, React 19 desteği, geliştirilmiş caching mekanizmaları ve yeni API'ler ile web geliştirmede önemli bir adım ileri atıyor. Bu yazıda Next.js 15'in getirdiği tüm yenilikleri, breaking change'leri ve migration stratejilerini kapsamlı şekilde inceleyeceğiz.</p>
+
+<h3>React 19 Desteği</h3>
+
+<p>Next.js 15, React 19'u tam destekleyen ilk framework'tür. React 19 ile gelen yenilikler doğrudan Next.js projelerinizde kullanılabilir:</p>
+
+<pre><code>// React 19: useActionState hook'u
+'use client';
+import { useActionState } from 'react';
+import { submitForm } from './actions';
+
+export function ContactForm() {
+  const [state, formAction, isPending] = useActionState(submitForm, {
+    message: '',
+    errors: {},
+  });
+
+  return (
+    &lt;form action={formAction}&gt;
+      &lt;input name="email" type="email" /&gt;
+      {state.errors?.email &amp;&amp; (
+        &lt;p className="text-red-500"&gt;{state.errors.email}&lt;/p&gt;
+      )}
+      &lt;button type="submit" disabled={isPending}&gt;
+        {isPending ? 'Gönderiliyor...' : 'Gönder'}
+      &lt;/button&gt;
+      {state.message &amp;&amp; &lt;p&gt;{state.message}&lt;/p&gt;}
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+<h4>React 19 Compiler (Deneysel)</h4>
+
+<p>React Compiler, <code>useMemo</code> ve <code>useCallback</code> gibi manuel optimizasyonları otomatik hale getirir:</p>
+
+<pre><code>// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    reactCompiler: true,
+  },
+};
+
+module.exports = nextConfig;
+
+// babel.config.js (React Compiler Babel plugin)
+// npm install babel-plugin-react-compiler
+module.exports = {
+  plugins: [['babel-plugin-react-compiler']],
+};</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> React Compiler hala deneysel aşamadadır. Production'da kullanmadan önce kapsamlı test yapmanız önerilir.
+</div>
+
+<h3>Caching Değişiklikleri (Breaking Change)</h3>
+
+<p>Next.js 15'in en önemli breaking change'i caching davranışındaki değişikliklerdir. Artık <code>fetch</code> istekleri ve route handler'lar varsayılan olarak <strong>cache'lenmez</strong>:</p>
+
+<pre><code>// Next.js 14: Varsayılan olarak cache'lenir
+// Next.js 15: Varsayılan olarak cache'lenmez (no-store)
+const data = await fetch('https://api.example.com/data');
+
+// Açıkça cache'lemek için:
+const cachedData = await fetch('https://api.example.com/data', {
+  cache: 'force-cache',
+});
+
+// Zaman bazlı revalidation:
+const revalidatedData = await fetch('https://api.example.com/data', {
+  next: { revalidate: 3600 },
+});</code></pre>
+
+<h4>GET Route Handler'lar</h4>
+
+<pre><code>// Next.js 14: GET handler'lar varsayılan olarak cache'lenirdi
+// Next.js 15: Artık cache'lenmez
+
+// app/api/posts/route.ts
+export async function GET() {
+  const posts = await db.post.findMany();
+  return Response.json(posts);
+}
+
+// Açıkça cache'lemek için:
+export const dynamic = 'force-static';
+export const revalidate = 3600;</code></pre>
+
+<h3>Async Request API'leri</h3>
+
+<p>Next.js 15'te <code>headers()</code>, <code>cookies()</code>, <code>params</code> ve <code>searchParams</code> artık asenkron API'lerdir:</p>
+
+<pre><code>// Next.js 14 (Senkron)
+import { cookies } from 'next/headers';
+
+export default function Page() {
+  const cookieStore = cookies();
+  const theme = cookieStore.get('theme');
+  return &lt;div&gt;Tema: {theme?.value}&lt;/div&gt;;
+}
+
+// Next.js 15 (Asenkron)
+import { cookies } from 'next/headers';
+
+export default async function Page() {
+  const cookieStore = await cookies();
+  const theme = cookieStore.get('theme');
+  return &lt;div&gt;Tema: {theme?.value}&lt;/div&gt;;
+}</code></pre>
+
+<pre><code>// Params ve SearchParams da async
+// Next.js 15
+type Props = {
+  params: Promise&lt;{ slug: string }&gt;;
+  searchParams: Promise&lt;{ page?: string }&gt;;
+};
+
+export default async function BlogPost({ params, searchParams }: Props) {
+  const { slug } = await params;
+  const { page } = await searchParams;
+
+  return &lt;article&gt;Slug: {slug}, Sayfa: {page}&lt;/article&gt;;
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Bu breaking change, mevcut projelerinizde birçok dosyayı etkileyebilir. Next.js, geçiş sürecinde uyumluluk katmanı sunar, ancak kademeli olarak tüm kullanımları güncellemeniz gerekir.
+</div>
+
+<h3>Partial Prerendering (PPR)</h3>
+
+<p>PPR, statik ve dinamik içeriği tek bir route'ta birleştiren deneysel bir özelliktir:</p>
+
+<pre><code>// next.config.js
+const nextConfig = {
+  experimental: {
+    ppr: 'incremental',
+  },
+};
+
+// app/page.tsx
+import { Suspense } from 'react';
+
+export const experimental_ppr = true;
+
+export default function Page() {
+  return (
+    &lt;main&gt;
+      {/* Statik: Build zamanında render edilir */}
+      &lt;h1&gt;Blog Yazıları&lt;/h1&gt;
+      &lt;StaticSidebar /&gt;
+
+      {/* Dinamik: İstek zamanında stream edilir */}
+      &lt;Suspense fallback={&lt;PostsSkeleton /&gt;}&gt;
+        &lt;DynamicPosts /&gt;
+      &lt;/Suspense&gt;
+    &lt;/main&gt;
+  );
+}</code></pre>
+
+<h3>next/after API</h3>
+
+<p><code>after()</code> API'si, response tamamlandıktan sonra arka plan görevlerini çalıştırmanıza olanak tanır:</p>
+
+<pre><code>// app/api/submit/route.ts
+import { after } from 'next/server';
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
+  const data = await request.json();
+
+  // Hızlı response dön
+  const result = await processData(data);
+
+  // Response gönderildikten sonra çalışır
+  after(async () =&gt; {
+    await logAnalytics({ action: 'submit', data });
+    await sendNotification(data.email);
+    await updateSearchIndex(result.id);
+  });
+
+  return NextResponse.json(result);
+}</code></pre>
+
+<h3>Turbopack Dev (Stable)</h3>
+
+<p>Next.js 15'te Turbopack, development modu için kararlı (stable) hale geldi:</p>
+
+<pre><code># Turbopack ile dev server başlat
+next dev --turbopack
+
+// package.json
+{
+  "scripts": {
+    "dev": "next dev --turbopack"
+  }
+}</code></pre>
+
+<p>Turbopack'in sağladığı iyileştirmeler:</p>
+
+<ul>
+  <li>İlk sayfa yükleme süresi %76.7 daha hızlı</li>
+  <li>HMR (Hot Module Replacement) %96.3 daha hızlı</li>
+  <li>Route derleme süresi %45.8 daha hızlı</li>
+</ul>
+
+<h3>next/form Bileşeni</h3>
+
+<p>Yeni <code>&lt;Form&gt;</code> bileşeni, progressive enhancement ile form navigasyonunu geliştirir:</p>
+
+<pre><code>import Form from 'next/form';
+
+export default function SearchForm() {
+  return (
+    &lt;Form action="/search"&gt;
+      &lt;input name="q" placeholder="Ara..." /&gt;
+      &lt;button type="submit"&gt;Ara&lt;/button&gt;
+    &lt;/Form&gt;
+  );
+  // JavaScript yüklendiğinde: client-side navigation
+  // JavaScript devre dışıysa: normal form submit
+}</code></pre>
+
+<h3>Instrumentation Hook (Stable)</h3>
+
+<pre><code>// instrumentation.ts (proje kökünde)
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Node.js runtime'a özgü setup
+    const { setupTracing } = await import('./lib/tracing');
+    setupTracing();
+  }
+
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    // Edge runtime'a özgü setup
+  }
+}
+
+export function onRequestError(
+  err: { digest: string } &amp; Error,
+  request: { path: string; method: string; headers: Record&lt;string, string&gt; },
+  context: { routerKind: string; routePath: string }
+) {
+  // Hata raporlama servisine gönder
+  errorReporter.captureException(err, {
+    request,
+    context,
+  });
+}</code></pre>
+
+<h3>Migration Rehberi (v14 -> v15)</h3>
+
+<ol>
+  <li>Next.js ve React'i güncelleyin: <code>npm install next@15 react@19 react-dom@19</code></li>
+  <li>Codemod'ları çalıştırın: <code>npx @next/codemod@canary upgrade latest</code></li>
+  <li>Async API'leri güncelleyin: <code>cookies()</code>, <code>headers()</code>, <code>params</code>, <code>searchParams</code></li>
+  <li>Caching davranışlarını kontrol edin ve gerekli yerlere <code>cache: 'force-cache'</code> ekleyin</li>
+  <li>Turbopack ile test edin ve uyumsuz eklentileri güncelleyin</li>
+</ol>
+
+<div class="tip">
+  <strong>İpucu:</strong> Next.js codemod aracı, breaking change'lerin çoğunu otomatik olarak düzeltir. Önce codemod çalıştırın, ardından kalan sorunları manuel olarak giderin.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js 15, React 19 entegrasyonu, caching mekanizmalarının yeniden tasarlanması, Turbopack'in kararlı hale gelmesi ve PPR gibi yeniliklerle modern web geliştirmede önemli bir sıçrama yapıyor. Caching ve async API'lerdeki breaking change'ler dikkat gerektirirken, codemod araçları geçiş sürecini kolaylaştırıyor. Yeni projelerinizde Next.js 15'i tercih edin, mevcut projelerinizi ise kademeli olarak migrate edin.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/blog/next-15" target="_blank" rel="noopener noreferrer">Next.js 15 Blog Post</a></li>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/upgrading/version-15" target="_blank" rel="noopener noreferrer">Next.js 15 Upgrade Guide</a></li>
+  <li><a href="https://react.dev/blog/2024/12/05/react-19" target="_blank" rel="noopener noreferrer">React 19 Blog Post</a></li>
+  <li><a href="https://turbo.build/pack" target="_blank" rel="noopener noreferrer">Turbopack Documentation</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/functions/after" target="_blank" rel="noopener noreferrer">Next.js - after() API</a></li>
+</ul>

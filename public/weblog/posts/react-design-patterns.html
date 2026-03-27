@@ -1,0 +1,291 @@
+<h2>React Design Patterns: Compound, Render Props, HOC</h2>
+
+<p>React'te temiz, yeniden kullanılabilir ve bakımı kolay componentler yazmak için çeşitli tasarım kalıpları (design patterns) geliştirilmiştir. Bu rehberde, en yaygın ve etkili üç pattern'i — Compound Components, Render Props ve Higher-Order Components (HOC) — detaylı örneklerle inceleyeceğiz. Her pattern'in ne zaman kullanılacağını ve avantaj/dezavantajlarını ele alacağız.</p>
+
+<h3>1. Compound Components Pattern</h3>
+
+<p>Compound Components, birlikte çalışan ve bir parent component aracılığıyla implicit state paylaşan componentler oluşturmanızı sağlar. HTML'deki select/option ilişkisine benzer. Bu pattern, component API'sini esnek ve deklaratif tutar.</p>
+
+<pre><code>import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+// Accordion için shared context
+interface AccordionContextType {
+  activeIndex: number | null;
+  toggleItem: (index: number) => void;
+}
+
+const AccordionContext = createContext&lt;AccordionContextType | null&gt;(null);
+
+function useAccordionContext() {
+  const context = useContext(AccordionContext);
+  if (!context) throw new Error('Accordion compound componentleri Accordion içinde kullanılmalıdır');
+  return context;
+}
+
+// Ana Accordion component
+function Accordion({ children, defaultIndex = null }: { children: ReactNode; defaultIndex?: number | null }) {
+  const [activeIndex, setActiveIndex] = useState&lt;number | null&gt;(defaultIndex);
+
+  const toggleItem = (index: number) => {
+    setActiveIndex((prev) => (prev === index ? null : index));
+  };
+
+  return (
+    &lt;AccordionContext.Provider value={{ activeIndex, toggleItem }}&gt;
+      &lt;div className="border rounded-lg divide-y"&gt;{children}&lt;/div&gt;
+    &lt;/AccordionContext.Provider&gt;
+  );
+}
+
+// Accordion.Item compound component
+function AccordionItem({ children, index }: { children: ReactNode; index: number }) {
+  return &lt;div className="accordion-item"&gt;{children}&lt;/div&gt;;
+}
+
+// Accordion.Header compound component
+function AccordionHeader({ children, index }: { children: ReactNode; index: number }) {
+  const { activeIndex, toggleItem } = useAccordionContext();
+  const isOpen = activeIndex === index;
+
+  return (
+    &lt;button
+      onClick={() => toggleItem(index)}
+      className="w-full flex justify-between items-center p-4 text-left font-medium"
+      aria-expanded={isOpen}
+    &gt;
+      {children}
+      &lt;span className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`}&gt;▼&lt;/span&gt;
+    &lt;/button&gt;
+  );
+}
+
+// Accordion.Panel compound component
+function AccordionPanel({ children, index }: { children: ReactNode; index: number }) {
+  const { activeIndex } = useAccordionContext();
+  if (activeIndex !== index) return null;
+
+  return (
+    &lt;div className="p-4 bg-gray-50" role="region"&gt;
+      {children}
+    &lt;/div&gt;
+  );
+}
+
+// Compound component'leri birleştir
+Accordion.Item = AccordionItem;
+Accordion.Header = AccordionHeader;
+Accordion.Panel = AccordionPanel;
+
+// Kullanım — çok temiz ve deklaratif
+function FAQ() {
+  return (
+    &lt;Accordion defaultIndex={0}&gt;
+      &lt;Accordion.Item index={0}&gt;
+        &lt;Accordion.Header index={0}&gt;React nedir?&lt;/Accordion.Header&gt;
+        &lt;Accordion.Panel index={0}&gt;
+          &lt;p&gt;React, Facebook tarafından geliştirilen bir JavaScript kütüphanesidir.&lt;/p&gt;
+        &lt;/Accordion.Panel&gt;
+      &lt;/Accordion.Item&gt;
+      &lt;Accordion.Item index={1}&gt;
+        &lt;Accordion.Header index={1}&gt;Hook nedir?&lt;/Accordion.Header&gt;
+        &lt;Accordion.Panel index={1}&gt;
+          &lt;p&gt;Hook'lar, fonksiyon componentlerde state ve lifecycle kullanmanızı sağlar.&lt;/p&gt;
+        &lt;/Accordion.Panel&gt;
+      &lt;/Accordion.Item&gt;
+    &lt;/Accordion&gt;
+  );
+}</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Compound Components pattern'i özellikle UI kütüphaneleri ve tasarım sistemleri için idealdir. Headless UI, Radix UI gibi popüler kütüphaneler bu pattern'i yoğun şekilde kullanır.
+</div>
+
+<h3>2. Render Props Pattern</h3>
+
+<p>Render Props, bir component'in render etme mantığını dışarıdan (bir fonksiyon prop'u aracılığıyla) almasını sağlar. Bu pattern, component mantığını yeniden kullanmanın güçlü bir yoludur. Günümüzde custom hook'lar aynı amaca hizmet etse de, bazı senaryolarda hala çok kullanışlıdır.</p>
+
+<pre><code>import { useState, useEffect, ReactNode } from 'react';
+
+// Render Props ile mouse pozisyon takibi
+interface MousePosition {
+  x: number;
+  y: number;
+}
+
+interface MouseTrackerProps {
+  children: (position: MousePosition) => ReactNode;
+}
+
+function MouseTracker({ children }: MouseTrackerProps) {
+  const [position, setPosition] = useState&lt;MousePosition&gt;({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  return &lt;&gt;{children(position)}&lt;/&gt;;
+}
+
+// Kullanım 1: Mouse koordinatlarını göster
+function MouseDisplay() {
+  return (
+    &lt;MouseTracker&gt;
+      {({ x, y }) => (
+        &lt;div className="fixed top-4 right-4 bg-black text-white px-3 py-1 rounded"&gt;
+          Mouse: {x}, {y}
+        &lt;/div&gt;
+      )}
+    &lt;/MouseTracker&gt;
+  );
+}
+
+// Kullanım 2: Mouse'u takip eden element
+function FollowCursor() {
+  return (
+    &lt;MouseTracker&gt;
+      {({ x, y }) => (
+        &lt;div
+          className="fixed w-6 h-6 bg-blue-500 rounded-full pointer-events-none"
+          style={{ left: x - 12, top: y - 12 }}
+        /&gt;
+      )}
+    &lt;/MouseTracker&gt;
+  );
+}</code></pre>
+
+<h3>3. Higher-Order Components (HOC)</h3>
+
+<p>HOC, bir component'i alıp, ona ekstra özellikler ekleyerek yeni bir component döndüren fonksiyondur. Fonksiyonel programlamadaki higher-order function kavramının React karşılığıdır. Cross-cutting concern'leri (auth, logging, error handling) merkezi olarak yönetmek için kullanılır.</p>
+
+<pre><code>import React, { ComponentType, useEffect, useState } from 'react';
+
+// Auth HOC — kimlik doğrulama kontrolü
+interface WithAuthProps {
+  user: { id: string; name: string; role: string } | null;
+}
+
+function withAuth&lt;P extends object&gt;(
+  WrappedComponent: ComponentType&lt;P & WithAuthProps&gt;,
+  requiredRole?: string
+) {
+  return function AuthenticatedComponent(props: P) {
+    const [user, setUser] = useState&lt;WithAuthProps['user']&gt;(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      async function checkAuth() {
+        try {
+          const res = await fetch('/api/auth/me');
+          if (res.ok) {
+            const userData = await res.json();
+            setUser(userData);
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      checkAuth();
+    }, []);
+
+    if (isLoading) return &lt;div&gt;Yetki kontrol ediliyor...&lt;/div&gt;;
+    if (!user) return &lt;div&gt;Giriş yapmanız gerekiyor. &lt;a href="/login"&gt;Giriş Yap&lt;/a&gt;&lt;/div&gt;;
+    if (requiredRole && user.role !== requiredRole) {
+      return &lt;div&gt;Bu sayfaya erişim yetkiniz yok.&lt;/div&gt;;
+    }
+
+    return &lt;WrappedComponent {...props} user={user} /&gt;;
+  };
+}
+
+// Loading HOC — veri yükleme durumu yönetimi
+function withLoading&lt;P extends { isLoading: boolean }&gt;(
+  WrappedComponent: ComponentType&lt;Omit&lt;P, 'isLoading'&gt;&gt;
+) {
+  return function LoadingComponent(props: P) {
+    const { isLoading, ...rest } = props;
+
+    if (isLoading) {
+      return (
+        &lt;div className="flex justify-center items-center p-8"&gt;
+          &lt;div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /&gt;
+        &lt;/div&gt;
+      );
+    }
+
+    return &lt;WrappedComponent {...(rest as any)} /&gt;;
+  };
+}
+
+// Kullanım
+function AdminDashboard({ user }: WithAuthProps) {
+  return &lt;h1&gt;Hoşgeldiniz, {user?.name}!&lt;/h1&gt;;
+}
+
+const ProtectedDashboard = withAuth(AdminDashboard, 'admin');
+
+// JSX'te: &lt;ProtectedDashboard /&gt;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> HOC pattern'i, hook'ların tanıtılmasıyla birlikte popülerliğini kaybetmiştir. Yeni projelerde cross-cutting concern'ler için custom hook'ları tercih edin. HOC'lar prop drilling, ref forwarding ve tip güvenliği konularında sorunlara yol açabilir.
+</div>
+
+<h3>Pattern Karşılaştırması</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Özellik</th>
+      <th>Compound Components</th>
+      <th>Render Props</th>
+      <th>HOC</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Kullanım Alanı</td>
+      <td>UI component grupları</td>
+      <td>Mantık paylaşımı</td>
+      <td>Cross-cutting concerns</td>
+    </tr>
+    <tr>
+      <td>Karmaşıklık</td>
+      <td>Orta</td>
+      <td>Düşük</td>
+      <td>Yüksek</td>
+    </tr>
+    <tr>
+      <td>TypeScript Desteği</td>
+      <td>İyi</td>
+      <td>İyi</td>
+      <td>Zor</td>
+    </tr>
+    <tr>
+      <td>Modern Alternatif</td>
+      <td>Hala yaygın</td>
+      <td>Custom Hooks</td>
+      <td>Custom Hooks</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="info">
+  <strong>Bilgi:</strong> Modern React'te en çok tercih edilen yaklaşım, Compound Components + Custom Hooks kombinasyonudur. Render Props ve HOC hala geçerli olsa da, çoğu senaryo custom hook'larla daha temiz şekilde çözülebilir.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>React design pattern'leri, component'lerinizi daha modüler, yeniden kullanılabilir ve test edilebilir kılar. Compound Components esnek UI API'leri oluşturmak için, Render Props mantığı dışarıdan enjekte etmek için, HOC ise cross-cutting concern'leri merkezi olarak yönetmek için kullanılır. Modern projelerde custom hook'lar birçok pattern'in yerini alsa da, Compound Components hala son derece güçlü ve yaygın bir pattern olarak varlığını sürdürmektedir.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/learn/passing-data-deeply-with-context" target="_blank">React Docs: Context</a></li>
+  <li><a href="https://react.dev/learn/reusing-logic-with-custom-hooks" target="_blank">React Docs: Custom Hooks</a></li>
+  <li><a href="https://www.patterns.dev/react" target="_blank">Patterns.dev: React Patterns</a></li>
+  <li><a href="https://github.com/radix-ui/primitives" target="_blank">Radix UI Primitives (Compound Components örneği)</a></li>
+</ul>

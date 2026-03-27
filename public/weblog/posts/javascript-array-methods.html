@@ -1,0 +1,214 @@
+<h2>JavaScript Array Metotları: map, filter, reduce ve Daha Fazlası</h2>
+
+<p>JavaScript dizileri, veri işleme ve dönüştürme için zengin bir metot koleksiyonuna sahiptir. <code>map</code>, <code>filter</code>, <code>reduce</code>, <code>find</code>, <code>some</code>, <code>every</code> ve daha birçok yüksek seviye fonksiyon, fonksiyonel programlama yaklaşımıyla temiz ve okunabilir kod yazmayı mümkün kılar. Bu rehberde tüm önemli array metotlarını pratik örneklerle ele alıyoruz.</p>
+
+<h3>1. map — Dönüştürme</h3>
+
+<p><code>map()</code> dizideki her elemanı bir fonksiyon ile dönüştürür ve yeni bir dizi döner. Orijinal dizi değişmez.</p>
+
+<pre><code>const kullanicilar = [
+  { ad: "Tarık", yas: 30, sehir: "İstanbul" },
+  { ad: "Ayşe", yas: 25, sehir: "Ankara" },
+  { ad: "Mehmet", yas: 35, sehir: "İzmir" }
+];
+
+// Basit dönüştürme
+const adlar = kullanicilar.map(k => k.ad);
+// ["Tarık", "Ayşe", "Mehmet"]
+
+// Yeni obje oluşturma
+const kartlar = kullanicilar.map(k => ({
+  gorunenAd: `${k.ad} (${k.yas})`,
+  konum: k.sehir,
+  yetiskin: k.yas >= 18
+}));
+
+// Index kullanımı
+const siralanmis = kullanicilar.map((k, index) => ({
+  ...k,
+  sira: index + 1,
+  id: `USR-${String(index + 1).padStart(3, "0")}`
+}));
+// [{ ad: "Tarık", ..., sira: 1, id: "USR-001" }, ...]
+
+// Zincirleme
+const sonuc = [1, 2, 3, 4, 5]
+  .map(x => x ** 2)       // [1, 4, 9, 16, 25]
+  .map(x => x.toString()) // ["1", "4", "9", "16", "25"]
+  .map(x => `Değer: ${x}`);
+// ["Değer: 1", "Değer: 4", ...]</code></pre>
+
+<h3>2. filter — Filtreleme</h3>
+
+<p><code>filter()</code> koşulu sağlayan elemanlardan yeni bir dizi oluşturur. Test fonksiyonu <code>true</code> dönen elemanlar dahil edilir.</p>
+
+<pre><code>const urunler = [
+  { ad: "Laptop", fiyat: 25000, stok: 5, kategori: "Elektronik" },
+  { ad: "Kalem", fiyat: 15, stok: 200, kategori: "Kırtasiye" },
+  { ad: "Mouse", fiyat: 350, stok: 0, kategori: "Elektronik" },
+  { ad: "Defter", fiyat: 45, stok: 150, kategori: "Kırtasiye" },
+  { ad: "Monitör", fiyat: 8000, stok: 3, kategori: "Elektronik" }
+];
+
+// Stokta olan ürünler
+const stoktaOlanlar = urunler.filter(u => u.stok > 0);
+
+// Birden fazla koşul
+const uygunElektronik = urunler.filter(
+  u => u.kategori === "Elektronik" && u.fiyat < 10000 && u.stok > 0
+);
+
+// Benzersiz değerler (Set alternatifi)
+const kategoriler = [...new Set(urunler.map(u => u.kategori))];
+
+// Falsy değerleri temizleme
+const karisik = [0, "merhaba", "", null, undefined, false, 42, "dünya"];
+const temiz = karisik.filter(Boolean);
+// ["merhaba", 42, "dünya"]
+
+// filter + map zincirleme
+const uygunUrunAdlari = urunler
+  .filter(u => u.fiyat < 1000 && u.stok > 0)
+  .map(u => `${u.ad} - ${u.fiyat} TL`)
+  .sort();
+// ["Defter - 45 TL", "Kalem - 15 TL"]</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> <code>filter</code> + <code>map</code> zinciri yerine <code>flatMap</code> kullanarak tek geçişte hem filtreleme hem dönüştürme yapabilirsiniz: <code>dizi.flatMap(x => koşul(x) ? [dönüştür(x)] : [])</code>
+</div>
+
+<h3>3. reduce — Biriktirme</h3>
+
+<p><code>reduce()</code> diziyi tek bir değere indirger. Toplama, gruplama, düzleştirme ve birçok karmaşık işlem için kullanılır.</p>
+
+<pre><code>const siparisler = [
+  { urun: "Laptop", miktar: 1, birimFiyat: 25000 },
+  { urun: "Mouse", miktar: 2, birimFiyat: 350 },
+  { urun: "Klavye", miktar: 1, birimFiyat: 750 },
+  { urun: "Mouse", miktar: 1, birimFiyat: 350 }
+];
+
+// Toplam hesaplama
+const toplamTutar = siparisler.reduce(
+  (toplam, s) => toplam + (s.miktar * s.birimFiyat), 0
+);
+// 26800
+
+// Gruplama
+const uruneBazli = siparisler.reduce((grup, s) => {
+  grup[s.urun] = grup[s.urun] || [];
+  grup[s.urun].push(s);
+  return grup;
+}, {});
+// { Laptop: [...], Mouse: [...], Klavye: [...] }
+
+// Frekans hesaplama
+const sayimlar = siparisler.reduce((sayim, s) => {
+  sayim[s.urun] = (sayim[s.urun] || 0) + s.miktar;
+  return sayim;
+}, {});
+// { Laptop: 1, Mouse: 3, Klavye: 1 }
+
+// Pipe fonksiyonu oluşturma
+const pipe = (...fonksiyonlar) =>
+  fonksiyonlar.reduce(
+    (f, g) => (...args) => g(f(...args))
+  );
+
+const isle = pipe(
+  x => x * 2,
+  x => x + 10,
+  x => `Sonuç: ${x}`
+);
+
+console.log(isle(5)); // "Sonuç: 20"
+
+// İç içe diziyi düzleştirme
+const icice = [[1, 2], [3, [4, 5]], [6]];
+const duz = icice.flat(Infinity); // [1, 2, 3, 4, 5, 6]</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> <code>reduce</code> ile başlangıç değeri (ikinci parametre) vermezseniz, dizinin ilk elemanı başlangıç değeri olarak kullanılır. Boş dizide başlangıç değeri olmadan <code>reduce</code> çağırmak <code>TypeError</code> fırlatır. Her zaman başlangıç değeri verin.
+</div>
+
+<h3>4. find, some, every ve includes</h3>
+
+<p>Bu metotlar dizi içinde arama ve kontrol işlemleri için kullanılır.</p>
+
+<pre><code>const ogrenciler = [
+  { ad: "Ali", not: 85, aktif: true },
+  { ad: "Veli", not: 42, aktif: true },
+  { ad: "Ayşe", not: 95, aktif: false },
+  { ad: "Fatma", not: 78, aktif: true }
+];
+
+// find — ilk eşleşen elemanı döner
+const basarili = ogrenciler.find(o => o.not >= 90);
+// { ad: "Ayşe", not: 95, aktif: false }
+
+// findIndex — ilk eşleşen index
+const kalinanIndex = ogrenciler.findIndex(o => o.not < 50);
+// 1
+
+// findLast ve findLastIndex (ES2023)
+const sonAktif = ogrenciler.findLast(o => o.aktif);
+// { ad: "Fatma", not: 78, aktif: true }
+
+// some — en az biri koşulu sağlıyor mu?
+const kalanVar = ogrenciler.some(o => o.not < 50);
+// true
+
+// every — hepsi koşulu sağlıyor mu?
+const hepsiAktif = ogrenciler.every(o => o.aktif);
+// false
+
+// includes — değer var mı? (basit değerler için)
+const notlar = [85, 42, 95, 78];
+console.log(notlar.includes(95)); // true
+
+// Array.from ile dizi oluşturma
+const harfler = Array.from("Merhaba"); // ["M", "e", "r", "h", "a", "b", "a"]
+const sayilar = Array.from({ length: 5 }, (_, i) => i * 10);
+// [0, 10, 20, 30, 40]</code></pre>
+
+<h3>5. Sıralama ve Yeniden Yapılandırma</h3>
+
+<pre><code>// sort — yerinde sıralama (mutasyon yapar!)
+const isimler = ["Zeynep", "Ali", "Mehmet", "Ayşe"];
+const sirali = [...isimler].sort((a, b) => a.localeCompare(b, "tr"));
+// ["Ali", "Ayşe", "Mehmet", "Zeynep"]
+
+// Obje dizisi sıralama
+const notaGore = [...ogrenciler].sort((a, b) => b.not - a.not);
+
+// toSorted — yeni dizi döner (ES2023, mutasyon yok)
+const yeniSirali = ogrenciler.toSorted((a, b) => a.not - b.not);
+
+// toReversed (ES2023)
+const tersSirali = ogrenciler.toReversed();
+
+// toSpliced (ES2023)
+const eklenmis = ogrenciler.toSpliced(1, 0, { ad: "Yeni", not: 70, aktif: true });
+
+// with (ES2023) — belirli index'i değiştir
+const guncellenmis = ogrenciler.with(0, { ...ogrenciler[0], not: 90 });
+
+// flatMap — map + flat
+const cumleler = ["Merhaba Dünya", "JavaScript Harika"];
+const kelimeler = cumleler.flatMap(c => c.split(" "));
+// ["Merhaba", "Dünya", "JavaScript", "Harika"]</code></pre>
+
+<div class="info">
+<strong>Bilgi:</strong> ES2023 ile gelen <code>toSorted</code>, <code>toReversed</code>, <code>toSpliced</code> ve <code>with</code> metotları orijinal diziyi değiştirmez (immutable). Bu, React gibi state yönetiminde immutability gerektiren framework'ler için özellikle faydalıdır.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>JavaScript array metotları, veri işleme ve dönüştürme için güçlü bir araç setidir. <code>map</code> ile dönüştürme, <code>filter</code> ile filtreleme, <code>reduce</code> ile biriktirme ve <code>find</code>/<code>some</code>/<code>every</code> ile arama işlemlerini zincirleme şeklinde birleştirerek temiz, okunabilir ve bakımı kolay kod yazabilirsiniz. ES2023 ile gelen immutable metotları da projelerinizde aktif olarak kullanmanızı öneriyorum.</p>
+
+<h4>Kaynaklar</h4>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" target="_blank" rel="noopener noreferrer">MDN — Array</a></li>
+  <li><a href="https://javascript.info/array-methods" target="_blank" rel="noopener noreferrer">JavaScript.info — Array Methods</a></li>
+  <li><a href="https://tc39.es/ecma262/#sec-array-objects" target="_blank" rel="noopener noreferrer">ECMAScript Specification — Array Objects</a></li>
+</ul>

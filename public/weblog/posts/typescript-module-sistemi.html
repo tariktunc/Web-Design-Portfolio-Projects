@@ -1,0 +1,214 @@
+<h2>TypeScript Module Sistemi: Import/Export Rehberi</h2>
+
+<p>Modül sistemi, büyük uygulamaları yönetilebilir parçalara bölmenin temelidir. TypeScript, ES Modules standardını destekler ve üzerine tip güvenliği ekler. Bu yazıda TypeScript modül sistemini, import/export pattern'lerini ve best practice'leri kapsamlı bir şekilde inceleyeceğiz.</p>
+
+<h3>Named Export ve Import</h3>
+
+<p>En yaygın kullanılan export/import yöntemidir. Birden fazla değeri dışa aktarmanızı sağlar:</p>
+
+<pre><code>// utils/matematik.ts
+export function topla(a: number, b: number): number {
+  return a + b;
+}
+
+export function cikar(a: number, b: number): number {
+  return a - b;
+}
+
+export const PI = 3.14159;
+
+export interface MatematikSonuc {
+  deger: number;
+  islem: string;
+}
+
+// app.ts - Named import
+import { topla, cikar, PI, MatematikSonuc } from "./utils/matematik";
+
+const sonuc: MatematikSonuc = {
+  deger: topla(5, 3),
+  islem: "toplama"
+};
+
+// Alias ile import
+import { topla as toplama, cikar as cikarma } from "./utils/matematik";
+
+// Tümünü namespace olarak import
+import * as Matematik from "./utils/matematik";
+console.log(Matematik.topla(5, 3));
+console.log(Matematik.PI);</code></pre>
+
+<h3>Default Export</h3>
+
+<pre><code>// services/KullaniciServisi.ts
+export default class KullaniciServisi {
+  async getir(id: number): Promise&lt;Kullanici&gt; {
+    const response = await fetch(`/api/kullanicilar/${id}`);
+    return response.json();
+  }
+
+  async listele(): Promise&lt;Kullanici[]&gt; {
+    const response = await fetch("/api/kullanicilar");
+    return response.json();
+  }
+}
+
+// app.ts - Default import (isim serbestçe verilebilir)
+import KullaniciServisi from "./services/KullaniciServisi";
+import KullaniciApi from "./services/KullaniciServisi"; // Farklı isim de olabilir
+
+// Default ve named birlikte
+// helpers.ts
+export default function anaFonksiyon() { /* ... */ }
+export function yardimciFonksiyon() { /* ... */ }
+export const SABIT = 42;
+
+// Import
+import anaFonksiyon, { yardimciFonksiyon, SABIT } from "./helpers";</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Modern TypeScript projelerinde named export tercih edilir. Sebepleri: otomatik import desteği daha iyi çalışır, yeniden adlandırma (refactoring) daha güvenlidir ve tree-shaking daha etkindir. Default export, modülün tek bir ana şey dışa aktardığı durumlarda (bir sınıf veya React bileşeni) uygundur.
+</div>
+
+<h3>Type-Only Import ve Export</h3>
+
+<p>TypeScript 3.8 ile gelen type-only import/export, derleme sonrası JavaScript'te yer almayan tip importlarını açıkça belirtir:</p>
+
+<pre><code>// types.ts
+export interface Kullanici {
+  id: number;
+  isim: string;
+  email: string;
+}
+
+export type KullaniciRolu = "admin" | "editor" | "okuyucu";
+
+export enum Durum {
+  Aktif = "AKTIF",
+  Pasif = "PASIF"
+}
+
+// app.ts - Type-only import
+import type { Kullanici, KullaniciRolu } from "./types";
+import { Durum } from "./types"; // Enum runtime'da gerekli
+
+// Inline type import (TypeScript 4.5+)
+import { Durum, type Kullanici, type KullaniciRolu } from "./types";
+
+// Type-only export
+export type { Kullanici };
+export type { KullaniciRolu as Rol };</code></pre>
+
+<h3>Barrel Export Pattern</h3>
+
+<pre><code>// models/Kullanici.ts
+export interface Kullanici {
+  id: number;
+  isim: string;
+}
+
+// models/Urun.ts
+export interface Urun {
+  id: number;
+  ad: string;
+  fiyat: number;
+}
+
+// models/Siparis.ts
+export interface Siparis {
+  id: number;
+  urunler: Urun[];
+  kullanici: Kullanici;
+}
+
+// models/index.ts - Barrel file
+export { Kullanici } from "./Kullanici";
+export { Urun } from "./Urun";
+export { Siparis } from "./Siparis";
+
+// Veya tümünü re-export
+export * from "./Kullanici";
+export * from "./Urun";
+export * from "./Siparis";
+
+// Kullanım - tek import satırı ile tüm modellere erişim
+import { Kullanici, Urun, Siparis } from "./models";</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Barrel export'lar büyük projelerde tree-shaking sorunlarına yol açabilir. Özellikle Next.js gibi framework'lerde, barrel dosyalar gereksiz modüllerin bundle'a dahil edilmesine neden olabilir. Performans kritik projelerde doğrudan import tercih edin.
+</div>
+
+<h3>Module Resolution</h3>
+
+<pre><code>// tsconfig.json - Module resolution ayarları
+{
+  "compilerOptions": {
+    // Module sistemi
+    "module": "ESNext",        // ES Modules
+    "moduleResolution": "bundler", // Modern bundler uyumlu
+
+    // Path mapping
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@models/*": ["./models/*"],
+      "@services/*": ["./services/*"],
+      "@utils/*": ["./utils/*"]
+    }
+  }
+}
+
+// Path alias kullanımı
+import { Kullanici } from "@models/Kullanici";
+import { ApiServisi } from "@services/ApiServisi";
+import { formatTarih } from "@utils/tarih";
+
+// Yerine uzun relative path kullanmak gerekmez:
+// import { Kullanici } from "../../../models/Kullanici";</code></pre>
+
+<h3>Dynamic Import</h3>
+
+<pre><code>// Lazy loading ile dynamic import
+async function sayfaYukle(sayfa: string): Promise&lt;void&gt; {
+  switch (sayfa) {
+    case "dashboard":
+      const { DashboardSayfa } = await import("./pages/Dashboard");
+      new DashboardSayfa().render();
+      break;
+    case "profil":
+      const { ProfilSayfa } = await import("./pages/Profil");
+      new ProfilSayfa().render();
+      break;
+  }
+}
+
+// Conditional import
+async function platformServisi() {
+  if (typeof window !== "undefined") {
+    const { BrowserServisi } = await import("./services/BrowserServisi");
+    return new BrowserServisi();
+  } else {
+    const { NodeServisi } = await import("./services/NodeServisi");
+    return new NodeServisi();
+  }
+}
+
+// Type ile dynamic import
+type DashboardModul = typeof import("./pages/Dashboard");
+type DashboardSayfa = InstanceType&lt;DashboardModul["DashboardSayfa"]&gt;;</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Dynamic import (<code>import()</code>), code splitting ve lazy loading için kullanılır. Büyük uygulamalarda başlangıç yükleme süresini azaltır. Webpack, Vite ve Rollup gibi bundler'lar dynamic import'ları otomatik olarak ayrı chunk'lara böler.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>TypeScript modül sistemi, büyük uygulamaları organize etmenin temelidir. Named export'lar, type-only import'lar, barrel pattern ve path alias'lar ile temiz ve sürdürülebilir bir kod yapısı oluşturabilirsiniz. Module resolution stratejinizi projenizin ihtiyaçlarına göre yapılandırarak, hem geliştirici deneyimini hem de uygulama performansını optimize edebilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/modules.html" target="_blank" rel="noopener noreferrer">TypeScript Handbook: Modules</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/module-resolution.html" target="_blank" rel="noopener noreferrer">Module Resolution</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/modules/reference.html" target="_blank" rel="noopener noreferrer">Modules Reference</a></li>
+</ul>

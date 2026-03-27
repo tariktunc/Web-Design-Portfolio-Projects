@@ -1,0 +1,253 @@
+<h2>Next.js Environment Variables Yönetimi</h2>
+
+<p>Environment variables (ortam değişkenleri), uygulamanızın farklı ortamlarda (development, staging, production) farklı yapılandırmalarla çalışmasını sağlar. API anahtarları, veritabanı bağlantı bilgileri ve uygulama ayarları gibi değerleri kod dışında tutarak güvenliği ve esnekliği artırır. Bu yazıda Next.js'te environment variables yönetiminin tüm detaylarını inceleyeceğiz.</p>
+
+<h3>Temel Kavramlar</h3>
+
+<p>Next.js'te environment variables iki kategoriye ayrılır:</p>
+
+<ul>
+  <li><strong>Server-side variables:</strong> Sadece sunucu tarafında erişilebilir. API secret'ları, veritabanı bilgileri burada tutulur.</li>
+  <li><strong>Client-side variables:</strong> <code>NEXT_PUBLIC_</code> prefix'i ile başlar. Tarayıcıda da erişilebilir, JavaScript bundle'a dahil edilir.</li>
+</ul>
+
+<pre><code># .env.local
+# Server-side — sadece sunucuda erişilebilir
+DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
+AUTH_SECRET=super-secret-key-12345
+STRIPE_SECRET_KEY=sk_test_abc123
+SMTP_PASSWORD=email-password
+
+# Client-side — tarayıcıda da erişilebilir
+NEXT_PUBLIC_API_URL=https://api.example.com
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+NEXT_PUBLIC_SITE_URL=https://example.com</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>NEXT_PUBLIC_</code> prefix'i ile başlayan değişkenler build sırasında JavaScript bundle'a inline edilir ve tarayıcıda herkes tarafından görülebilir. Hassas bilgileri (API secret, veritabanı şifresi, private key) asla <code>NEXT_PUBLIC_</code> ile başlatmayın.
+</div>
+
+<h3>.env Dosya Hiyerarşisi</h3>
+
+<p>Next.js, ortam değişkenlerini belirli bir öncelik sırasına göre yükler:</p>
+
+<ol>
+  <li><code>.env.local</code> — En yüksek öncelik (git'e eklenmez)</li>
+  <li><code>.env.development.local</code> veya <code>.env.production.local</code></li>
+  <li><code>.env.development</code> veya <code>.env.production</code></li>
+  <li><code>.env</code> — En düşük öncelik (tüm ortamlar için varsayılan)</li>
+</ol>
+
+<pre><code># .env — Tüm ortamlarda geçerli varsayılanlar
+NEXT_PUBLIC_SITE_NAME=My App
+NEXT_PUBLIC_DEFAULT_LOCALE=tr
+
+# .env.development — Sadece development ortamı
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+DATABASE_URL=postgresql://localhost:5432/mydb_dev
+DEBUG=true
+
+# .env.production — Sadece production ortamı
+NEXT_PUBLIC_API_URL=https://api.myapp.com
+DATABASE_URL=postgresql://prod-server:5432/mydb_prod
+
+# .env.local — Lokal geliştirme, git'e eklenmez
+AUTH_SECRET=local-dev-secret
+STRIPE_SECRET_KEY=sk_test_local</code></pre>
+
+<h3>.gitignore Ayarları</h3>
+
+<pre><code># .gitignore
+.env.local
+.env.development.local
+.env.production.local
+.env*.local</code></pre>
+
+<h3>Kullanım Örnekleri</h3>
+
+<h4>Server Component'lerde</h4>
+
+<pre><code>// app/page.js (Server Component)
+export default async function HomePage() {
+  // Server-side değişkenlere doğrudan erişim
+  const dbUrl = process.env.DATABASE_URL;
+  const apiSecret = process.env.API_SECRET;
+
+  // Client-side değişkenlere de erişilebilir
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  const data = await fetch(process.env.NEXT_PUBLIC_API_URL + '/posts', {
+    headers: {
+      Authorization: `Bearer ${process.env.API_SECRET}`,
+    },
+  });
+
+  return &lt;div&gt;{/* ... */}&lt;/div&gt;;
+}</code></pre>
+
+<h4>Client Component'lerde</h4>
+
+<pre><code>'use client';
+
+export function AnalyticsTracker() {
+  // Sadece NEXT_PUBLIC_ değişkenlerine erişilebilir
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  // Bu ÇALIŞMAZ — undefined döner
+  // const secret = process.env.API_SECRET;
+
+  return &lt;script src={`https://analytics.com?id=${gaId}`} /&gt;;
+}</code></pre>
+
+<h4>Route Handler'larda</h4>
+
+<pre><code>// app/api/webhook/route.js
+export async function POST(request) {
+  const webhookSecret = process.env.WEBHOOK_SECRET;
+  const signature = request.headers.get('x-signature');
+
+  if (!verifySignature(signature, webhookSecret)) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // İşlemi gerçekleştir...
+  return Response.json({ success: true });
+}</code></pre>
+
+<h4>Middleware'de</h4>
+
+<pre><code>// middleware.js
+import { NextResponse } from 'next/server';
+
+export function middleware(request) {
+  // Edge Runtime'da process.env erişimi
+  const maintenanceMode = process.env.MAINTENANCE_MODE === 'true';
+
+  if (maintenanceMode) {
+    return NextResponse.rewrite(new URL('/maintenance', request.url));
+  }
+
+  return NextResponse.next();
+}</code></pre>
+
+<h3>TypeScript ile Tip Güvenliği</h3>
+
+<pre><code>// env.d.ts
+namespace NodeJS {
+  interface ProcessEnv {
+    DATABASE_URL: string;
+    AUTH_SECRET: string;
+    STRIPE_SECRET_KEY: string;
+    NEXT_PUBLIC_API_URL: string;
+    NEXT_PUBLIC_SITE_URL: string;
+    NEXT_PUBLIC_GA_ID: string;
+    NODE_ENV: 'development' | 'production' | 'test';
+  }
+}</code></pre>
+
+<h3>Zod ile Runtime Validasyon</h3>
+
+<pre><code>// lib/env.js
+import { z } from 'zod';
+
+const envSchema = z.object({
+  DATABASE_URL: z.string().url('Geçerli bir veritabanı URL\'i gerekli'),
+  AUTH_SECRET: z.string().min(16, 'AUTH_SECRET en az 16 karakter olmalı'),
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  NEXT_PUBLIC_API_URL: z.string().url(),
+  NEXT_PUBLIC_SITE_URL: z.string().url(),
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+});
+
+function validateEnv() {
+  const parsed = envSchema.safeParse(process.env);
+
+  if (!parsed.success) {
+    console.error('Ortam değişkenleri geçersiz:');
+    console.error(parsed.error.flatten().fieldErrors);
+    throw new Error('Ortam değişkenleri eksik veya geçersiz.');
+  }
+
+  return parsed.data;
+}
+
+export const env = validateEnv();</code></pre>
+
+<pre><code>// Kullanım
+import { env } from '@/lib/env';
+
+const dbUrl = env.DATABASE_URL; // Tip güvenli ve validate edilmiş</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> <code>@t3-oss/env-nextjs</code> paketi, Next.js için özel olarak tasarlanmış bir environment validation kütüphanesidir. Server ve client değişkenlerini ayrı ayrı tanımlar ve build sırasında validasyon yapar.
+</div>
+
+<h3>@t3-oss/env-nextjs Kullanımı</h3>
+
+<pre><code>npm install @t3-oss/env-nextjs zod</code></pre>
+
+<pre><code>// env.mjs
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod';
+
+export const env = createEnv({
+  server: {
+    DATABASE_URL: z.string().url(),
+    AUTH_SECRET: z.string().min(16),
+    STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  },
+  client: {
+    NEXT_PUBLIC_API_URL: z.string().url(),
+    NEXT_PUBLIC_SITE_URL: z.string().url(),
+  },
+  runtimeEnv: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  },
+});</code></pre>
+
+<h3>Vercel'de Environment Variables</h3>
+
+<pre><code># CLI ile ekleme
+vercel env add DATABASE_URL production
+vercel env add DATABASE_URL preview
+vercel env add DATABASE_URL development
+
+# Lokal'e çekme
+vercel env pull .env.local
+
+# Listeleme
+vercel env ls</code></pre>
+
+<h3>.env.example Dosyası</h3>
+
+<p>Ekip üyelerine hangi değişkenlerin gerekli olduğunu belirtmek için bir örnek dosya oluşturun:</p>
+
+<pre><code># .env.example — Bu dosyayı .env.local olarak kopyalayın ve değerleri doldurun
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+AUTH_SECRET=
+STRIPE_SECRET_KEY=sk_test_
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_GA_ID=</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Next.js, <code>process.env.VARIABLE_NAME</code> ifadelerini build sırasında statik olarak değiştirir. Bu nedenle <code>process.env[key]</code> veya destructuring (<code>const { API_URL } = process.env</code>) gibi dinamik erişimler client-side değişkenler için çalışmaz.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Next.js'te environment variables yönetimi, güvenlik ve yapılandırma esnekliği açısından kritik öneme sahiptir. Server-side ve client-side ayrımını doğru yapmak, .env dosya hiyerarşisini anlamak ve runtime validasyon uygulamak güvenli bir uygulama için temeldir. Zod veya @t3-oss/env-nextjs ile tip güvenli validasyon ekleyerek build sırasında hataları yakalayabilir, .env.example dosyası ile ekip iletişimini iyileştirebilir ve Vercel gibi platformlarda ortam bazlı değişken yönetimi yapabilirsiniz.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/configuring/environment-variables" target="_blank" rel="noopener noreferrer">Next.js Docs — Environment Variables</a></li>
+  <li><a href="https://env.t3.gg/" target="_blank" rel="noopener noreferrer">@t3-oss/env-nextjs Documentation</a></li>
+  <li><a href="https://vercel.com/docs/projects/environment-variables" target="_blank" rel="noopener noreferrer">Vercel — Environment Variables</a></li>
+  <li><a href="https://zod.dev/" target="_blank" rel="noopener noreferrer">Zod — Schema Validation</a></li>
+</ul>

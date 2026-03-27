@@ -1,0 +1,292 @@
+<h2>JavaScript Performans İpuçları: Hız Optimizasyonu</h2>
+
+<p>JavaScript performansı, kullanıcı deneyimini doğrudan etkiler. Yavaş çalışan kod, sayfa etkileşimlerinde gecikmeye, düşük FPS'e ve olumsuz Core Web Vitals skorlarına yol açar. Bu rehberde JavaScript performansını artırmak için DOM manipülasyonu, olay yönetimi, bellek optimizasyonu, algoritma verimliliği ve modern tarayıcı API'lerini inceleyeceğiz.</p>
+
+<h3>DOM Manipülasyonu Optimizasyonu</h3>
+
+<h4>Batch DOM Güncellemeleri</h4>
+
+<pre><code>// Kötü: Her iterasyonda DOM'a erişim (reflow/repaint)
+function addItemsBad(items) {
+  const list = document.getElementById('list');
+  items.forEach(item =&gt; {
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li); // Her seferinde reflow
+  });
+}
+
+// İyi: DocumentFragment ile toplu ekleme
+function addItemsGood(items) {
+  const list = document.getElementById('list');
+  const fragment = document.createDocumentFragment();
+
+  items.forEach(item =&gt; {
+    const li = document.createElement('li');
+    li.textContent = item;
+    fragment.appendChild(li);
+  });
+
+  list.appendChild(fragment); // Tek reflow
+}
+
+// Daha iyi: innerHTML ile toplu ekleme (küçük listeler için)
+function addItemsBest(items) {
+  const list = document.getElementById('list');
+  list.innerHTML = items
+    .map(item =&gt; `&lt;li&gt;${escapeHtml(item)}&lt;/li&gt;`)
+    .join('');
+}</code></pre>
+
+<h4>Layout Thrashing'den Kaçınma</h4>
+
+<pre><code>// Kötü: Layout thrashing (okuma/yazma karışık)
+function resizeAll(elements) {
+  elements.forEach(el =&gt; {
+    const height = el.offsetHeight; // Okuma (reflow tetikler)
+    el.style.height = height * 2 + 'px'; // Yazma
+  });
+}
+
+// İyi: Önce oku, sonra yaz
+function resizeAllOptimized(elements) {
+  // Toplu okuma
+  const heights = elements.map(el =&gt; el.offsetHeight);
+
+  // Toplu yazma
+  elements.forEach((el, i) =&gt; {
+    el.style.height = heights[i] * 2 + 'px';
+  });
+}
+
+// En iyi: requestAnimationFrame kullanımı
+function resizeAllRAF(elements) {
+  const heights = elements.map(el =&gt; el.offsetHeight);
+
+  requestAnimationFrame(() =&gt; {
+    elements.forEach((el, i) =&gt; {
+      el.style.height = heights[i] * 2 + 'px';
+    });
+  });
+}</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> Layout thrashing, DOM'dan okuma ve yazma işlemlerinin karışık yapılmasıdır. Tarayıcı her okumada layout'u yeniden hesaplar. Okumaları ve yazmaları gruplayarak bu maliyetten kaçının.
+</div>
+
+<h3>Olay (Event) Optimizasyonu</h3>
+
+<h4>Debounce ve Throttle</h4>
+
+<pre><code>// Debounce: Son çağrıdan belirli süre sonra çalışır
+function debounce(fn, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() =&gt; fn.apply(this, args), delay);
+  };
+}
+
+// Throttle: Belirli aralıklarla en fazla bir kez çalışır
+function throttle(fn, limit) {
+  let inThrottle = false;
+  return function (...args) {
+    if (!inThrottle) {
+      fn.apply(this, args);
+      inThrottle = true;
+      setTimeout(() =&gt; (inThrottle = false), limit);
+    }
+  };
+}
+
+// Kullanım
+const searchInput = document.getElementById('search');
+searchInput.addEventListener('input', debounce((e) =&gt; {
+  fetchSearchResults(e.target.value);
+}, 300));
+
+window.addEventListener('scroll', throttle(() =&gt; {
+  updateScrollPosition();
+}, 100));</code></pre>
+
+<h4>Event Delegation</h4>
+
+<pre><code>// Kötü: Her elemente ayrı listener
+document.querySelectorAll('.btn').forEach(btn =&gt; {
+  btn.addEventListener('click', handleClick); // 100 listener
+});
+
+// İyi: Tek listener, event delegation
+document.getElementById('button-container').addEventListener('click', (e) =&gt; {
+  const btn = e.target.closest('.btn');
+  if (btn) handleClick(e);
+}); // 1 listener</code></pre>
+
+<h3>Bellek Optimizasyonu</h3>
+
+<pre><code>// Hafıza sızıntısı: Olay dinleyicilerini temizleme
+class Component {
+  constructor() {
+    this.handleResize = this.onResize.bind(this);
+    window.addEventListener('resize', this.handleResize);
+  }
+
+  onResize() { /* ... */ }
+
+  // Mutlaka cleanup yapın
+  destroy() {
+    window.removeEventListener('resize', this.handleResize);
+  }
+}
+
+// AbortController ile kolay cleanup
+class ModernComponent {
+  constructor() {
+    this.controller = new AbortController();
+    const { signal } = this.controller;
+
+    window.addEventListener('resize', this.onResize, { signal });
+    window.addEventListener('scroll', this.onScroll, { signal });
+    document.addEventListener('click', this.onClick, { signal });
+  }
+
+  destroy() {
+    this.controller.abort(); // Tüm listener'ları tek seferde temizle
+  }
+}
+
+// Timer temizleme
+let intervalId = setInterval(update, 1000);
+// Kullanılmadığında temizle
+clearInterval(intervalId);
+intervalId = null;</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> Temizlenmeyen event listener'lar, timer'lar ve closure referansları en yaygın hafıza sızıntısı kaynaklarıdır. Bileşen kaldırıldığında veya sayfa değiştiğinde cleanup yapmayı unutmayın.
+</div>
+
+<h3>Döngü ve Algoritma Optimizasyonu</h3>
+
+<pre><code>// Dizi arama: O(n) vs O(1)
+// Kötü: Her arama O(n)
+const items = [{ id: 1, name: 'a' }, { id: 2, name: 'b' }, /* ... 10000 */];
+function findById(id) {
+  return items.find(item =&gt; item.id === id); // O(n)
+}
+
+// İyi: Map ile O(1) arama
+const itemMap = new Map(items.map(item =&gt; [item.id, item]));
+function findByIdFast(id) {
+  return itemMap.get(id); // O(1)
+}
+
+// Set ile hızlı varlık kontrolü
+const activeIds = new Set([1, 5, 10, 25, 100]);
+activeIds.has(25); // O(1) - includes() O(n)'den çok daha hızlı
+
+// Erken çıkış ile gereksiz iterasyondan kaçınma
+function hasAdminUser(users) {
+  // some() bulduğunda durur, forEach tamamı döner
+  return users.some(user =&gt; user.role === 'admin');
+}</code></pre>
+
+<h3>Lazy Loading ve Code Splitting</h3>
+
+<pre><code>// Dinamik import
+async function loadChart() {
+  const { Chart } = await import('chart.js');
+  return new Chart(/* ... */);
+}
+
+// IntersectionObserver ile lazy loading
+const observer = new IntersectionObserver((entries) =&gt; {
+  entries.forEach(entry =&gt; {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      img.src = img.dataset.src;
+      img.classList.remove('lazy');
+      observer.unobserve(img);
+    }
+  });
+}, { rootMargin: '200px' });
+
+document.querySelectorAll('img.lazy').forEach(img =&gt; {
+  observer.observe(img);
+});</code></pre>
+
+<h3>requestIdleCallback ile Düşük Öncelikli İşler</h3>
+
+<pre><code>// Boş zamanlarda çalıştır (ana thread'i bloklamaz)
+function processLargeData(data) {
+  let index = 0;
+
+  function processChunk(deadline) {
+    while (index &lt; data.length &amp;&amp; deadline.timeRemaining() &gt; 0) {
+      processItem(data[index]);
+      index++;
+    }
+
+    if (index &lt; data.length) {
+      requestIdleCallback(processChunk);
+    } else {
+      console.log('İşlem tamamlandı');
+    }
+  }
+
+  requestIdleCallback(processChunk);
+}</code></pre>
+
+<h3>Performans Ölçümü</h3>
+
+<pre><code>// Performance API ile ölçüm
+performance.mark('start-process');
+
+// ... işlem ...
+
+performance.mark('end-process');
+performance.measure('process-duration', 'start-process', 'end-process');
+
+const measure = performance.getEntriesByName('process-duration')[0];
+console.log(`İşlem süresi: ${measure.duration.toFixed(2)}ms`);
+
+// PerformanceObserver ile sürekli izleme
+const observer = new PerformanceObserver((list) =&gt; {
+  list.getEntries().forEach(entry =&gt; {
+    if (entry.duration &gt; 50) {
+      console.warn('Yavaş işlem:', entry.name, entry.duration + 'ms');
+    }
+  });
+});
+observer.observe({ entryTypes: ['measure', 'longtask'] });</code></pre>
+
+<div class="tip">
+  <strong>İpucu:</strong> Chrome DevTools Performance sekmesinde recording yaparak hangi fonksiyonların en fazla süre harcadığını tespit edin. "Long tasks" (&gt;50ms) özellikle INP metriğini olumsuz etkiler.
+</div>
+
+<h3>Modern API'ler ile Performans</h3>
+
+<pre><code>// structuredClone (derin kopya - JSON.parse'dan hızlı)
+const clone = structuredClone(complexObject);
+
+// Array.at() (negatif indeks desteği)
+const last = arr.at(-1); // arr[arr.length - 1] yerine
+
+// Object.groupBy (ES2024)
+const grouped = Object.groupBy(users, user =&gt; user.role);
+
+// Promise.withResolvers (ES2024)
+const { promise, resolve, reject } = Promise.withResolvers();</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>JavaScript performansı, DOM manipülasyonlarını minimize etme, olay yönetimini optimize etme, bellek sızıntılarını önleme ve doğru veri yapılarını seçme ile iyileştirilir. Debounce/throttle ile gereksiz çağrıları engelleyin, event delegation ile listener sayısını azaltın, Map/Set ile arama performansını artırın. Performance API ile darboğazları tespit edin ve hedefli optimizasyon yapın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://web.dev/articles/rendering-performance" target="_blank" rel="noopener noreferrer">web.dev - Rendering Performance</a></li>
+  <li><a href="https://developer.chrome.com/docs/devtools/performance" target="_blank" rel="noopener noreferrer">Chrome DevTools - Performance</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Performance_API" target="_blank" rel="noopener noreferrer">MDN - Performance API</a></li>
+  <li><a href="https://web.dev/articles/optimize-long-tasks" target="_blank" rel="noopener noreferrer">web.dev - Optimize Long Tasks</a></li>
+  <li><a href="https://v8.dev/blog" target="_blank" rel="noopener noreferrer">V8 Blog - JavaScript Engine Insights</a></li>
+</ul>

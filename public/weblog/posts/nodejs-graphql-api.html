@@ -1,0 +1,380 @@
+<h2>Node.js GraphQL API: Apollo Server Rehberi</h2>
+
+<p>GraphQL, API'lerden veri sorgulama ve manipüle etme için Facebook tarafından geliştirilen güçlü bir query dilidir. REST API'lerin over-fetching ve under-fetching sorunlarını çözer, istemcinin tam olarak ihtiyacı olan veriyi tek istekte almasını sağlar. Bu rehberde Apollo Server ile Node.js'te GraphQL API oluşturmayı adım adım inceleyeceğiz.</p>
+
+<h3>1. GraphQL vs REST</h3>
+
+<table>
+<tr><th>Özellik</th><th>REST</th><th>GraphQL</th></tr>
+<tr><td>Endpoint</td><td>Birden fazla (/users, /posts)</td><td>Tek endpoint (/graphql)</td></tr>
+<tr><td>Veri kontrolü</td><td>Sunucu belirler</td><td>İstemci belirler</td></tr>
+<tr><td>Over-fetching</td><td>Yaygın</td><td>Yok</td></tr>
+<tr><td>Versiyonlama</td><td>URL bazlı (v1, v2)</td><td>Schema evolüsyonu</td></tr>
+<tr><td>Tip güvenliği</td><td>Yok (varsayılan)</td><td>Dahili tip sistemi</td></tr>
+<tr><td>Dökümantasyon</td><td>Harici (Swagger)</td><td>Otomatik (introspection)</td></tr>
+</table>
+
+<h3>2. Apollo Server Kurulumu</h3>
+
+<pre><code># Kurulum
+npm install @apollo/server graphql
+npm install --save-dev @graphql-tools/merge</code></pre>
+
+<pre><code>// server.js
+const { ApolloServer } = require('@apollo/server');
+const { startStandaloneServer } = require('@apollo/server/standalone');
+
+// Type tanımlamaları
+const typeDefs = `#graphql
+  type User {
+    id: ID!
+    name: String!
+    email: String!
+    posts: [Post!]!
+    createdAt: String!
+  }
+
+  type Post {
+    id: ID!
+    title: String!
+    content: String!
+    author: User!
+    comments: [Comment!]!
+    published: Boolean!
+    createdAt: String!
+  }
+
+  type Comment {
+    id: ID!
+    text: String!
+    author: User!
+    post: Post!
+  }
+
+  type Query {
+    users: [User!]!
+    user(id: ID!): User
+    posts(published: Boolean): [Post!]!
+    post(id: ID!): Post
+  }
+
+  type Mutation {
+    createUser(input: CreateUserInput!): User!
+    createPost(input: CreatePostInput!): Post!
+    updatePost(id: ID!, input: UpdatePostInput!): Post!
+    deletePost(id: ID!): Boolean!
+    addComment(postId: ID!, text: String!): Comment!
+  }
+
+  input CreateUserInput {
+    name: String!
+    email: String!
+  }
+
+  input CreatePostInput {
+    title: String!
+    content: String!
+    authorId: ID!
+  }
+
+  input UpdatePostInput {
+    title: String
+    content: String
+    published: Boolean
+  }
+`;
+
+// Resolver fonksiyonları
+const resolvers = {
+  Query: {
+    users: (_, __, { dataSources }) => dataSources.userAPI.getAll(),
+    user: (_, { id }, { dataSources }) => dataSources.userAPI.getById(id),
+    posts: (_, { published }, { dataSources }) => dataSources.postAPI.getAll(published),
+    post: (_, { id }, { dataSources }) => dataSources.postAPI.getById(id),
+  },
+
+  Mutation: {
+    createUser: (_, { input }, { dataSources }) => dataSources.userAPI.create(input),
+    createPost: (_, { input }, { dataSources }) => dataSources.postAPI.create(input),
+    updatePost: (_, { id, input }, { dataSources }) => dataSources.postAPI.update(id, input),
+    deletePost: (_, { id }, { dataSources }) => dataSources.postAPI.delete(id),
+  },
+
+  // Field resolver'lar — ilişkili veriler
+  User: {
+    posts: (user, _, { dataSources }) => dataSources.postAPI.getByAuthor(user.id),
+  },
+
+  Post: {
+    author: (post, _, { dataSources }) => dataSources.userAPI.getById(post.authorId),
+    comments: (post, _, { dataSources }) => dataSources.commentAPI.getByPost(post.id),
+  },
+};
+
+async function startServer() {
+  const server = new ApolloServer({ typeDefs, resolvers });
+
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: 4000 },
+    context: async ({ req }) => ({
+      token: req.headers.authorization,
+      dataSources: {
+        userAPI: new UserAPI(),
+        postAPI: new PostAPI(),
+        commentAPI: new CommentAPI(),
+      },
+    }),
+  });
+
+  console.log(`GraphQL Server: ${url}`);
+}
+
+startServer();</code></pre>
+
+<h3>3. Express ile Apollo Server</h3>
+
+<pre><code>// Express entegrasyonu
+const express = require('express');
+const { ApolloServer } = require('@apollo/server');
+const { expressMiddleware } = require('@apollo/server/express4');
+const cors = require('cors');
+
+const app = express();
+
+const server = new ApolloServer({ typeDefs, resolvers });
+await server.start();
+
+app.use(
+  '/graphql',
+  cors({ origin: ['https://www.example.com'] }),
+  express.json(),
+  expressMiddleware(server, {
+    context: async ({ req }) => ({
+      user: await authenticateUser(req.headers.authorization),
+    }),
+  })
+);
+
+app.listen(4000);</code></pre>
+
+<h3>4. DataSource ve Veritabanı Entegrasyonu</h3>
+
+<pre><code>// dataSources/UserAPI.js
+const { PrismaClient } = require('@prisma/client');
+
+class UserAPI {
+  constructor() {
+    this.prisma = new PrismaClient();
+  }
+
+  async getAll() {
+    return this.prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  async getById(id) {
+    return this.prisma.user.findUnique({ where: { id: parseInt(id) } });
+  }
+
+  async create(input) {
+    return this.prisma.user.create({ data: input });
+  }
+}
+
+// dataSources/PostAPI.js
+class PostAPI {
+  constructor() {
+    this.prisma = new PrismaClient();
+  }
+
+  async getAll(published) {
+    const where = published !== undefined ? { published } : {};
+    return this.prisma.post.findMany({ where, orderBy: { createdAt: 'desc' } });
+  }
+
+  async getByAuthor(authorId) {
+    return this.prisma.post.findMany({ where: { authorId: parseInt(authorId) } });
+  }
+
+  async create(input) {
+    return this.prisma.post.create({
+      data: {
+        title: input.title,
+        content: input.content,
+        authorId: parseInt(input.authorId),
+      },
+    });
+  }
+
+  async update(id, input) {
+    return this.prisma.post.update({
+      where: { id: parseInt(id) },
+      data: input,
+    });
+  }
+
+  async delete(id) {
+    await this.prisma.post.delete({ where: { id: parseInt(id) } });
+    return true;
+  }
+}</code></pre>
+
+<h3>5. Authentication ve Authorization</h3>
+
+<pre><code>// Auth middleware
+const jwt = require('jsonwebtoken');
+
+async function authenticateUser(token) {
+  if (!token) return null;
+
+  try {
+    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+// Auth directive veya resolver guard
+function requireAuth(resolverFn) {
+  return (parent, args, context, info) => {
+    if (!context.user) {
+      throw new Error('Yetkilendirme gerekli');
+    }
+    return resolverFn(parent, args, context, info);
+  };
+}
+
+// Kullanım
+const resolvers = {
+  Mutation: {
+    createPost: requireAuth((_, { input }, { user, dataSources }) => {
+      return dataSources.postAPI.create({ ...input, authorId: user.id });
+    }),
+  },
+};</code></pre>
+
+<h3>6. N+1 Problemi ve DataLoader</h3>
+
+<p>GraphQL'de en yaygın performans sorunu N+1 problemidir. DataLoader ile çözülür.</p>
+
+<pre><code># Kurulum
+npm install dataloader</code></pre>
+
+<pre><code>const DataLoader = require('dataloader');
+
+// DataLoader oluştur
+function createLoaders() {
+  return {
+    userLoader: new DataLoader(async (userIds) => {
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds.map(Number) } },
+      });
+      // ID sırasıyla eşleştir
+      const userMap = new Map(users.map(u => [u.id, u]));
+      return userIds.map(id => userMap.get(Number(id)) || null);
+    }),
+  };
+}
+
+// Context'e ekle
+context: async ({ req }) => ({
+  user: await authenticateUser(req.headers.authorization),
+  loaders: createLoaders(),
+}),
+
+// Resolver'da kullan
+Post: {
+  author: (post, _, { loaders }) => loaders.userLoader.load(post.authorId),
+},</code></pre>
+
+<div class="tip">
+<strong>İpucu:</strong> DataLoader, her istek için yeni oluşturulmalıdır. Böylece cache istekler arasında sızmaz ve her istek izole kalır.
+</div>
+
+<h3>7. GraphQL Sorgu Örnekleri</h3>
+
+<pre><code># Temel sorgu
+query {
+  users {
+    id
+    name
+    email
+  }
+}
+
+# İç içe sorgu
+query {
+  post(id: "1") {
+    title
+    content
+    author {
+      name
+    }
+    comments {
+      text
+      author {
+        name
+      }
+    }
+  }
+}
+
+# Mutation
+mutation {
+  createPost(input: {
+    title: "GraphQL Rehberi"
+    content: "GraphQL harika!"
+    authorId: "1"
+  }) {
+    id
+    title
+    author {
+      name
+    }
+  }
+}
+
+# Variables ile
+mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
+    id
+    title
+  }
+}</code></pre>
+
+<h3>8. Error Handling</h3>
+
+<pre><code>const { GraphQLError } = require('graphql');
+
+// Custom error
+throw new GraphQLError('Kullanıcı bulunamadı', {
+  extensions: {
+    code: 'USER_NOT_FOUND',
+    http: { status: 404 },
+  },
+});
+
+// Validation error
+throw new GraphQLError('Geçersiz email formatı', {
+  extensions: {
+    code: 'VALIDATION_ERROR',
+    field: 'email',
+  },
+});</code></pre>
+
+<div class="warning">
+<strong>Uyarı:</strong> Production'da <code>introspection</code> ve <code>landing page</code> özelliklerini kapatın. Bu, API şemanızın dışarıdan keşfedilmesini engeller.
+</div>
+
+<h3>Sonuç</h3>
+
+<p>Apollo Server ile Node.js'te GraphQL API oluşturmak, istemci odaklı, tip güvenli ve esnek bir API deneyimi sunar. Schema-first yaklaşım ile tip tanımlamalarınızı netleştirin, DataLoader ile N+1 problemini çözün ve authentication/authorization katmanlarını ekleyin. GraphQL'in tek endpoint yapısı, API versiyonlama sorunlarını ortadan kaldırır. Production'da introspection'ı kapatmayı, query depth limiting ve cost analysis uygulamayı unutmayın.</p>
+
+<h3>Kaynaklar</h3>
+<ul>
+<li><a href="https://www.apollographql.com/docs/apollo-server/" target="_blank">Apollo Server Dokümantasyonu</a></li>
+<li><a href="https://graphql.org/learn/" target="_blank">GraphQL Resmi Öğrenme Rehberi</a></li>
+<li><a href="https://github.com/graphql/dataloader" target="_blank">DataLoader GitHub</a></li>
+<li><a href="https://www.prisma.io/docs" target="_blank">Prisma ORM Dokümantasyonu</a></li>
+<li><a href="https://www.howtographql.com/" target="_blank">How to GraphQL — Ücretsiz Tutorial</a></li>
+</ul>

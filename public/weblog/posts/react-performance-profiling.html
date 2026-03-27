@@ -1,0 +1,234 @@
+<h2>React Performance Profiling: DevTools ile Analiz</h2>
+
+<p>React uygulamalarında performans sorunları genellikle gereksiz re-render'lar, büyük component tree'ler ve optimize edilmemiş state yönetiminden kaynaklanır. React DevTools Profiler, bu sorunları tespit etmek için güçlü bir araçtır. Bu rehberde React Profiler'ı etkili kullanmayı, yaygın performans sorunlarını teşhis etmeyi ve React.memo, useMemo, useCallback gibi optimizasyon tekniklerini doğru senaryolarda uygulamayı öğreneceksiniz.</p>
+
+<h3>React DevTools Profiler Kullanımı</h3>
+
+<p>React DevTools Profiler, her render döngüsünde hangi bileşenlerin render edildiğini, ne kadar sürdüğünü ve neden tetiklendiğini gösterir:</p>
+
+<ol>
+  <li>React DevTools tarayıcı eklentisini kurun</li>
+  <li>DevTools'ta "Profiler" sekmesine geçin</li>
+  <li>Ayarlardan "Record why each component rendered" seçeneğini aktifleyin</li>
+  <li>Mavi kayıt butonuna basın ve uygulamada etkileşim yapın</li>
+  <li>Kaydı durdurup flame chart'ı inceleyin</li>
+</ol>
+
+<div class="tip">
+  <strong>İpucu:</strong> Profiler'da "Highlight updates when components render" seçeneğini aktifleştirin. Bu, hangi bileşenlerin ne zaman render edildiğini görsel olarak gösterir. Çok sık yanıp sönen bileşenler, performans sorunlarının kaynağı olabilir.
+</div>
+
+<h3>Programatik Profiling</h3>
+
+<p>React'in yerleşik Profiler bileşeni ile render sürelerini programatik olarak ölçebilirsiniz:</p>
+
+<pre><code>import { Profiler, useState, useMemo } from 'react';
+
+function onRenderCallback(
+  id,           // Profiler tree'sinin id'si
+  phase,        // "mount" veya "update"
+  actualDuration,   // Bu render'ın süresi (ms)
+  baseDuration,     // Memo olmadan tahmini süre
+  startTime,        // Render başlangıç zamanı
+  commitTime        // Commit zamanı
+) {
+  // Yavaş render'ları logla
+  if (actualDuration > 16) {  // 16ms = 60fps frame budget
+    console.warn(`Yavaş render: ${id}`, {
+      phase,
+      duration: `${actualDuration.toFixed(2)}ms`,
+      baseDuration: `${baseDuration.toFixed(2)}ms`
+    });
+
+    // Monitoring servisine gönder
+    sendToMonitoring({
+      component: id,
+      duration: actualDuration,
+      phase,
+      timestamp: commitTime
+    });
+  }
+}
+
+function App() {
+  return (
+    &lt;Profiler id="App" onRender={onRenderCallback}&gt;
+      &lt;Profiler id="Header" onRender={onRenderCallback}&gt;
+        &lt;Header /&gt;
+      &lt;/Profiler&gt;
+      &lt;Profiler id="ProductList" onRender={onRenderCallback}&gt;
+        &lt;ProductList /&gt;
+      &lt;/Profiler&gt;
+    &lt;/Profiler&gt;
+  );
+}</code></pre>
+
+<h3>Gereksiz Re-render'ları Tespit Etme ve Önleme</h3>
+
+<p>React'te en yaygın performans sorunu gereksiz re-render'lardır. Bir parent bileşen render olduğunda tüm child bileşenler de render olur:</p>
+
+<pre><code>// SORUN: ExpensiveList, count her değiştiğinde gereksiz yere render olur
+function App() {
+  const [count, setCount] = useState(0);
+  const [items] = useState(generateLargeList());
+
+  return (
+    &lt;div&gt;
+      &lt;button onClick={() => setCount(c => c + 1)}&gt;Count: {count}&lt;/button&gt;
+      &lt;ExpensiveList items={items} /&gt;  {/* Her count değişiminde render! */}
+    &lt;/div&gt;
+  );
+}
+
+// ÇÖZÜM 1: React.memo ile child bileşeni sarma
+const ExpensiveList = React.memo(function ExpensiveList({ items }) {
+  console.log('ExpensiveList rendered');  // Sadece items değiştiğinde
+  return (
+    &lt;ul&gt;
+      {items.map(item => (
+        &lt;li key={item.id}&gt;{item.name}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+});
+
+// ÇÖZÜM 2: Composition pattern ile state'i izole etme
+function Counter() {
+  const [count, setCount] = useState(0);
+  return &lt;button onClick={() => setCount(c => c + 1)}&gt;Count: {count}&lt;/button&gt;;
+}
+
+function App() {
+  const [items] = useState(generateLargeList());
+  return (
+    &lt;div&gt;
+      &lt;Counter /&gt;  {/* State burada izole */}
+      &lt;ExpensiveList items={items} /&gt;  {/* Etkilenmez */}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="warning">
+  <strong>Uyarı:</strong> <code>React.memo</code>'yu her yerde kullanmayın. Memo'nun kendisi de maliyet taşır (prop karşılaştırma). Sadece gerçekten yavaş render eden veya sık gereksiz render olan bileşenlerde kullanın. Profiler ile önce sorunu doğrulayın, sonra optimize edin.
+</div>
+
+<h3>useMemo ve useCallback Doğru Kullanımı</h3>
+
+<p>Bu hook'lar referans kararlılığı sağlayarak gereksiz hesaplama ve re-render'ları önler:</p>
+
+<pre><code>function ProductPage({ products, category }) {
+  // useMemo: Pahalı hesaplamayı cache'le
+  // Sadece products veya category değiştiğinde yeniden hesapla
+  const filteredProducts = useMemo(() => {
+    console.log('Filtering products...');  // Ne sıklıkta çağrıldığını izle
+    return products
+      .filter(p => p.category === category)
+      .sort((a, b) => b.rating - a.rating);
+  }, [products, category]);
+
+  // useCallback: Fonksiyon referansını kararlı tut
+  // React.memo'lu child bileşene prop olarak geçirirken gerekli
+  const handleAddToCart = useCallback((productId) => {
+    addToCart(productId);
+    showNotification('Ürün sepete eklendi');
+  }, []);  // Dış bağımlılık yoksa boş array
+
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;{category} ({filteredProducts.length} ürün)&lt;/h2&gt;
+      {filteredProducts.map(product => (
+        &lt;ProductCard
+          key={product.id}
+          product={product}
+          onAddToCart={handleAddToCart}  // Kararlı referans
+        /&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}
+
+// React.memo ile useCallback birlikte etkili
+const ProductCard = React.memo(function ProductCard({ product, onAddToCart }) {
+  return (
+    &lt;div className="product-card"&gt;
+      &lt;h3&gt;{product.name}&lt;/h3&gt;
+      &lt;p&gt;{product.price} TL&lt;/p&gt;
+      &lt;button onClick={() => onAddToCart(product.id)}&gt;Sepete Ekle&lt;/button&gt;
+    &lt;/div&gt;
+  );
+});</code></pre>
+
+<h3>Virtualization ile Büyük Listeler</h3>
+
+<p>Binlerce öğe içeren listelerde virtualization kullanarak sadece görünen öğeleri render edin:</p>
+
+<pre><code>// react-window ile virtualized list
+import { FixedSizeList as List } from 'react-window';
+
+function VirtualizedProductList({ products }) {
+  const Row = ({ index, style }) => (
+    &lt;div style={style} className="product-row"&gt;
+      &lt;span&gt;{products[index].name}&lt;/span&gt;
+      &lt;span&gt;{products[index].price} TL&lt;/span&gt;
+    &lt;/div&gt;
+  );
+
+  return (
+    &lt;List
+      height={600}         // Container yüksekliği
+      itemCount={products.length}
+      itemSize={50}        // Her satır yüksekliği
+      width="100%"
+      overscanCount={5}    // Viewport dışında fazladan render edilecek satır
+    &gt;
+      {Row}
+    &lt;/List&gt;
+  );
+}
+
+// 10.000 ürün: Normal render ~500ms, Virtualized ~5ms</code></pre>
+
+<div class="info">
+  <strong>Bilgi:</strong> React 18'in <code>useTransition</code> hook'u, düşük öncelikli state güncellemelerini işaretleyerek UI'ın responsive kalmasını sağlar. Arama filtreleme gibi yoğun render işlemleri için <code>startTransition</code> kullanarak kullanıcı girişinin bloke olmasını önleyebilirsiniz.
+</div>
+
+<h3>React 18+ Concurrent Features</h3>
+
+<pre><code>import { useState, useTransition, useDeferredValue } from 'react';
+
+function SearchProducts() {
+  const [query, setQuery] = useState('');
+  const [isPending, startTransition] = useTransition();
+
+  // useDeferredValue: Arama sonuçlarını geciktir
+  const deferredQuery = useDeferredValue(query);
+
+  return (
+    &lt;div&gt;
+      &lt;input
+        value={query}
+        onChange={(e) => {
+          // Input güncellemesi yüksek öncelikli (anında)
+          setQuery(e.target.value);
+        }}
+        placeholder="Ürün ara..."
+      /&gt;
+      {isPending && &lt;span&gt;Aranıyor...&lt;/span&gt;}
+      {/* Liste düşük öncelikli render - UI donmaz */}
+      &lt;ProductList query={deferredQuery} /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h3>Sonuç</h3>
+
+<p>React performans optimizasyonu, önce ölçüm sonra iyileştirme prensibine dayanır. React DevTools Profiler ile sorunlu bileşenleri tespit edin, gereksiz re-render'ları composition pattern veya React.memo ile önleyin, pahalı hesaplamaları useMemo ile cache'leyin ve büyük listelerde virtualization kullanın. Erken optimizasyondan kaçının; Profiler'ın gösterdiği gerçek darboğazlara odaklanın.</p>
+
+<h3>Kaynaklar</h3>
+
+<ul>
+  <li><a href="https://react.dev/reference/react/Profiler" target="_blank" rel="noopener noreferrer">React Docs - Profiler</a></li>
+  <li><a href="https://react.dev/reference/react/memo" target="_blank" rel="noopener noreferrer">React Docs - React.memo</a></li>
+  <li><a href="https://react-window.vercel.app/" target="_blank" rel="noopener noreferrer">react-window - Virtualized Lists</a></li>
+  <li><a href="https://react.dev/reference/react/useTransition" target="_blank" rel="noopener noreferrer">React Docs - useTransition</a></li>
+</ul>
