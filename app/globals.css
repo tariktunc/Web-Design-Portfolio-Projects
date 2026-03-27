@@ -16,6 +16,19 @@
 	--font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* ===== Light Theme Tokens ===== */
+html:not(.dark) {
+	--navy: #f8fafc;
+	--navy-light: #f1f5f9;
+	--navy-lighter: #e2e8f0;
+	--slate: #475569;
+	--slate-light: #334155;
+	--lightest-slate: #0f172a;
+	--white: #020617;
+	--green: #0d9488;
+	--green-tint: rgba(13, 148, 136, 0.1);
+}
+
 /* ===== Base Styles ===== */
 html {
 	scroll-padding-top: 5rem;
@@ -61,6 +74,25 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
 	background: var(--slate);
+}
+
+/* ===== Light Mode Overrides ===== */
+html:not(.dark) ::-webkit-scrollbar-track {
+	background: var(--navy);
+}
+html:not(.dark) ::-webkit-scrollbar-thumb {
+	background: var(--navy-lighter);
+}
+html:not(.dark) ::selection {
+	background-color: rgba(13, 148, 136, 0.3);
+	color: var(--lightest-slate);
+}
+html:not(.dark) .glass-navbar {
+	background-color: rgba(248, 250, 252, 0.85);
+	border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+html:not(.dark) .glass-navbar.scrolled {
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 /* ===== Accessibility ===== */

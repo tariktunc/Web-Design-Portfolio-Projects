@@ -6,6 +6,7 @@ import "./theme-config.css";
 import Providers from "./Providers";
 import MouseGradient from "./Components/MouseGradient/MouseGradient";
 import AnimatedBackground from "./Components/Background/AnimatedBackground";
+import CookieConsent from "./Components/CookieConsent/CookieConsent";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -47,6 +48,14 @@ export const metadata: Metadata = {
     title: "Tarık Tunç — Full Stack Geliştirici Portfolyo",
     description:
       "React, Next.js ve TypeScript ile modern web uygulamaları geliştiren Full Stack Developer. Projeler, blog yazıları ve teknik beceriler.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Tarık Tunç — Full Stack Geliştirici",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -54,6 +63,7 @@ export const metadata: Metadata = {
     description:
       "React, Next.js ve TypeScript ile modern web uygulamaları geliştiren Full Stack Geliştirici.",
     creator: "@tarkktunc",
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
@@ -67,7 +77,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className="dark" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} font-sans`} suppressHydrationWarning>
         <Providers>
           <a href="#main-content" className="skip-to-content">
@@ -78,6 +95,7 @@ export default function RootLayout({
           <div className="site-container">
             {children}
           </div>
+          <CookieConsent />
         </Providers>
       </body>
     </html>

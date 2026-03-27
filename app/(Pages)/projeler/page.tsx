@@ -6,6 +6,7 @@ import {
   GlowLine,
 } from "@/app/Components/Motion/MotionWrappers";
 import ProjectContainer from "./Components/GithubProjectData";
+import Breadcrumb from "@/app/Components/Breadcrumb/Breadcrumb";
 
 export const metadata: Metadata = {
   title: "Projeler — Tarık Tunç",
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
 export default function LaboratoryPage() {
   return (
     <>
+      <Breadcrumb items={[{ label: "Projeler" }]} />
       {/* ── Typographic Hero ── */}
       <div className="pt-8 pb-12 md:pt-16 md:pb-16">
         <SlideIn direction="down" delay={0}>

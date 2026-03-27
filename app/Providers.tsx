@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { ThemeProvider } from "@/utils/context";
+import { useTheme } from "next-themes";
 import { Provider } from "react-redux";
 import store from "@/app/store";
 import { Theme } from "@radix-ui/themes";
@@ -13,19 +14,28 @@ function LenisProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RadixThemeWrapper({ children }: { children: React.ReactNode }) {
+  const { resolvedTheme } = useTheme();
+  return (
+    <Theme
+      appearance={(resolvedTheme as "dark" | "light") ?? "dark"}
+      accentColor="teal"
+      grayColor="slate"
+      panelBackground="solid"
+      radius="medium"
+    >
+      {children}
+    </Theme>
+  );
+}
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <ThemeProvider>
-        <Theme
-          appearance="dark"
-          accentColor="teal"
-          grayColor="slate"
-          panelBackground="solid"
-          radius="medium"
-        >
+        <RadixThemeWrapper>
           <LenisProvider>{children}</LenisProvider>
-        </Theme>
+        </RadixThemeWrapper>
       </ThemeProvider>
     </Provider>
   );

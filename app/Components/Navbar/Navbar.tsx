@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Flex, Text } from "@radix-ui/themes";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useScrollDirection } from "@/app/hooks/useScrollDirection";
+import ThemeToggle from "@/app/Components/ThemeToggle/ThemeToggle";
 
 type NavItem = { label: string; href: string };
 
@@ -356,6 +357,7 @@ export default function Navbar() {
 
 						{/* Mobile hamburger */}
 						<Flex align="center" gap="3">
+							<ThemeToggle />
 							<div className="sm:hidden">
 								<button
 									ref={menuButtonRef}

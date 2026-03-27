@@ -10,6 +10,7 @@ import {
   SlideIn,
   GlowLine,
 } from "@/app/Components/Motion/MotionWrappers";
+import Breadcrumb from "@/app/Components/Breadcrumb/Breadcrumb";
 
 export const metadata: Metadata = {
   title: "Hakkımda — Tarık Tunç | Full Stack Developer & Siber Güvenlik Uzmanı",
@@ -29,6 +30,7 @@ export const metadata: Metadata = {
 export default function WhoAmIPage() {
   return (
     <>
+      <Breadcrumb items={[{ label: "Ben Kimim" }]} />
       {/* Banner — circle clip reveal + parallax */}
       <ClipReveal direction="circle" className="mb-10 rounded overflow-hidden">
         <ParallaxImage

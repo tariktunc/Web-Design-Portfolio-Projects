@@ -1,0 +1,142 @@
+# Tarık Tunç — Full Stack Developer (Detailed)
+
+> React, Next.js ve TypeScript ile modern web uygulamaları geliştiren Full Stack Developer.
+
+## About
+Tarık Tunç, Türkiye merkezli bir Full Stack Developer'dır. React, Next.js, TypeScript ve modern web teknolojileri ile profesyonel web uygulamaları geliştirir. Freelancer olarak Blakfy.com üzerinden hizmet vermektedir. Açık kaynak projelere katkıda bulunur ve teknik blog yazıları yazar.
+
+## Key Topics
+- Full Stack Web Development: React, Next.js, TypeScript, Node.js ile modern web uygulamaları
+- Frontend Development: HTML, CSS, Tailwind CSS, Sass, responsive tasarım
+- Backend Development: Node.js, Express.js, MongoDB
+- Freelance Software Development: Blakfy.com üzerinden profesyonel hizmetler
+
+## Important Pages
+- [Ana Sayfa](https://tariktunc.vercel.app): Portfolio ana sayfası, beceriler ve projeler
+- [Projeler](https://tariktunc.vercel.app/projeler): Tamamlanmış projeler ve açık kaynak çalışmalar
+- [Blog](https://tariktunc.vercel.app/weblog): Teknik blog yazıları ve rehberler
+- [Ben Kimim](https://tariktunc.vercel.app/ben-kimim): Detaylı biyografi ve kariyer geçmişi
+
+## Services
+- Web Uygulama Geliştirme: React ve Next.js ile modern SPA/SSR uygulamalar
+- Frontend Geliştirme: Responsive, erişilebilir ve performanslı arayüzler
+- Freelance Geliştirme: Blakfy.com üzerinden kurumsal ve bireysel projeler
+
+## Technology Stack
+
+### Frontend
+- React 19, Next.js (App Router)
+- TypeScript, JavaScript (ES6+)
+- Tailwind CSS, Sass, CSS3
+- Redux Toolkit, Context API
+- Framer Motion (animasyonlar)
+- Headless UI, Radix UI
+- i18next (çoklu dil desteği)
+
+### Backend
+- Node.js, Express.js
+- MongoDB
+- REST API tasarımı ve entegrasyonu
+
+### DevOps & Tools
+- Git, GitHub
+- Vercel, Netlify (deployment)
+- ESLint, Prettier
+- Responsive & Mobile-First Design
+- SEO Optimizasyonu (OpenGraph, JSON-LD, Sitemap)
+
+### Other
+- WordPress, PHP (müşteri projeleri)
+- Wix, EditorX (müşteri projeleri)
+
+## Projects
+
+### Personal / Open Source Projects
+
+#### Where to Watch
+- URL: https://where-to-watch-blakfy.netlify.app/
+- GitHub: https://github.com/tariktunc/Where-to-Watch
+- Aciklama: TMDb API kullanarak film ve dizi arama, keşfetme ve hangi platformda izlenebileceğini gösteren kapsamlı bir web uygulaması.
+- Teknolojiler: Next.js, React, Redux Toolkit, Tailwind CSS, TMDb API, i18next, Axios, Framer Motion, Headless UI, Netlify
+- Ozellikler: 7 dil desteği, karanlık/aydınlık tema, JustWatch entegrasyonu, akıllı öneri sihirbazı, Oscar verileri (2016-2025), gelişmiş filtreleme sistemi
+
+#### Multi-Stream Viewer
+- URL: https://multichannels.netlify.app/
+- GitHub: https://github.com/tariktunc/Multi-Stream-Viewer
+- Aciklama: Twitch ve YouTube'dan birden fazla canlı yayını aynı anda izlemeyi sağlayan açık kaynaklı web platformu.
+- Teknolojiler: Next.js, React, JavaScript, Tailwind CSS, Twitch Embed API, YouTube IFrame API, Netlify
+- Ozellikler: Çoklu yayın izleme, grid düzeni, bağımsız ses kontrolü, TR/EN dil desteği
+
+### Client Projects (Blakfy.com)
+
+#### Birincioğlu Trade
+- URL: https://www.birinciogluticaret.com/
+- Aciklama: Toptan ve perakende ticaret ürünlerinin sergilendiği profesyonel e-ticaret web sitesi.
+- Teknolojiler: Next.js, React, Tailwind CSS, Vercel
+
+#### Kubra Yilmaz Beauty
+- URL: https://kubrayilmazbeauty.com/
+- Aciklama: Kübra Yılmaz Güzellik Merkezi için tasarlanan modern web sitesi. Online randevu sistemi ve hizmet tanıtımları.
+- Teknolojiler: Next.js, React, Tailwind CSS, Vercel
+
+#### Blakfy
+- URL: https://blakfy.com/
+- Aciklama: Web tasarım ve geliştirme hizmetleri sunan dijital ajansın kurumsal web sitesi.
+- Teknolojiler: Next.js, React, Tailwind CSS, Vercel
+
+#### Ozharbiye Doner
+- URL: https://ozharbiyedoner.com/
+- Aciklama: Özharbiye Döner restoran zinciri için geliştirilen web sitesi. Menü, şube bilgileri ve galeri.
+- Teknolojiler: Wix, EditorX, JavaScript, CSS
+
+#### Tripslab
+- URL: https://www.trips-lab.com/
+- Aciklama: Turizm sektörüne yönelik kapsamlı web platformu. Destinasyon tanıtımları ve tur paketleri.
+- Teknolojiler: Next.js, React, Tailwind CSS, Vercel
+
+#### Vinart Design
+- URL: https://blakfy.wixsite.com/vinartdesign/en
+- Aciklama: İç mimarlık ve tasarım firması için portföy web sitesi. Çok dilli destek (TR/EN).
+- Teknolojiler: Wix, JavaScript, CSS
+
+#### Galata Law
+- URL: https://galatahukuk.com.tr/
+- Aciklama: Galata Hukuk Bürosu kurumsal web sitesi. Uzmanlık alanları ve avukat kadrosu tanıtımları.
+- Teknolojiler: WordPress, PHP, CSS, JavaScript
+
+#### Saracyol Building Company
+- URL: https://www.saracyol.com/
+- Aciklama: Saracyol İnşaat firması kurumsal web sitesi. Proje portföyü ve referanslar.
+- Teknolojiler: WordPress, PHP, CSS, JavaScript
+
+#### Tab Yapi
+- URL: https://www.tabyapi.com/
+- Aciklama: Tab Yapı inşaat firması kurumsal web sitesi. İnşaat projeleri ve hizmet detayları.
+- Teknolojiler: WordPress, PHP, CSS, JavaScript
+
+## Blog Topics
+Teknik blog yazıları Medium platformunda yayınlanmaktadır.
+
+### React'te useEffect Hook'unun Etkin Kullanımı
+- Tarih: 11 Ocak 2024
+- Konu: useEffect hook'unun doğru kullanımı, dependency array, cleanup fonksiyonları, async/await ile kullanım, custom hook'lar
+- Link: https://medium.com/@tariktunc/reactte-useeffect-hook-unun-etkin-kullanımı-2de2572516e5
+
+### ReactJS'te useState Kullanırken Dikkat Edilmesi Gerekenler
+- Tarih: 16 Aralık 2023
+- Konu: useState'in asenkron doğası, batching mekanizması, referans tipli değerlerle çalışma, fonksiyonel güncelleme pattern'i, lazy initialization
+- Link: https://medium.com/@tariktunc/reactjste-usestate-kullanırken-dikkat-edilmesi-gerekenler-c440809ce868
+
+## Career Summary
+- Full Stack Developer olarak freelance çalışmaktadır
+- Blakfy.com dijital ajansının kurucusu ve baş geliştiricisi
+- E-ticaret, turizm, hukuk, inşaat, güzellik ve restoran sektörlerinde müşteri projeleri tamamlamıştır
+- Açık kaynak projelere katkıda bulunmakta ve GitHub'da aktif olarak paylaşım yapmaktadır
+- React, Next.js ve modern frontend ekosistemine odaklanmaktadır
+
+## Contact
+- Email: me@tariktunc.com
+- LinkedIn: linkedin.com/in/tarktunc
+- GitHub: github.com/tariktunc
+- Twitter: twitter.com/tarkktunc
+- Freelancer: blakfy.com

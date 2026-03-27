@@ -19,6 +19,13 @@ const navLinks = [
   { label: "Projeler", href: "/projeler" },
   { label: "Blog", href: "/weblog" },
   { label: "Ben Kimim?", href: "/ben-kimim" },
+  { label: "İletişim", href: "/iletisim" },
+];
+
+const legalLinks = [
+  { label: "Gizlilik Politikası", href: "/gizlilik" },
+  { label: "Kullanım Şartları", href: "/kullanim-sartlari" },
+  { label: "Çerez Politikası", href: "/cerez-politikasi" },
 ];
 
 const socialLinks = [
@@ -152,6 +159,30 @@ export default function Footer() {
             </div>
           </div>
         </MotionSection>
+
+        {/* Legal links */}
+        <div className="border-t border-navy-lighter pt-6 mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          {legalLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-xs text-slate-custom hover:text-green transition-colors duration-200"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("open-cookie-settings"));
+              }
+            }}
+            className="text-xs text-slate-custom hover:text-green transition-colors duration-200 cursor-pointer bg-transparent border-none p-0"
+          >
+            Çerez Tercihleri
+          </button>
+        </div>
 
         {/* Bottom bar */}
         <div className="border-t border-navy-lighter pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">

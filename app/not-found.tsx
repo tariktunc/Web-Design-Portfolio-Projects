@@ -1,36 +1,45 @@
-import { Container, Heading, Text, Flex } from "@radix-ui/themes";
 import Link from "next/link";
+import type { Metadata } from "next";
 import Navbar from "@/app/Components/Navbar/Navbar";
 import FadeInSection from "@/app/Components/FadeInSection";
+
+export const metadata: Metadata = {
+  title: "404 — Sayfa Bulunamadı",
+  description: "Aradığınız sayfa bulunamadı.",
+  robots: { index: false, follow: true },
+};
 
 export default function NotFound() {
   return (
     <>
       <Navbar />
-      <main id="main-content">
-        <Container size="2">
-          <FadeInSection>
-            <Flex
-              direction="column"
-              justify="center"
-              align="center"
-              py="9"
-              gap="4"
+      <main
+        id="main-content"
+        className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center"
+      >
+        <FadeInSection>
+          <p className="text-8xl font-bold text-green mb-4">404</p>
+          <h1 className="text-2xl font-bold text-lightest-slate mb-3">
+            Sayfa Bulunamadı
+          </h1>
+          <p className="text-slate-custom max-w-md mx-auto mb-8 leading-relaxed">
+            Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/"
+              className="px-5 py-2.5 rounded-lg border border-green/30 text-green text-sm font-medium hover:bg-green/10 hover:border-green/60 transition-all duration-300"
             >
-              <Heading as="h1" size="8">
-                404
-              </Heading>
-              <Text as="p" size="4" color="gray">
-                We could not find the page you were looking for.
-              </Text>
-              <Link href="/">
-                <Text size="3" color="teal">
-                  Go back to the home page
-                </Text>
-              </Link>
-            </Flex>
-          </FadeInSection>
-        </Container>
+              Ana Sayfaya Dön
+            </Link>
+            <Link
+              href="/projeler"
+              className="px-5 py-2.5 rounded-lg bg-navy-light text-slate-custom-light text-sm font-medium hover:text-green hover:bg-navy-lighter transition-all duration-300"
+            >
+              Projelere Göz At
+            </Link>
+          </div>
+        </FadeInSection>
       </main>
     </>
   );

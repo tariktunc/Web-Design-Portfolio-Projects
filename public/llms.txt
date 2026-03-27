@@ -1,0 +1,30 @@
+# Tarık Tunç — Full Stack Developer
+
+> React, Next.js ve TypeScript ile modern web uygulamaları geliştiren Full Stack Developer.
+
+## About
+Tarık Tunç, Türkiye merkezli bir Full Stack Developer'dır. React, Next.js, TypeScript ve modern web teknolojileri ile profesyonel web uygulamaları geliştirir. Freelancer olarak Blakfy.com üzerinden hizmet vermektedir. Açık kaynak projelere katkıda bulunur ve teknik blog yazıları yazar.
+
+## Key Topics
+- Full Stack Web Development: React, Next.js, TypeScript, Node.js ile modern web uygulamaları
+- Frontend Development: HTML, CSS, Tailwind CSS, Sass, responsive tasarım
+- Backend Development: Node.js, Express.js, MongoDB
+- Freelance Software Development: Blakfy.com üzerinden profesyonel hizmetler
+
+## Important Pages
+- [Ana Sayfa](https://tariktunc.vercel.app): Portfolio ana sayfası, beceriler ve projeler
+- [Projeler](https://tariktunc.vercel.app/projeler): Tamamlanmış projeler ve açık kaynak çalışmalar
+- [Blog](https://tariktunc.vercel.app/weblog): Teknik blog yazıları ve rehberler
+- [Ben Kimim](https://tariktunc.vercel.app/ben-kimim): Detaylı biyografi ve kariyer geçmişi
+
+## Services
+- Web Uygulama Geliştirme: React ve Next.js ile modern SPA/SSR uygulamalar
+- Frontend Geliştirme: Responsive, erişilebilir ve performanslı arayüzler
+- Freelance Geliştirme: Blakfy.com üzerinden kurumsal ve bireysel projeler
+
+## Contact
+- Email: me@tariktunc.com
+- LinkedIn: linkedin.com/in/tarktunc
+- GitHub: github.com/tariktunc
+- Twitter: twitter.com/tarkktunc
+- Freelancer: blakfy.com

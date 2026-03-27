@@ -7,6 +7,7 @@ import {
   TextReveal,
   MotionSection,
 } from "@/app/Components/Motion/MotionWrappers";
+import Breadcrumb from "@/app/Components/Breadcrumb/Breadcrumb";
 
 export const metadata: Metadata = {
   title: "Blog — React & Web Development",
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
 export default function WeblogPage() {
   return (
     <>
+      <Breadcrumb items={[{ label: "Blog" }]} />
       <ClipReveal direction="bottom">
         <ParallaxImage
           src="/weblog/weblogbanner.webp"

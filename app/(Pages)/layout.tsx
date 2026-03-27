@@ -1,6 +1,7 @@
 import Navbar from "@/app/Components/Navbar/Navbar";
 import SocialMedia from "@/app/Components/SocialMedia/SocialMedia";
 import Footer from "@/app/Components/Footer/Footer";
+import BackToTop from "@/app/Components/BackToTop/BackToTop";
 import {
   ScrollProgress,
   FloatingOrbs,
@@ -18,6 +19,7 @@ export default function PagesLayout({ children }: { children: React.ReactNode })
       </main>
       <SocialMedia />
       <Footer />
+      <BackToTop />
     </>
   );
 }
