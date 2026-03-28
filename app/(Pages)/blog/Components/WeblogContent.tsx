@@ -94,8 +94,6 @@ export default function WeblogContent() {
     );
   }, [posts, activeCategory]);
 
-  const featured = filtered[0];
-  const rest = filtered.slice(1);
 
   if (!loaded) {
     return (
@@ -144,47 +142,9 @@ export default function WeblogContent() {
         ))}
       </div>
 
-      {/* Featured Post */}
-      {featured && (
-        <Link
-          href={featured.slug ? `/post/${featured.slug}` : (featured.link || "/")}
-          className="blog-featured"
-        >
-          <div className="blog-featured-image">
-            {featured.imageSrc && (
-              <Image
-                src={featured.imageSrc}
-                alt={featured.alt || featured.title || ""}
-                fill
-                sizes="(max-width: 768px) 100vw, 70vw"
-                className="object-cover"
-              />
-            )}
-            <div className="blog-featured-overlay" />
-          </div>
-          <div className="blog-featured-content">
-            {featured.categories && (
-              <span className={`blog-tag ${CATEGORY_COLORS[normalizeCategory(featured.categories)] || ""}`}>
-                {normalizeCategory(featured.categories)}
-              </span>
-            )}
-            <h2 className="blog-featured-title">{featured.title}</h2>
-            {featured.summary && (
-              <p className="blog-featured-summary">{featured.summary}</p>
-            )}
-            <div className="blog-featured-meta">
-              {featured.date && (
-                <time dateTime={featured.date}>{formatDate(featured.date)}</time>
-              )}
-              {featured.readingTime && <span>{featured.readingTime}</span>}
-            </div>
-          </div>
-        </Link>
-      )}
-
       {/* Post Grid */}
       <StaggerContainer key={activeCategory} className="blog-grid">
-        {rest.map((post) => (
+        {filtered.map((post) => (
           <StaggerItem key={post.slug || post.title}>
             <Link
               href={post.slug ? `/post/${post.slug}` : (post.link || "/")}
