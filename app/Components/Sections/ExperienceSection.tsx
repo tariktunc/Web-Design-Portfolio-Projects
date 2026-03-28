@@ -54,14 +54,14 @@ export default function ExperienceSection() {
 
       {/* Timeline */}
       <div className="relative">
-        {/* Vertical line */}
-        <div className="absolute left-0 sm:left-8 top-0 bottom-0 w-px bg-gradient-to-b from-green via-accent2 to-transparent" />
+        {/* Vertical line — animated draw */}
+        <div className="absolute left-0 sm:left-8 top-0 bottom-0 w-px bg-gradient-to-b from-green via-accent2 to-transparent timeline-line" />
 
         <div className="space-y-12">
           {experiences.map((exp, i) => (
             <div key={i} className="exp-reveal relative pl-8 sm:pl-20">
-              {/* Timeline dot */}
-              <div className="absolute left-0 sm:left-8 top-1 -translate-x-1/2 w-4 h-4 rounded-full border-2 border-green bg-navy flex items-center justify-center">
+              {/* Timeline dot — pulse animation */}
+              <div className="absolute left-0 sm:left-8 top-1 -translate-x-1/2 w-4 h-4 rounded-full border-2 border-green bg-navy flex items-center justify-center timeline-dot">
                 <div className="w-2 h-2 rounded-full bg-green" />
               </div>
 

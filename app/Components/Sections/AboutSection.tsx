@@ -57,7 +57,7 @@ export default function AboutSection() {
         {stats.map((stat, i) => (
           <div
             key={stat.label}
-            className={`about-reveal group relative rounded-2xl border border-navy-lighter/60 bg-navy-light/40 p-6 transition-all duration-500 hover:border-green/30 hover:bg-navy-light/60 ${
+            className={`about-reveal stat-card-hover group relative rounded-2xl border border-navy-lighter/60 bg-navy-light/40 p-6 transition-all duration-500 hover:border-green/30 hover:bg-navy-light/60 ${
               i < 2 ? "sm:col-span-1" : "sm:col-span-1"
             }`}
           >

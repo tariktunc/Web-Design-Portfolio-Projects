@@ -18,25 +18,31 @@ export default function NotFound() {
         className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center"
       >
         <FadeInSection>
-          <p className="text-8xl font-bold text-green mb-4">404</p>
-          <h1 className="text-2xl font-bold text-lightest-slate mb-3">
+          {/* Animated 404 text */}
+          <p className="text-[8rem] sm:text-[10rem] font-bold leading-none bg-gradient-to-r from-green via-accent2 to-green bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_ease-in-out_infinite] mb-2 select-none">
+            404
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-lightest-slate mb-3">
             Sayfa Bulunamadı
           </h1>
-          <p className="text-slate-custom max-w-md mx-auto mb-8 leading-relaxed">
+          <p className="text-slate-custom max-w-md mx-auto mb-2 leading-relaxed">
+            Bu sayfayı bulamadık. Belki de henüz kodlamadım!
+          </p>
+          <p className="text-slate-custom/60 text-sm max-w-md mx-auto mb-8 leading-relaxed">
             Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/"
-              className="px-5 py-2.5 rounded-lg border border-green/30 text-green text-sm font-medium hover:bg-green/10 hover:border-green/60 transition-all duration-300"
+              className="hero-cta-primary px-6 py-3 rounded-xl bg-green text-white text-sm font-semibold shadow-xl shadow-green/25 hover:shadow-green/40 transition-all duration-300"
             >
               Ana Sayfaya Dön
             </Link>
             <Link
-              href="/projeler"
-              className="px-5 py-2.5 rounded-lg bg-navy-light text-slate-custom-light text-sm font-medium hover:text-green hover:bg-navy-lighter transition-all duration-300"
+              href="/blog"
+              className="px-6 py-3 rounded-xl border border-navy-lighter/60 bg-navy-light/40 text-slate-custom-light text-sm font-medium hover:text-green hover:border-green/30 transition-all duration-300"
             >
-              Projelere Göz At
+              Blog Yazılarına Göz At
             </Link>
           </div>
         </FadeInSection>

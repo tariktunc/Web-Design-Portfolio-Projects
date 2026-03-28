@@ -330,6 +330,49 @@ html:not(.dark) .navbar-mobile-border {
 }
 
 
+/* ===== Roller text smooth transition ===== */
+.duration-400 { transition-duration: 400ms; }
+
+/* Hero CTA glow animation */
+.hero-cta-primary:hover {
+  box-shadow: 0 0 30px rgba(var(--green-rgb) / 0.4), 0 0 60px rgba(var(--green-rgb) / 0.1);
+}
+
+/* Scroll indicator bounce */
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+.animate-scroll-bounce {
+  animation: scrollBounce 1.5s ease-in-out infinite;
+}
+
+/* ===== Timeline Animations ===== */
+@keyframes timelineDraw {
+  from { height: 0; }
+  to { height: 100%; }
+}
+.timeline-line {
+  animation: timelineDraw 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes timelineDotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--green-rgb) / 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(var(--green-rgb) / 0); }
+}
+.timeline-dot {
+  animation: timelineDotPulse 2s ease-in-out infinite;
+}
+
+/* ===== Stat Card Hover Glow ===== */
+.stat-card-hover {
+  transition: transform 500ms ease, box-shadow 500ms ease, border-color 500ms ease;
+}
+.stat-card-hover:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(var(--green-rgb) / 0.15), 0 0 40px rgba(var(--green-rgb) / 0.05);
+}
+
 /* ===== Entrance Animations (Keyframes) ===== */
 
 @keyframes fadeInUp {
