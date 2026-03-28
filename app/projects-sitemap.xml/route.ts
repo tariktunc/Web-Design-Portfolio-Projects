@@ -9,7 +9,7 @@ export async function GET() {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${projects.map((p) => `  <url>
     <loc>${baseUrl}/projeler/${p.slug}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
+    <lastmod>2026-03-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>`).join("\n")}
