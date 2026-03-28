@@ -28,7 +28,7 @@ export async function generateMetadata({
       authors: ["Tarik Tunç"],
     },
     alternates: {
-      canonical: `https://tariktunc.vercel.app/weblog/${blog}`,
+      canonical: `https://tariktunc.com/weblog/${blog}`,
     },
   };
 }

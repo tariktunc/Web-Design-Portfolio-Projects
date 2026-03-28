@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "React, Next.js ve TypeScript ile modern web uygulamaları geliştiren Full Stack Developer.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0a192f",
-    theme_color: "#0a192f",
+    background_color: "#0b0d17",
+    theme_color: "#0b0d17",
     icons: [
       {
         src: "/icon-192.png",

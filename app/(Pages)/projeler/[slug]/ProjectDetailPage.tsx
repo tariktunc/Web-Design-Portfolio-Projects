@@ -75,7 +75,7 @@ export default function ProjectDetailPage({
                 priority
                 className="aspect-[21/9] object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a192f] via-[#0a192f]/70 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0d17] via-[#0b0d17]/70 to-transparent" />
             </div>
           </ClipReveal>
 

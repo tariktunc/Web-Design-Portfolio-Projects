@@ -12,10 +12,10 @@ Tarık Tunç, Türkiye merkezli bir Full Stack Developer'dır. React, Next.js, T
 - Freelance Software Development: Blakfy.com üzerinden profesyonel hizmetler
 
 ## Important Pages
-- [Ana Sayfa](https://tariktunc.vercel.app): Portfolio ana sayfası, beceriler ve projeler
-- [Projeler](https://tariktunc.vercel.app/projeler): Tamamlanmış projeler ve açık kaynak çalışmalar
-- [Blog](https://tariktunc.vercel.app/weblog): Teknik blog yazıları ve rehberler
-- [Ben Kimim](https://tariktunc.vercel.app/ben-kimim): Detaylı biyografi ve kariyer geçmişi
+- [Ana Sayfa](https://tariktunc.com): Portfolio ana sayfası, beceriler ve projeler
+- [Projeler](https://tariktunc.com/projeler): Tamamlanmış projeler ve açık kaynak çalışmalar
+- [Blog](https://tariktunc.com/weblog): Teknik blog yazıları ve rehberler
+- [Ben Kimim](https://tariktunc.com/ben-kimim): Detaylı biyografi ve kariyer geçmişi
 
 ## Services
 - Web Uygulama Geliştirme: React ve Next.js ile modern SPA/SSR uygulamalar

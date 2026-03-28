@@ -1,6 +1,6 @@
 ### Live Stream
 
-#### [Portfolio Web Site](https://tariktunc.vercel.app/)
+#### [Portfolio Web Site](https://tariktunc.com/)
 
 ## Project Name: Personal Portfolio Website
 

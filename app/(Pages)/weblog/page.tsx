@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     images: [{ url: "/weblog/weblogbanner.webp", width: 1600, height: 600 }],
   },
   alternates: {
-    canonical: "https://tariktunc.vercel.app/weblog",
+    canonical: "https://tariktunc.com/weblog",
   },
 };
 

@@ -32,33 +32,33 @@ interface Orbit {
 const ORBITS: readonly Orbit[] = [
   {
     a: 120, b: 48,
-    stroke: "rgba(100,255,218,0.4)", width: 1.8,
+    stroke: "rgba(129,140,248,0.4)", width: 1.8,
     speed: 1, dir: 1,
     skills: [
       { name: "TypeScript", color: "#3178c6", angle: 0 },
       { name: "React", color: "#61dafb", angle: 120 },
-      { name: "Next.js", color: "#ccd6f6", angle: 240 },
+      { name: "Next.js", color: "#e2e8f0", angle: 240 },
     ],
   },
   {
     a: 215, b: 86,
-    stroke: "rgba(97,218,251,0.28)", width: 1.3,
+    stroke: "rgba(52,211,153,0.28)", width: 1.3,
     speed: 0.7, dir: -1,
     skills: [
       { name: "Node.js", color: "#68a063", angle: 20 },
-      { name: "Express", color: "#a8b2d1", angle: 110 },
+      { name: "Express", color: "#cbd5e1", angle: 110 },
       { name: "MongoDB", color: "#4db33d", angle: 200 },
       { name: "Redux", color: "#764abc", angle: 290 },
     ],
   },
   {
     a: 330, b: 132,
-    stroke: "rgba(100,255,218,0.18)", width: 1,
+    stroke: "rgba(129,140,248,0.18)", width: 1,
     speed: 0.45, dir: 1,
     skills: [
       { name: "Tailwind", color: "#38bdf8", angle: 10 },
       { name: "Git", color: "#f05032", angle: 82 },
-      { name: "REST API", color: "#64ffda", angle: 154 },
+      { name: "REST API", color: "#818cf8", angle: 154 },
       { name: "Python", color: "#3776ab", angle: 226 },
       { name: "CSS", color: "#264de4", angle: 298 },
     ],
@@ -98,7 +98,7 @@ export default function SkillRings({ progress }: Props) {
       if (!reduced) autoRef.current += dt * 10;
 
       const p = pRef.current;
-      const scrollDeg = p * 720;
+      const scrollDeg = p * 360;
       const vis = Math.min(1, p * 3.5);
 
       /* ── Orbit paths ── */
@@ -219,15 +219,15 @@ export default function SkillRings({ progress }: Props) {
         preserveAspectRatio="none"
         aria-hidden="true"
       >
-        <path className="bgl" d="M0 200 Q350 150 700 200 T1400 180" stroke="var(--green)" strokeWidth="0.8" opacity="0.04" />
-        <path className="bgl" d="M0 400 Q400 350 800 420 T1400 380" stroke="var(--green)" strokeWidth="0.6" opacity="0.03" />
-        <path className="bgl" d="M0 600 Q300 650 600 580 T1400 620" stroke="var(--green)" strokeWidth="0.8" opacity="0.04" />
-        <path className="bgl" d="M0 750 Q500 700 900 770 T1400 730" stroke="#61dafb" strokeWidth="0.5" opacity="0.03" />
-        <path className="bgl" d="M300 0 Q280 450 320 900" stroke="var(--green)" strokeWidth="0.5" opacity="0.03" />
-        <path className="bgl" d="M700 0 Q720 400 680 900" stroke="var(--green)" strokeWidth="0.6" opacity="0.04" />
-        <path className="bgl" d="M1100 0 Q1080 500 1120 900" stroke="#61dafb" strokeWidth="0.5" opacity="0.03" />
+        <path className="bgl" d="M0 200 Q350 150 700 200 T1400 180" stroke="var(--green)" strokeWidth="0.8" opacity="0.05" />
+        <path className="bgl" d="M0 400 Q400 350 800 420 T1400 380" stroke="var(--accent-2)" strokeWidth="0.6" opacity="0.04" />
+        <path className="bgl" d="M0 600 Q300 650 600 580 T1400 620" stroke="var(--green)" strokeWidth="0.8" opacity="0.05" />
+        <path className="bgl" d="M0 750 Q500 700 900 770 T1400 730" stroke="var(--accent-2)" strokeWidth="0.5" opacity="0.03" />
+        <path className="bgl" d="M300 0 Q280 450 320 900" stroke="var(--green)" strokeWidth="0.5" opacity="0.04" />
+        <path className="bgl" d="M700 0 Q720 400 680 900" stroke="var(--accent-2)" strokeWidth="0.6" opacity="0.04" />
+        <path className="bgl" d="M1100 0 Q1080 500 1120 900" stroke="var(--green)" strokeWidth="0.5" opacity="0.03" />
         <path className="bgl" d="M0 0 Q700 450 1400 900" stroke="var(--green)" strokeWidth="0.4" opacity="0.02" />
-        <path className="bgl" d="M1400 0 Q700 450 0 900" stroke="var(--green)" strokeWidth="0.4" opacity="0.02" />
+        <path className="bgl" d="M1400 0 Q700 450 0 900" stroke="var(--accent-2)" strokeWidth="0.4" opacity="0.02" />
       </svg>
 
       {/* ── Radial glow behind orbits ── */}
@@ -237,7 +237,7 @@ export default function SkillRings({ progress }: Props) {
           width: 500,
           height: 500,
           background:
-            "radial-gradient(circle, rgba(100,255,218,0.07) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(129,140,248,0.07) 0%, transparent 70%)",
           filter: "blur(40px)",
           opacity: Math.min(1, progress * 3),
         }}

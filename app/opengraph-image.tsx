@@ -16,7 +16,7 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#0a192f",
+          backgroundColor: "#0b0d17",
           fontFamily: "Inter, system-ui, sans-serif",
         }}
       >
@@ -33,7 +33,7 @@ export default async function Image() {
             style={{
               fontSize: 64,
               fontWeight: 700,
-              color: "#ccd6f6",
+              color: "#e2e8f0",
               letterSpacing: "-0.02em",
             }}
           >
@@ -42,7 +42,7 @@ export default async function Image() {
           <div
             style={{
               fontSize: 28,
-              color: "#64ffda",
+              color: "#818cf8",
               fontWeight: 500,
             }}
           >
@@ -51,7 +51,7 @@ export default async function Image() {
           <div
             style={{
               fontSize: 20,
-              color: "#8892b0",
+              color: "#94a3b8",
               marginTop: "10px",
             }}
           >
@@ -63,11 +63,11 @@ export default async function Image() {
             position: "absolute",
             bottom: 40,
             fontSize: 16,
-            color: "#64ffda",
+            color: "#818cf8",
             opacity: 0.7,
           }}
         >
-          tariktunc.vercel.app
+          tariktunc.com
         </div>
       </div>
     ),

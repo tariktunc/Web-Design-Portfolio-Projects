@@ -20,7 +20,7 @@ export default function BackToTop() {
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed bottom-6 right-6 z-40 flex items-center justify-center w-10 h-10 rounded-lg border border-green/30 bg-navy-light/80 backdrop-blur-sm text-green hover:bg-green/10 hover:border-green/60 hover:shadow-[0_0_16px_rgba(100,255,218,0.12)] transition-all duration-300 ${
+      className={`fixed bottom-6 right-6 z-40 flex items-center justify-center w-10 h-10 rounded-lg border border-green/30 bg-navy-light/80 backdrop-blur-sm text-green hover:bg-green/10 hover:border-green/60 hover:shadow-[0_0_16px_rgba(129,140,248,0.12)] transition-all duration-300 ${
         visible
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-4 pointer-events-none"

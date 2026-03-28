@@ -37,11 +37,13 @@ export default function MouseGradient() {
 
       const { x, y } = currentPos.current;
 
-      // Primary large gradient
-      el.style.background = `radial-gradient(800px at ${x}px ${y}px, rgba(29, 78, 216, 0.12), transparent 70%)`;
+      // Primary large gradient — uses CSS variable aware color
+      const isDark = document.documentElement.classList.contains("dark");
+      const primaryAlpha = isDark ? 0.08 : 0.04;
+      const secondaryAlpha = isDark ? 0.05 : 0.03;
 
-      // Secondary smaller teal glow
-      inner.style.background = `radial-gradient(400px at ${x}px ${y}px, rgba(100, 255, 218, 0.06), transparent 60%)`;
+      el.style.background = `radial-gradient(800px at ${x}px ${y}px, rgba(129, 140, 248, ${primaryAlpha}), transparent 70%)`;
+      inner.style.background = `radial-gradient(400px at ${x}px ${y}px, rgba(52, 211, 153, ${secondaryAlpha}), transparent 60%)`;
 
       raf = requestAnimationFrame(animate);
     };

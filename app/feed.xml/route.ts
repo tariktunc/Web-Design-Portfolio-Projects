@@ -2,15 +2,15 @@ import { getAllBlogPosts } from "@/app/lib/projects";
 
 export async function GET() {
   const posts = getAllBlogPosts();
-  const siteUrl = "https://tariktunc.vercel.app";
+  const siteUrl = "https://tariktunc.com";
 
   const rssItems = posts
     .map(
       (post) => `
     <item>
       <title><![CDATA[${post.title}]]></title>
-      <link>${siteUrl}/weblog/${post.slug}</link>
-      <guid isPermaLink="true">${siteUrl}/weblog/${post.slug}</guid>
+      <link>${siteUrl}/post/${post.slug}</link>
+      <guid isPermaLink="true">${siteUrl}/post/${post.slug}</guid>
       <description><![CDATA[${post.summary}]]></description>
       <pubDate>${new Date(post.date).toUTCString()}</pubDate>
       <category>${post.categories}</category>
@@ -22,7 +22,7 @@ export async function GET() {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tarık Tunç Blog</title>
-    <link>${siteUrl}/weblog</link>
+    <link>${siteUrl}/blog</link>
     <description>Tarık Tunç'un teknik blog yazıları — React, Next.js, TypeScript ve web geliştirme.</description>
     <language>tr</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

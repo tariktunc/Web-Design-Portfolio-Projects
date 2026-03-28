@@ -17,7 +17,7 @@ import {
 const navLinks = [
   { label: "Ana Sayfa", href: "/" },
   { label: "Projeler", href: "/projeler" },
-  { label: "Blog", href: "/weblog" },
+  { label: "Blog", href: "/blog" },
   { label: "Ben Kimim?", href: "/ben-kimim" },
   { label: "İletişim", href: "/iletisim" },
 ];
@@ -83,7 +83,7 @@ export default function Footer() {
               {/* Email CTA */}
               <a
                 href="mailto:me@tariktunc.com"
-                className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-green/30 text-green text-sm font-medium hover:bg-green/10 hover:border-green/60 hover:shadow-[0_0_24px_rgba(100,255,218,0.12)] transition-all duration-300"
+                className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-green/30 text-green text-sm font-medium hover:bg-green/10 hover:border-green/60 hover:shadow-[0_0_24px_rgba(129,140,248,0.12)] transition-all duration-300"
               >
                 me@tariktunc.com
                 <ArrowTopRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -128,7 +128,7 @@ export default function Footer() {
                           href={social.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center w-10 h-10 rounded-lg border border-navy-lighter text-slate-custom hover:text-green hover:border-green/40 hover:bg-green/5 hover:shadow-[0_0_16px_rgba(100,255,218,0.1)] transition-all duration-300"
+                          className="flex items-center justify-center w-10 h-10 rounded-lg border border-navy-lighter text-slate-custom hover:text-green hover:border-green/40 hover:bg-green/5 hover:shadow-[0_0_16px_rgba(129,140,248,0.1)] transition-all duration-300"
                           aria-label={`${social.name} (yeni sekmede açılır)`}
                         >
                           <social.icon className="h-4.5 w-4.5" />

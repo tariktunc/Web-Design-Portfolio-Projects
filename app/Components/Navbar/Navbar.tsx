@@ -3,507 +3,361 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Flex, Text } from "@radix-ui/themes";
+import { useTheme } from "next-themes";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useScrollDirection } from "@/app/hooks/useScrollDirection";
-import ThemeToggle from "@/app/Components/ThemeToggle/ThemeToggle";
 
-type NavItem = { label: string; href: string };
+/* ── Nav items ── */
+const NAV_ITEMS = [
+  { label: "Ana Sayfa", href: "/" },
+  { label: "Blog", href: "/blog" },
+] as const;
 
-/* ── Shared easing ── */
-const smoothEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
+/* ── Easing ── */
+const ease = [0.16, 1, 0.3, 1] as const;
 
-/* ── Navbar hide/show ── */
-const navbarVariants = {
-	visible: { y: 0 },
-	hidden: { y: "-100%" },
-};
-
-/* ── Mobile overlay ── */
-const overlayVariants = {
-	closed: { opacity: 0 },
-	open: { opacity: 1 },
+/* ── Navbar show/hide ── */
+const navVariants = {
+  visible: { y: 0 },
+  hidden: { y: "-100%" },
 };
 
 /* ── Mobile panel ── */
+const panelEase: [number, number, number, number] = [0.32, 0.72, 0, 1];
 const panelVariants = {
-	closed: { x: "100%" },
-	open: { x: 0 },
+  closed: { x: "100%" },
+  open: { x: 0, transition: { duration: 0.35, ease: panelEase } },
+  exit: { x: "100%", transition: { duration: 0.25, ease: panelEase } },
 };
 
-/* ── Mobile menu item stagger ── */
-const menuContainerVariants = {
-	closed: {},
-	open: {
-		transition: { staggerChildren: 0.07, delayChildren: 0.15 },
-	},
+const overlayVariants = {
+  closed: { opacity: 0 },
+  open: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
-const menuItemVariants = {
-	closed: { opacity: 0, x: 30, filter: "blur(6px)" },
-	open: {
-		opacity: 1,
-		x: 0,
-		filter: "blur(0px)",
-		transition: { duration: 0.4, ease: smoothEase },
-	},
+const menuStagger = {
+  closed: {},
+  open: { transition: { staggerChildren: 0.06, delayChildren: 0.12 } },
 };
 
-/* ── Desktop nav link stagger ── */
-const navLinkContainerVariants = {
-	hidden: {},
-	visible: {
-		transition: { staggerChildren: 0.06, delayChildren: 0.3 },
-	},
+const menuItem = {
+  closed: { opacity: 0, x: 24 },
+  open: { opacity: 1, x: 0, transition: { duration: 0.35, ease } },
 };
 
-const navLinkItemVariants = {
-	hidden: { opacity: 0, y: -12 },
-	visible: {
-		opacity: 1,
-		y: 0,
-		transition: { duration: 0.4, ease: smoothEase },
-	},
+/* ── Desktop link stagger ── */
+const linkContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } },
 };
 
-/* ── Logo entrance ── */
-const logoVariants = {
-	hidden: { opacity: 0, x: -20 },
-	visible: {
-		opacity: 1,
-		x: 0,
-		transition: { duration: 0.5, ease: smoothEase, delay: 0.1 },
-	},
+const linkItem = {
+  hidden: { opacity: 0, y: -10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease } },
 };
 
-/* ═══════════════════════════════════════════
-   HamburgerIcon — morphing 3-line → X
-   ═══════════════════════════════════════════ */
-function HamburgerIcon({
-	isOpen,
-	reduced,
-}: {
-	isOpen: boolean;
-	reduced: boolean | null;
-}) {
-	const transition = reduced
-		? { duration: 0 }
-		: { duration: 0.3, ease: smoothEase };
+/* ══════════════════════════════════════════
+   ThemeToggle — Dark / Light / System
+   ══════════════════════════════════════════ */
+function ThemeToggle() {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
 
-	const lineStyle: React.CSSProperties = {
-		width: 22,
-		height: 2,
-		backgroundColor: "var(--slate-light)",
-		borderRadius: 2,
-		position: "absolute",
-		left: 0,
-	};
+  React.useEffect(() => setMounted(true), []);
 
-	return (
-		<div style={{ width: 22, height: 16, position: "relative" }}>
-			<motion.div
-				style={{ ...lineStyle, top: 0 }}
-				animate={isOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
-				transition={transition}
-			/>
-			<motion.div
-				style={{ ...lineStyle, top: 7 }}
-				animate={
-					isOpen
-						? { opacity: 0, scaleX: 0 }
-						: { opacity: 1, scaleX: 1 }
-				}
-				transition={transition}
-			/>
-			<motion.div
-				style={{ ...lineStyle, top: 14 }}
-				animate={isOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
-				transition={transition}
-			/>
-		</div>
-	);
+  if (!mounted) {
+    return (
+      <div
+        className="navbar-toggle-placeholder"
+        aria-hidden="true"
+      />
+    );
+  }
+
+  const isDark = resolvedTheme === "dark";
+  const isSystem = theme === "system";
+
+  const cycle = () => {
+    if (theme === "dark") setTheme("light");
+    else if (theme === "light") setTheme("system");
+    else setTheme("dark");
+  };
+
+  const label = isSystem ? "Sistem teması" : isDark ? "Koyu tema" : "Açık tema";
+
+  return (
+    <button
+      onClick={cycle}
+      className="navbar-toggle"
+      aria-label={`${label} aktif. Tıklayarak tema değiştir.`}
+      title={label}
+    >
+      {isDark ? (
+        /* Moon */
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      ) : isSystem ? (
+        /* Monitor */
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+      ) : (
+        /* Sun */
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      )}
+    </button>
+  );
 }
 
-/* ═══════════════════════════════════════════
-   NavLink — with layoutId indicators
-   ═══════════════════════════════════════════ */
-function NavLink({
-	item,
-	index,
-	isActive,
-	isHovered,
-	onHoverStart,
-	reduced,
-}: {
-	item: NavItem;
-	index: number;
-	isActive: boolean;
-	isHovered: boolean;
-	onHoverStart: () => void;
-	reduced: boolean | null;
-}) {
-	const isExternal = item.href.startsWith("http");
+/* ══════════════════════════════════════════
+   HamburgerIcon — 3 lines ↔ X morph
+   ══════════════════════════════════════════ */
+function HamburgerIcon({ isOpen, reduced }: { isOpen: boolean; reduced: boolean | null }) {
+  const t = reduced ? { duration: 0 } : { duration: 0.3, ease };
+  const bar: React.CSSProperties = {
+    width: 22, height: 2, borderRadius: 2, position: "absolute", left: 0,
+    backgroundColor: "currentColor",
+  };
 
-	return (
-		<Link
-			href={item.href}
-			className="nav-link"
-			aria-current={isActive ? "page" : undefined}
-			onMouseEnter={onHoverStart}
-			{...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-		>
-			{/* Hover-follow background */}
-			{isHovered && (
-				<motion.span
-					layoutId="nav-hover"
-					className="absolute inset-0 rounded-lg"
-					style={{
-						backgroundColor: "rgba(100, 255, 218, 0.08)",
-						zIndex: -1,
-					}}
-					transition={{
-						type: "spring",
-						stiffness: 400,
-						damping: 30,
-					}}
-				/>
-			)}
-
-			{/* Active sliding pill */}
-			{isActive && (
-				<motion.span
-					layoutId="nav-active"
-					className="absolute inset-0 rounded-lg"
-					style={{
-						backgroundColor: "rgba(100, 255, 218, 0.1)",
-						zIndex: -1,
-					}}
-					transition={
-						reduced
-							? { duration: 0 }
-							: { type: "spring", stiffness: 380, damping: 28 }
-					}
-				/>
-			)}
-
-			{/* Numbered prefix */}
-			<span
-				className="font-mono text-xs mr-1.5"
-				style={{ color: "var(--green)" }}
-			>
-				{String(index + 1).padStart(2, "0")}.
-			</span>
-
-			<span style={{ color: isActive ? "var(--green)" : undefined }}>
-				{item.label}
-			</span>
-		</Link>
-	);
+  return (
+    <div style={{ width: 22, height: 16, position: "relative" }} aria-hidden="true">
+      <motion.div style={{ ...bar, top: 0 }} animate={isOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }} transition={t} />
+      <motion.div style={{ ...bar, top: 7 }} animate={isOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }} transition={t} />
+      <motion.div style={{ ...bar, top: 14 }} animate={isOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }} transition={t} />
+    </div>
+  );
 }
 
-/* ═══════════════════════════════════════════
+/* ══════════════════════════════════════════
    Navbar
-   ═══════════════════════════════════════════ */
+   ══════════════════════════════════════════ */
 export default function Navbar() {
-	const [menuOpen, setMenuOpen] = React.useState(false);
-	const [navItems, setNavItems] = React.useState<NavItem[]>([]);
-	const [hoveredHref, setHoveredHref] = React.useState<string | null>(null);
-	const pathname = usePathname();
-	const { direction, atTop } = useScrollDirection(8);
-	const reduced = useReducedMotion();
-	const menuButtonRef = React.useRef<HTMLButtonElement>(null);
-	const panelRef = React.useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [hoveredHref, setHoveredHref] = React.useState<string | null>(null);
+  const pathname = usePathname();
+  const { direction, atTop } = useScrollDirection(8);
+  const reduced = useReducedMotion();
+  const menuBtnRef = React.useRef<HTMLButtonElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
 
-	/* Fetch nav items */
-	React.useEffect(() => {
-		fetch("/Data/navbarItem.json")
-			.then((res) => res.json())
-			.then((data) => setNavItems(data))
-			.catch(() => {});
-	}, []);
+  /* Close on route change */
+  React.useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-	/* Close menu on route change */
-	React.useEffect(() => {
-		setMenuOpen(false);
-	}, [pathname]);
+  /* Body lock + focus management */
+  React.useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => {
+        const first = panelRef.current?.querySelector("a") as HTMLElement | null;
+        first?.focus();
+      });
+    } else {
+      document.body.style.overflow = "";
+      menuBtnRef.current?.focus();
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
 
-	/* Body overflow lock + focus management */
-	React.useEffect(() => {
-		if (menuOpen) {
-			document.body.style.overflow = "hidden";
-			requestAnimationFrame(() => {
-				const firstLink = panelRef.current?.querySelector(
-					"a"
-				) as HTMLElement;
-				if (firstLink) firstLink.focus();
-			});
-		} else {
-			document.body.style.overflow = "";
-			menuButtonRef.current?.focus();
-		}
-		return () => {
-			document.body.style.overflow = "";
-		};
-	}, [menuOpen]);
+  /* Escape closes mobile menu */
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
-	/* Escape key closes mobile menu */
-	React.useEffect(() => {
-		if (!menuOpen) return;
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setMenuOpen(false);
-		};
-		document.addEventListener("keydown", handleKeyDown);
-		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [menuOpen]);
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
-	return (
-		<>
-			<motion.nav
-				className={`glass-navbar ${!atTop ? "scrolled" : ""}`}
-				aria-label="Main navigation"
-				variants={navbarVariants}
-				initial="visible"
-				animate={
-					reduced
-						? "visible"
-						: direction === "down" && !atTop && !menuOpen
-							? "hidden"
-							: "visible"
-				}
-				transition={
-					reduced
-						? { duration: 0 }
-						: { duration: 0.35, ease: smoothEase }
-				}
-			>
-				<div className="mx-auto px-4" style={{ maxWidth: 1600 }}>
-					<Flex
-						justify="between"
-						align="center"
-						style={{ height: 64 }}
-					>
-						{/* Logo — slide from left */}
-						<motion.div
-							variants={logoVariants}
-							initial={reduced ? "visible" : "hidden"}
-							animate="visible"
-						>
-							<Link
-								href="/"
-								className="link-hover"
-								aria-label="Home — tariktunc"
-							>
-								<Flex align="center" gap="2">
-									<Image
-										src="/Logo/Grayscale.webp"
-										alt="Tarik Tunç logo"
-										width={32}
-										height={80}
-									/>
-									<Flex direction="column">
-										<Text
-											size="5"
-											weight="bold"
-											style={{
-												color: "var(--lightest-slate)",
-											}}
-										>
-											tariktunc
-										</Text>
-										<Text
-											size="1"
-											style={{ color: "var(--slate)" }}
-										>
-											blakfy tarafından işletilmektedir
-										</Text>
-									</Flex>
-								</Flex>
-							</Link>
-						</motion.div>
+  return (
+    <>
+      {/* ── Fixed navbar ── */}
+      <motion.nav
+        className={`navbar-glass${!atTop ? " navbar-scrolled" : ""}`}
+        aria-label="Ana gezinme"
+        variants={navVariants}
+        initial="visible"
+        animate={
+          reduced ? "visible"
+            : direction === "down" && !atTop && !menuOpen ? "hidden" : "visible"
+        }
+        transition={reduced ? { duration: 0 } : { duration: 0.35, ease }}
+      >
+        <div className="mx-auto flex items-center justify-between px-4 sm:px-6" style={{ maxWidth: 1280, height: 64 }}>
 
-						{/* Desktop nav links — stagger from top */}
-						<motion.div
-							className="hidden sm:flex"
-							variants={navLinkContainerVariants}
-							initial={reduced ? "visible" : "hidden"}
-							animate="visible"
-							onMouseLeave={() => setHoveredHref(null)}
-						>
-							<Flex gap="2" align="center">
-								{navItems.map((item, index) => {
-									const isActive = pathname === item.href;
-									return (
-										<motion.div
-											key={item.label}
-											variants={navLinkItemVariants}
-										>
-											<NavLink
-												item={item}
-												index={index}
-												isActive={isActive}
-												isHovered={
-													hoveredHref === item.href
-												}
-												onHoverStart={() =>
-													setHoveredHref(item.href)
-												}
-												reduced={reduced}
-											/>
-										</motion.div>
-									);
-								})}
-							</Flex>
-						</motion.div>
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group" aria-label="Ana sayfa — tariktunc">
+            <Image src="/Logo/Grayscale.webp" alt="" width={28} height={70} aria-hidden="true" />
+            <span className="flex flex-col leading-tight">
+              <span className="text-[15px] font-bold navbar-logo-text">tariktunc</span>
+              <span className="text-[10px] navbar-sub-text">blakfy tarafından işletilmektedir</span>
+            </span>
+          </Link>
 
-						{/* Mobile hamburger */}
-						<Flex align="center" gap="3">
-							<ThemeToggle />
-							<div className="sm:hidden">
-								<button
-									ref={menuButtonRef}
-									onClick={() => setMenuOpen(!menuOpen)}
-									className="theme-toggle"
-									aria-label={
-										menuOpen ? "Close menu" : "Open menu"
-									}
-									aria-expanded={menuOpen}
-								>
-									<HamburgerIcon
-										isOpen={menuOpen}
-										reduced={reduced}
-									/>
-								</button>
-							</div>
-						</Flex>
-					</Flex>
-				</div>
-			</motion.nav>
+          {/* Desktop links */}
+          <motion.ul
+            className="hidden md:flex items-center gap-1"
+            variants={linkContainer}
+            initial={reduced ? "visible" : "hidden"}
+            animate="visible"
+            onMouseLeave={() => setHoveredHref(null)}
+            role="list"
+          >
+            {NAV_ITEMS.map((item, i) => {
+              const active = isActive(item.href);
+              const hovered = hoveredHref === item.href;
+              return (
+                <motion.li key={item.href} variants={linkItem}>
+                  <Link
+                    href={item.href}
+                    className="navbar-link"
+                    aria-current={active ? "page" : undefined}
+                    onMouseEnter={() => setHoveredHref(item.href)}
+                    data-active={active || undefined}
+                  >
+                    {/* Hover pill */}
+                    {hovered && (
+                      <motion.span
+                        layoutId="nav-hover-pill"
+                        className="absolute inset-0 rounded-lg navbar-hover-bg"
+                        style={{ zIndex: -1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    {/* Active pill */}
+                    {active && (
+                      <motion.span
+                        layoutId="nav-active-pill"
+                        className="absolute inset-0 rounded-lg navbar-active-bg"
+                        style={{ zIndex: -1 }}
+                        transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 28 }}
+                      />
+                    )}
+                    <span className="font-mono text-[11px] mr-1.5 navbar-link-num">
+                      {String(i + 1).padStart(2, "0")}.
+                    </span>
+                    <span>{item.label}</span>
+                  </Link>
+                </motion.li>
+              );
+            })}
+          </motion.ul>
 
-			<div className="navbar-spacer" />
+          {/* Right side: theme toggle + hamburger */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              ref={menuBtnRef}
+              onClick={() => setMenuOpen((v) => !v)}
+              className="navbar-toggle md:hidden"
+              aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav-panel"
+            >
+              <HamburgerIcon isOpen={menuOpen} reduced={reduced} />
+            </button>
+          </div>
+        </div>
+      </motion.nav>
 
-			{/* Mobile overlay + panel */}
-			<AnimatePresence>
-				{menuOpen && (
-					<>
-						{/* Overlay */}
-						<motion.div
-							key="overlay"
-							variants={overlayVariants}
-							initial="closed"
-							animate="open"
-							exit="closed"
-							transition={{ duration: 0.3 }}
-							onClick={() => setMenuOpen(false)}
-							aria-hidden="true"
-							style={{
-								position: "fixed",
-								inset: 0,
-								zIndex: 40,
-								backgroundColor: "rgba(0, 0, 0, 0.6)",
-							}}
-						/>
+      {/* Spacer so content doesn't hide behind fixed navbar */}
+      <div className="h-16" aria-hidden="true" />
 
-						{/* Panel */}
-						<motion.div
-							key="panel"
-							ref={panelRef}
-							variants={panelVariants}
-							initial="closed"
-							animate="open"
-							exit="closed"
-							transition={
-								reduced
-									? { duration: 0 }
-									: {
-											duration: 0.35,
-											ease: [0.32, 0.72, 0, 1],
-										}
-							}
-							role="dialog"
-							aria-modal={true}
-							aria-label="Navigation menu"
-							style={{
-								position: "fixed",
-								top: 0,
-								right: 0,
-								bottom: 0,
-								zIndex: 45,
-								width: "min(320px, 85vw)",
-								backdropFilter:
-									"blur(20px) saturate(180%)",
-								WebkitBackdropFilter:
-									"blur(20px) saturate(180%)",
-								backgroundColor:
-									"rgba(10, 25, 47, 0.92)",
-								borderLeft:
-									"1px solid rgba(255, 255, 255, 0.06)",
-								overflowY: "auto",
-							}}
-						>
-							<div style={{ paddingTop: 80 }}>
-								<nav
-									aria-label="Mobile navigation"
-									style={{ padding: "8px 16px" }}
-								>
-									<motion.div
-										variants={menuContainerVariants}
-										initial="closed"
-										animate="open"
-										exit="closed"
-									>
-										<Flex direction="column" gap="1">
-											{navItems.map((item, index) => {
-												const isActive =
-													pathname === item.href;
-												return (
-													<motion.div
-														key={item.label}
-														variants={
-															menuItemVariants
-														}
-													>
-														<Link
-															href={item.href}
-															className={`mobile-nav-item ${isActive ? "active" : ""}`}
-															aria-current={
-																isActive
-																	? "page"
-																	: undefined
-															}
-															onClick={() =>
-																setMenuOpen(
-																	false
-																)
-															}
-															{...(item.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-														>
-															<span
-																className="font-mono text-xs mr-2"
-																style={{
-																	color: "var(--green)",
-																}}
-															>
-																{String(
-																	index + 1
-																).padStart(
-																	2,
-																	"0"
-																)}
-																.
-															</span>
-															{item.label}
-														</Link>
-													</motion.div>
-												);
-											})}
-										</Flex>
-									</motion.div>
-								</nav>
-							</div>
-						</motion.div>
-					</>
-				)}
-			</AnimatePresence>
-		</>
-	);
+      {/* ── Mobile menu ── */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              key="nav-overlay"
+              variants={overlayVariants}
+              initial="closed"
+              animate="open"
+              exit="exit"
+              transition={{ duration: 0.25 }}
+              onClick={() => setMenuOpen(false)}
+              className="fixed inset-0 z-40 navbar-overlay"
+              aria-hidden="true"
+            />
+
+            {/* Panel */}
+            <motion.div
+              key="nav-panel"
+              id="mobile-nav-panel"
+              ref={panelRef}
+              variants={panelVariants}
+              initial="closed"
+              animate="open"
+              exit="exit"
+              role="dialog"
+              aria-modal={true}
+              aria-label="Gezinme menüsü"
+              className="fixed top-0 right-0 bottom-0 z-50 w-[min(320px,85vw)] overflow-y-auto navbar-mobile-panel"
+            >
+              {/* Close button inside panel */}
+              <div className="flex justify-end p-4">
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  className="navbar-toggle"
+                  aria-label="Menüyü kapat"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <nav aria-label="Mobil gezinme" className="px-4 pt-4">
+                <motion.ul variants={menuStagger} initial="closed" animate="open" exit="closed" role="list" className="flex flex-col gap-1">
+                  {NAV_ITEMS.map((item, i) => {
+                    const active = isActive(item.href);
+                    return (
+                      <motion.li key={item.href} variants={menuItem}>
+                        <Link
+                          href={item.href}
+                          className={`navbar-mobile-link${active ? " navbar-mobile-active" : ""}`}
+                          aria-current={active ? "page" : undefined}
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          <span className="font-mono text-xs mr-2 navbar-link-num">
+                            {String(i + 1).padStart(2, "0")}.
+                          </span>
+                          {item.label}
+                        </Link>
+                      </motion.li>
+                    );
+                  })}
+                </motion.ul>
+              </nav>
+
+              {/* Mobile theme indicator */}
+              <div className="px-4 mt-8 pt-6 border-t navbar-mobile-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs navbar-sub-text">Tema</span>
+                  <ThemeToggle />
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }

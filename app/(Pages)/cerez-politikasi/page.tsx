@@ -42,7 +42,7 @@ export default function CerezPolitikasiPage() {
           2. Kullanılan Çerez Türleri
         </h2>
         <p className="text-slate-custom leading-relaxed mb-4">
-          Bu web sitesinde (<a href="https://tariktunc.vercel.app" className="text-green hover:underline">tariktunc.vercel.app</a>)
+          Bu web sitesinde (<a href="https://tariktunc.com" className="text-green hover:underline">tariktunc.com</a>)
           aşağıdaki çerez türleri kullanılmaktadır:
         </p>
 

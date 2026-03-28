@@ -60,7 +60,7 @@ export default function ExperienceCard({
     <li ref={cardRef} className="mb-12">
       <div className="group relative grid pb-1 transition-all duration-300 sm:grid-cols-8 sm:gap-8 md:gap-4 md:hover:!opacity-100 md:group-hover/list:opacity-50">
         {/* Glass hover background with glow */}
-        <div className="absolute -inset-x-4 -inset-y-4 z-0 hidden rounded-md transition-all duration-500 motion-reduce:transition-none md:-inset-x-6 md:block md:group-hover:bg-navy-light/50 md:group-hover:shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1),0_0_30px_rgba(100,255,218,0.03)] md:group-hover:drop-shadow-lg md:group-hover:backdrop-blur-sm" />
+        <div className="absolute -inset-x-4 -inset-y-4 z-0 hidden rounded-md transition-all duration-500 motion-reduce:transition-none md:-inset-x-6 md:block md:group-hover:bg-navy-light/50 md:group-hover:shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1),0_0_30px_rgba(129,140,248,0.03)] md:group-hover:drop-shadow-lg md:group-hover:backdrop-blur-sm" />
 
         <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-slate-custom sm:col-span-2 transition-colors duration-300 group-hover:text-green/70">
           {period}
@@ -91,7 +91,7 @@ export default function ExperienceCard({
           <ul className="mt-2 flex flex-wrap gap-2" aria-label="Technologies used">
             {technologies.map((tech) => (
               <li key={tech}>
-                <span className="tech-badge shimmer-badge inline-flex items-center rounded-full px-3 py-1 text-xs font-medium leading-5 text-green border border-green/20 transition-all duration-300 hover:border-green/50 hover:shadow-[0_0_8px_rgba(100,255,218,0.15)]">
+                <span className="tech-badge shimmer-badge inline-flex items-center rounded-full px-3 py-1 text-xs font-medium leading-5 text-green border border-green/20 transition-all duration-300 hover:border-green/50 hover:shadow-[0_0_8px_rgba(129,140,248,0.15)]">
                   {tech}
                 </span>
               </li>

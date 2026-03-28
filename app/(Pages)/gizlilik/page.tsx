@@ -25,7 +25,7 @@ export default function GizlilikPage() {
           1. Veri Sorumlusu
         </h2>
         <p className="text-slate-custom leading-relaxed mb-4">
-          Bu web sitesi (<a href="https://tariktunc.vercel.app" className="text-green hover:underline">tariktunc.vercel.app</a>),
+          Bu web sitesi (<a href="https://tariktunc.com" className="text-green hover:underline">tariktunc.com</a>),
           Tarık Tunç tarafından işletilmektedir. 6698 sayılı Kişisel Verilerin Korunması Kanunu
           (KVKK) kapsamında veri sorumlusu sıfatıyla hareket etmektedir.
         </p>
@@ -171,10 +171,10 @@ export default function GizlilikPage() {
         <p className="text-slate-custom leading-relaxed mb-4">
           <strong className="text-lightest-slate">Web:</strong>{" "}
           <a
-            href="https://tariktunc.vercel.app"
+            href="https://tariktunc.com"
             className="text-green hover:underline"
           >
-            tariktunc.vercel.app
+            tariktunc.com
           </a>
         </p>
       </FadeInSection>

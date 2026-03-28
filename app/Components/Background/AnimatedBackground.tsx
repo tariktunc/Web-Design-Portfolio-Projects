@@ -35,7 +35,7 @@ export default function AnimatedBackground() {
           cx={1280}
           cy={320}
           r={4.5}
-          fill="#61dafb"
+          fill="var(--accent-2)"
           opacity={0.04}
           style={{ animation: "bgFloat 22s ease-in-out infinite 3s" }}
         />
@@ -76,7 +76,7 @@ export default function AnimatedBackground() {
           y1={550}
           x2={1150}
           y2={555}
-          stroke="#61dafb"
+          stroke="var(--accent-2)"
           strokeWidth={0.5}
           opacity={0.025}
           style={{ animation: "bgDrift 40s ease-in-out infinite alternate 5s" }}
@@ -119,7 +119,7 @@ export default function AnimatedBackground() {
         <polygon
           className="bg-anim"
           points="180,470 195,445 210,470"
-          stroke="#61dafb"
+          stroke="var(--accent-2)"
           strokeWidth={0.5}
           fill="none"
           opacity={0.04}
@@ -156,7 +156,7 @@ export default function AnimatedBackground() {
           cx={1100}
           cy={680}
           r={1.5}
-          fill="#61dafb"
+          fill="var(--accent-2)"
           style={{ animation: "bgPulse 4s ease-in-out infinite 2s" }}
         />
         <circle
@@ -180,7 +180,7 @@ export default function AnimatedBackground() {
         <path
           className="bg-anim"
           d="M1400 200 Q1050 250 700 190 T0 230"
-          stroke="#61dafb"
+          stroke="var(--accent-2)"
           strokeWidth={0.3}
           opacity={0.02}
           style={{ animation: "bgDrift 42s ease-in-out infinite alternate 10s" }}

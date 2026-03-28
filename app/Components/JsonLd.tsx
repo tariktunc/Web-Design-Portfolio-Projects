@@ -4,7 +4,7 @@ export default function JsonLd() {
     "@type": "Person",
     name: "Tarik Tunç",
     alternateName: "Tarık Tunç",
-    url: "https://tariktunc.vercel.app",
+    url: "https://tariktunc.com",
     jobTitle: "Full Stack Geliştirici",
     description:
       "React, Next.js ve TypeScript alanında uzmanlaşmış Full Stack Geliştirici. Blakfy'de modern web uygulamaları geliştiriyor.",
@@ -41,7 +41,7 @@ export default function JsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Tarık Tunç — Full Stack Geliştirici Portfolyo",
-    url: "https://tariktunc.vercel.app",
+    url: "https://tariktunc.com",
     description:
       "Tarık Tunç'un web geliştirme projeleri, blog yazıları ve teknik becerilerini sergileyen portfolyo sitesi.",
     author: {
@@ -55,10 +55,10 @@ export default function JsonLd() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: "https://tariktunc.vercel.app" },
-      { "@type": "ListItem", position: 2, name: "Projeler", item: "https://tariktunc.vercel.app/projeler" },
-      { "@type": "ListItem", position: 3, name: "Blog", item: "https://blakfy.com/blog" },
-      { "@type": "ListItem", position: 4, name: "Hakkımda", item: "https://tariktunc.vercel.app/ben-kimim" },
+      { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: "https://tariktunc.com" },
+      { "@type": "ListItem", position: 2, name: "Projeler", item: "https://tariktunc.com/projeler" },
+      { "@type": "ListItem", position: 3, name: "Blog", item: "https://tariktunc.com/blog" },
+      { "@type": "ListItem", position: 4, name: "Hakkımda", item: "https://tariktunc.com/ben-kimim" },
     ],
   };
 

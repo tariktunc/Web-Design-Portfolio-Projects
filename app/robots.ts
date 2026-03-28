@@ -32,6 +32,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: "/",
       },
     ],
-    sitemap: "https://tariktunc.vercel.app/sitemap.xml",
+    sitemap: "https://tariktunc.com/sitemap.xml",
   };
 }

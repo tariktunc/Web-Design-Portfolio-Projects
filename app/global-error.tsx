@@ -11,8 +11,8 @@ export default function GlobalError({
     <html lang="tr">
       <body
         style={{
-          backgroundColor: "#0a192f",
-          color: "#8892b0",
+          backgroundColor: "#0b0d17",
+          color: "#94a3b8",
           fontFamily: "Inter, system-ui, sans-serif",
           margin: 0,
           minHeight: "100vh",
@@ -26,7 +26,7 @@ export default function GlobalError({
             style={{
               fontSize: "3.75rem",
               fontWeight: 700,
-              color: "#64ffda",
+              color: "#818cf8",
               marginBottom: "1rem",
             }}
           >
@@ -36,7 +36,7 @@ export default function GlobalError({
             style={{
               fontSize: "1.5rem",
               fontWeight: 700,
-              color: "#ccd6f6",
+              color: "#e2e8f0",
               marginBottom: "0.75rem",
             }}
           >
@@ -56,9 +56,9 @@ export default function GlobalError({
             style={{
               padding: "0.625rem 1.25rem",
               borderRadius: "0.5rem",
-              border: "1px solid rgba(100, 255, 218, 0.3)",
+              border: "1px solid rgba(129, 140, 248, 0.3)",
               backgroundColor: "transparent",
-              color: "#64ffda",
+              color: "#818cf8",
               fontSize: "0.875rem",
               fontWeight: 500,
               cursor: "pointer",

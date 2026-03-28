@@ -7,6 +7,13 @@ import Providers from "./Providers";
 import MouseGradient from "./Components/MouseGradient/MouseGradient";
 import AnimatedBackground from "./Components/Background/AnimatedBackground";
 import CookieConsent from "./Components/CookieConsent/CookieConsent";
+import Navbar from "./Components/Navbar/Navbar";
+import Footer from "./Components/Footer/Footer";
+import BackToTop from "./Components/BackToTop/BackToTop";
+import {
+  ScrollProgress,
+  PageTransition,
+} from "./Components/Motion/MotionWrappers";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -14,7 +21,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://tariktunc.vercel.app"),
+  metadataBase: new URL("https://tariktunc.com"),
   title: {
     default: "Tarık Tunç — Full Stack Geliştirici",
     template: "%s | Tarık Tunç",
@@ -34,16 +41,16 @@ export const metadata: Metadata = {
     "Tarik Tunç",
     "Portfolio",
   ],
-  authors: [{ name: "Tarik Tunç", url: "https://tariktunc.vercel.app" }],
+  authors: [{ name: "Tarik Tunç", url: "https://tariktunc.com" }],
   creator: "Tarik Tunç",
   alternates: {
-    canonical: "https://tariktunc.vercel.app",
+    canonical: "https://tariktunc.com",
   },
   openGraph: {
     type: "website",
     locale: "tr_TR",
     alternateLocale: ["en_US"],
-    url: "https://tariktunc.vercel.app",
+    url: "https://tariktunc.com",
     siteName: "Tarık Tunç — Full Stack Geliştirici",
     title: "Tarık Tunç — Full Stack Geliştirici Portfolyo",
     description:
@@ -92,9 +99,15 @@ export default function RootLayout({
           </a>
           <MouseGradient />
           <AnimatedBackground />
+          <ScrollProgress />
+          <Navbar />
           <div className="site-container">
-            {children}
+            <main id="main-content" className="px-4 xs:px-5 sm:px-6">
+              <PageTransition>{children}</PageTransition>
+            </main>
           </div>
+          <Footer />
+          <BackToTop />
           <CookieConsent />
         </Providers>
       </body>

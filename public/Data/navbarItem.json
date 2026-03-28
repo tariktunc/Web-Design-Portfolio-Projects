@@ -1,6 +1,7 @@
 [
 	{ "label": "Ana Sayfa", "href": "/" },
 	{ "label": "Projeler", "href": "/projeler" },
-	{ "label": "Blog", "href": "https://blakfy.com/blog" },
-	{ "label": "Ben Kimim?", "href": "/ben-kimim" }
+	{ "label": "Blog", "href": "/weblog" },
+	{ "label": "Ben Kimim?", "href": "/ben-kimim" },
+	{ "label": "İletişim", "href": "/iletisim" }
 ]

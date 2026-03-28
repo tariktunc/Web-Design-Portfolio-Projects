@@ -255,7 +255,7 @@ export function AnimatedHeading({
         transition={{ duration: 1.2, delay: 0.3, ease: smoothEase }}
         style={{
           transformOrigin: "left",
-          boxShadow: "0 0 10px rgba(100, 255, 218, 0.3)",
+          boxShadow: "0 0 10px rgba(129, 140, 248, 0.3)",
         }}
       />
     </div>
@@ -355,7 +355,7 @@ export function ScrollProgress() {
       style={{
         scaleX,
         background: "linear-gradient(90deg, var(--green), #00d4aa, var(--green))",
-        boxShadow: "0 0 15px rgba(100, 255, 218, 0.6), 0 0 30px rgba(100, 255, 218, 0.3)",
+        boxShadow: "0 0 15px rgba(129, 140, 248, 0.6), 0 0 30px rgba(129, 140, 248, 0.3)",
       }}
     />
   );
@@ -557,8 +557,8 @@ export function GlowLine({
       className={`h-[2px] ${className}`}
       style={{
         background:
-          "linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.6), transparent)",
-        boxShadow: "0 0 15px rgba(100, 255, 218, 0.3), 0 0 30px rgba(100, 255, 218, 0.1)",
+          "linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.6), transparent)",
+        boxShadow: "0 0 15px rgba(129, 140, 248, 0.3), 0 0 30px rgba(129, 140, 248, 0.1)",
         transformOrigin: "left",
       }}
       initial={{ scaleX: 0, opacity: 0 }}

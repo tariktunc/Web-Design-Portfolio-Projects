@@ -31,7 +31,7 @@ export async function generateMetadata({
       type: "article",
     },
     alternates: {
-      canonical: `https://tariktunc.vercel.app/projeler/${slug}`,
+      canonical: `https://tariktunc.com/projeler/${slug}`,
     },
   };
 }

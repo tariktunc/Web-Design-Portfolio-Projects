@@ -25,7 +25,7 @@ export default function KullanimSartlariPage() {
           1. Genel Koşullar
         </h2>
         <p className="text-slate-custom leading-relaxed mb-4">
-          Bu web sitesine (<a href="https://tariktunc.vercel.app" className="text-green hover:underline">tariktunc.vercel.app</a>)
+          Bu web sitesine (<a href="https://tariktunc.com" className="text-green hover:underline">tariktunc.com</a>)
           erişerek ve siteyi kullanarak aşağıda belirtilen kullanım şartlarını
           kabul etmiş sayılırsınız. Bu şartları kabul etmiyorsanız siteyi
           kullanmayı bırakmanız gerekmektedir.

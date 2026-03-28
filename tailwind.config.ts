@@ -35,20 +35,25 @@ const config: Config = {
     extend: {
       colors: {
         navy: {
-          DEFAULT: "#0a192f",
-          light: "#112240",
-          lighter: "#233554",
+          DEFAULT: "rgb(var(--navy-rgb) / <alpha-value>)",
+          light: "rgb(var(--navy-light-rgb) / <alpha-value>)",
+          lighter: "rgb(var(--navy-lighter-rgb) / <alpha-value>)",
         },
         "slate-custom": {
-          DEFAULT: "#8892b0",
-          light: "#a8b2d1",
+          DEFAULT: "rgb(var(--slate-rgb) / <alpha-value>)",
+          light: "rgb(var(--slate-light-rgb) / <alpha-value>)",
         },
-        "lightest-slate": "#ccd6f6",
-        "white-bright": "#e6f1ff",
+        "lightest-slate": "rgb(var(--lightest-slate-rgb) / <alpha-value>)",
+        "white-bright": "rgb(var(--white-rgb) / <alpha-value>)",
         green: {
-          DEFAULT: "#64ffda",
-          tint: "rgba(100, 255, 218, 0.1)",
+          DEFAULT: "rgb(var(--green-rgb) / <alpha-value>)",
+          tint: "var(--green-tint)",
         },
+        accent2: {
+          DEFAULT: "rgb(var(--accent-2-rgb) / <alpha-value>)",
+          tint: "var(--accent-2-tint)",
+        },
+        "accent-cyan": "rgb(var(--accent-cyan-rgb) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
