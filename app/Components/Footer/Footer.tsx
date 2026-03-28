@@ -60,13 +60,62 @@ const techStack = [
 
 export default function Footer() {
   return (
-    <footer className="relative mt-16 border-t border-navy-lighter" role="contentinfo">
+    <footer
+      className="relative mt-16 border-t border-navy-lighter"
+      role="contentinfo"
+    >
       <GlowLine className="mb-0" />
 
-      {/* Main footer content */}
-      <div className="max-w-5xl mx-auto px-6 py-12 sm:py-16">
+      {/* ─── "Benimle Çalış" CTA Banner ─── */}
+      <div className="max-w-5xl mx-auto px-6 pt-12 sm:pt-16">
         <MotionSection>
-          {/* Top section — CTA + Nav */}
+          <div className="rounded-2xl border border-green/20 bg-green/[0.04] p-8 sm:p-10 mb-12 relative overflow-hidden">
+            {/* Decorative gradient */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              aria-hidden="true"
+              style={{
+                background:
+                  "radial-gradient(ellipse at top right, rgba(59,130,246,0.06), transparent 60%)",
+              }}
+            />
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold text-lightest-slate mb-2 tracking-tight">
+                  Bir projeniz mi var?{" "}
+                  <span className="text-green">Birlikte çalışalım.</span>
+                </h3>
+                <p className="text-sm text-slate-custom leading-relaxed max-w-md">
+                  Web geliştirme, e-ticaret veya dijital dönüşüm projeniz için
+                  hemen iletişime geçin. Ücretsiz ön görüşme ile başlayalım.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                <a
+                  href="https://wa.me/905059796134"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-green text-white text-sm font-medium shadow-xl shadow-green/25 hover:shadow-green/40 hover:scale-[1.02] transition-all duration-200"
+                >
+                  WhatsApp ile Ulaş
+                  <ArrowTopRightIcon className="h-3.5 w-3.5" />
+                </a>
+                <a
+                  href="mailto:developer@tariktunc.com"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-navy-lighter bg-lightest-slate/[0.06] text-slate-custom-light text-sm font-medium hover:text-green hover:border-green/30 transition-all duration-200"
+                >
+                  E-posta Gönder
+                </a>
+              </div>
+            </div>
+          </div>
+        </MotionSection>
+      </div>
+
+      {/* Main footer content */}
+      <div className="max-w-5xl mx-auto px-6 pb-12 sm:pb-16">
+        <MotionSection>
+          {/* Top section — Nav + Social + Tech */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
             {/* Left — Brand & Description */}
             <div className="md:col-span-5">
@@ -76,18 +125,27 @@ export default function Footer() {
                 <span className="text-green">inşa edelim.</span>
               </h3>
               <p className="text-sm text-slate-custom leading-relaxed max-w-sm mb-6">
-                Yeni projeler, işbirlikleri veya sadece merhaba demek için
-                her zaman iletişime geçebilirsiniz.
+                Yeni projeler, işbirlikleri veya sadece merhaba demek için her
+                zaman iletişime geçebilirsiniz.
               </p>
 
-              {/* Email CTA */}
-              <a
-                href="mailto:developer@tariktunc.com"
-                className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-green/30 text-green text-sm font-medium hover:bg-green/10 hover:border-green/60 hover:shadow-[0_0_24px_rgba(129,140,248,0.12)] transition-all duration-300"
-              >
-                developer@tariktunc.com
-                <ArrowTopRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
+              {/* Email links */}
+              <div className="space-y-2">
+                <a
+                  href="mailto:developer@tariktunc.com"
+                  className="group flex items-center gap-2 text-sm text-green hover:text-accent-cyan transition-colors"
+                >
+                  developer@tariktunc.com
+                  <ArrowTopRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+                <a
+                  href="mailto:info@blakfy.com"
+                  className="group flex items-center gap-2 text-sm text-slate-custom hover:text-green transition-colors"
+                >
+                  info@blakfy.com
+                  <ArrowTopRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+              </div>
             </div>
 
             {/* Middle — Navigation */}
@@ -128,7 +186,7 @@ export default function Footer() {
                           href={social.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center w-10 h-10 rounded-lg border border-navy-lighter text-slate-custom hover:text-green hover:border-green/40 hover:bg-green/5 hover:shadow-[0_0_16px_rgba(129,140,248,0.1)] transition-all duration-300"
+                          className="flex items-center justify-center w-10 h-10 rounded-lg border border-navy-lighter text-slate-custom hover:text-green hover:border-green/40 hover:bg-green/5 hover:shadow-[0_0_16px_rgba(59,130,246,0.1)] transition-all duration-300"
                           aria-label={`${social.name} (yeni sekmede açılır)`}
                         >
                           <social.icon className="h-4.5 w-4.5" />
@@ -187,7 +245,8 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-navy-lighter pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-custom">
-            &copy; {new Date().getFullYear()} Tarık Tunç. Tüm hakları saklıdır.
+            &copy; {new Date().getFullYear()} Tarık Tunç. Tüm hakları
+            saklıdır.
           </p>
           <p className="text-xs text-slate-custom">
             Tasarım ve geliştirme{" "}
@@ -198,8 +257,8 @@ export default function Footer() {
               className="text-slate-custom-light hover:text-green transition-colors"
             >
               Blakfy
-            </a>
-            {" "}tarafından desteklenmektedir.
+            </a>{" "}
+            tarafından desteklenmektedir.
           </p>
         </div>
       </div>

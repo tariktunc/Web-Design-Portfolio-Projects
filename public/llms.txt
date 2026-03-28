@@ -1,9 +1,9 @@
 # Tarık Tunç — Full Stack Developer
 
-> React, Next.js ve TypeScript ile modern web uygulamaları geliştiren Full Stack Developer.
+> React, Next.js ve TypeScript ile modern web uygulamaları geliştiren Full Stack Developer. 796+ teknik blog yazısı, 9+ müşteri projesi.
 
 ## About
-Tarık Tunç, Türkiye merkezli bir Full Stack Developer'dır. React, Next.js, TypeScript ve modern web teknolojileri ile profesyonel web uygulamaları geliştirir. Freelancer olarak Blakfy.com üzerinden hizmet vermektedir. Açık kaynak projelere katkıda bulunur ve teknik blog yazıları yazar.
+Tarık Tunç, Türkiye merkezli bir Full Stack Developer'dır. React, Next.js, TypeScript ve modern web teknolojileri ile profesyonel web uygulamaları geliştirir. Freelancer olarak Blakfy.com üzerinden hizmet vermektedir. Açık kaynak projelere katkıda bulunur ve 796+ teknik blog yazısı yayınlamıştır. Siber güvenlik, SEO ve yapay zeka alanlarında da uzmanlığa sahiptir.
 
 ## Key Topics
 - Full Stack Web Development: React, Next.js, TypeScript, Node.js ile modern web uygulamaları
@@ -14,7 +14,7 @@ Tarık Tunç, Türkiye merkezli bir Full Stack Developer'dır. React, Next.js, T
 ## Important Pages
 - [Ana Sayfa](https://tariktunc.com): Portfolio ana sayfası, beceriler ve projeler
 - [Projeler](https://tariktunc.com/projeler): Tamamlanmış projeler ve açık kaynak çalışmalar
-- [Blog](https://tariktunc.com/weblog): Teknik blog yazıları ve rehberler
+- [Blog](https://tariktunc.com/blog): 796+ teknik blog yazısı ve rehberler
 - [Ben Kimim](https://tariktunc.com/ben-kimim): Detaylı biyografi ve kariyer geçmişi
 
 ## Services

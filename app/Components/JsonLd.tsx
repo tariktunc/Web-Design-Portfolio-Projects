@@ -5,6 +5,8 @@ export default function JsonLd() {
     name: "Tarik Tunç",
     alternateName: "Tarık Tunç",
     url: "https://tariktunc.com",
+    email: "developer@tariktunc.com",
+    telephone: "+905059796134",
     jobTitle: "Full Stack Geliştirici",
     description:
       "React, Next.js ve TypeScript alanında uzmanlaşmış Full Stack Geliştirici. Blakfy'de modern web uygulamaları geliştiriyor.",
@@ -22,6 +24,8 @@ export default function JsonLd() {
       "Node.js",
       "Web Geliştirme",
       "Full Stack Geliştirme",
+      "Siber Güvenlik",
+      "SEO",
     ],
     nationality: {
       "@type": "Country",
