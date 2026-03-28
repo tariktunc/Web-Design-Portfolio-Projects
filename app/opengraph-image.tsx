@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Tarık Tunç — Full Stack Geliştirici";
+export const alt = "Tarık Tunç — Full Stack Developer & Vibe Coder";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -16,7 +16,7 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#0b0d17",
+          backgroundColor: "#0a0a0f",
           fontFamily: "Inter, system-ui, sans-serif",
         }}
       >
@@ -33,7 +33,7 @@ export default async function Image() {
             style={{
               fontSize: 64,
               fontWeight: 700,
-              color: "#e2e8f0",
+              color: "#e5e5e5",
               letterSpacing: "-0.02em",
             }}
           >
@@ -42,20 +42,20 @@ export default async function Image() {
           <div
             style={{
               fontSize: 28,
-              color: "#818cf8",
+              color: "#3b82f6",
               fontWeight: 500,
             }}
           >
-            Full Stack Geliştirici
+            Full Stack Developer &amp; Vibe Coder
           </div>
           <div
             style={{
               fontSize: 20,
-              color: "#94a3b8",
+              color: "#a3a3a3",
               marginTop: "10px",
             }}
           >
-            React • Next.js • TypeScript • Node.js
+            796+ Blog Yazısı • React • Next.js • TypeScript
           </div>
         </div>
         <div
@@ -63,7 +63,7 @@ export default async function Image() {
             position: "absolute",
             bottom: 40,
             fontSize: 16,
-            color: "#818cf8",
+            color: "#3b82f6",
             opacity: 0.7,
           }}
         >
