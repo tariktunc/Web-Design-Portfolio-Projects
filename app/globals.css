@@ -1180,23 +1180,70 @@ html:not(.dark) .navbar-mobile-border {
 :root:not(.dark) .blog-tag--emerald { background: rgba(16,185,129,0.08); color: #059669; }
 :root:not(.dark) .blog-tag--red { background: rgba(239,68,68,0.08); color: #dc2626; }
 
+/* Pagination */
+.blog-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 48px;
+	padding-top: 32px;
+	border-top: 1px solid rgb(var(--navy-lighter-rgb));
+}
+.blog-page-numbers {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.blog-page-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 40px;
+	height: 40px;
+	padding: 0 12px;
+	border-radius: 10px;
+	border: 1px solid rgb(var(--navy-lighter-rgb));
+	background: transparent;
+	color: rgb(var(--slate-rgb));
+	font-size: 0.85rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 200ms ease;
+}
+.blog-page-btn:hover:not(:disabled) {
+	border-color: rgb(var(--green-rgb) / 0.5);
+	color: rgb(var(--lightest-slate-rgb));
+	background: rgb(var(--navy-lighter-rgb) / 0.3);
+}
+.blog-page-btn:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+.blog-page-active {
+	border-color: rgb(var(--green-rgb));
+	color: rgb(var(--green-rgb));
+	background: rgb(var(--green-rgb) / 0.08);
+	font-weight: 600;
+}
+.blog-page-active:hover {
+	background: rgb(var(--green-rgb) / 0.12);
+}
+.blog-page-arrow {
+	font-size: 0.82rem;
+	gap: 4px;
+}
+.blog-page-dots {
+	color: rgb(var(--slate-rgb) / 0.5);
+	padding: 0 4px;
+	user-select: none;
+}
+
 /* Responsive — Tablet */
 @media (max-width: 1024px) {
 	.blog-grid {
 		grid-template-columns: repeat(2, 1fr);
 		gap: 20px;
-	}
-	.blog-featured {
-		grid-template-columns: 1fr;
-	}
-	.blog-featured-image {
-		aspect-ratio: 16/8;
-	}
-	.blog-featured-overlay {
-		background: linear-gradient(to top, rgb(var(--navy-light-rgb) / 0.9) 10%, transparent 60%);
-	}
-	.blog-featured-content {
-		padding: 24px;
 	}
 }
 
@@ -1220,11 +1267,13 @@ html:not(.dark) .navbar-mobile-border {
 		grid-template-columns: 1fr;
 		gap: 16px;
 	}
-	.blog-featured-content {
-		padding: 20px;
+	.blog-pagination {
+		flex-wrap: wrap;
+		gap: 6px;
 	}
-	.blog-featured-title {
-		font-size: 1.2rem;
+	.blog-page-arrow {
+		font-size: 0.75rem;
+		padding: 0 8px;
 	}
 }
 
