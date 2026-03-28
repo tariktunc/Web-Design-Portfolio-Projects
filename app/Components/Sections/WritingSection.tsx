@@ -25,8 +25,8 @@ function BlogGrid({ posts }: { posts: BlogPost[] }) {
   return (
     <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {posts.map((post) => {
-        const href = post.link || `/weblog/${post.slug}`;
-        const isExternal = !!post.link;
+        const href = post.slug ? `/post/${post.slug}` : (post.link || "/blog");
+        const isExternal = !post.slug && !!post.link;
 
         return (
           <article
@@ -145,7 +145,7 @@ export default function WritingSection() {
       {/* CTA */}
       <div className="mt-10 text-center">
         <Link
-          href="/weblog"
+          href="/blog"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-green/30 text-green font-medium hover:bg-green/10 hover:border-green/50 transition-all duration-300 group"
         >
           Tüm Yazıları Gör

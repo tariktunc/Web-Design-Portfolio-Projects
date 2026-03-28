@@ -3,9 +3,9 @@ import { useAnimeScrollReveal } from "@/app/hooks/useAnime";
 
 const stats = [
   { value: "9+", label: "Müşteri Projesi" },
+  { value: "796+", label: "Blog Yazısı" },
   { value: "3+", label: "Yıl Deneyim" },
-  { value: "%300", label: "Satış Artışı" },
-  { value: "5+", label: "Teknoloji Stack" },
+  { value: "26+", label: "Tamamlanan Proje" },
 ];
 
 export default function AboutSection() {
