@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 export default async function Page({
   params,
@@ -6,5 +6,5 @@ export default async function Page({
   params: Promise<{ blog: string }>;
 }) {
   const { blog } = await params;
-  redirect(`/post/${blog}`);
+  permanentRedirect(`/post/${blog}`);
 }
