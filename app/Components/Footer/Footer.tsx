@@ -46,7 +46,7 @@ const socialLinks = [
   },
   {
     name: "Email",
-    href: "mailto:me@tariktunc.com",
+    href: "mailto:developer@tariktunc.com",
     icon: EnvelopeClosedIcon,
   },
 ];
@@ -82,10 +82,10 @@ export default function Footer() {
 
               {/* Email CTA */}
               <a
-                href="mailto:me@tariktunc.com"
+                href="mailto:developer@tariktunc.com"
                 className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-green/30 text-green text-sm font-medium hover:bg-green/10 hover:border-green/60 hover:shadow-[0_0_24px_rgba(129,140,248,0.12)] transition-all duration-300"
               >
-                me@tariktunc.com
+                developer@tariktunc.com
                 <ArrowTopRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </a>
             </div>

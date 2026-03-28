@@ -29,7 +29,7 @@ const socials = [
   },
   {
     name: "Email",
-    href: "mailto:me@tariktunc.com",
+    href: "mailto:developer@tariktunc.com",
     icon: EnvelopeClosedIcon,
   },
 ];

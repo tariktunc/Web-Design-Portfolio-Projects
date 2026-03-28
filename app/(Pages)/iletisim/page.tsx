@@ -31,8 +31,8 @@ const channels = [
   },
   {
     label: "E-posta",
-    value: "me@tariktunc.com",
-    href: "mailto:me@tariktunc.com",
+    value: "developer@tariktunc.com",
+    href: "mailto:developer@tariktunc.com",
     desc: "Detaylı konular için",
     icon: <EnvelopeClosedIcon className="h-5 w-5" />,
   },

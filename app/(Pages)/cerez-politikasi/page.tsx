@@ -182,8 +182,8 @@ export default function CerezPolitikasiPage() {
         </p>
         <p className="text-slate-custom leading-relaxed mb-4">
           <strong className="text-lightest-slate">E-posta:</strong>{" "}
-          <a href="mailto:me@tariktunc.com" className="text-green hover:underline">
-            me@tariktunc.com
+          <a href="mailto:developer@tariktunc.com" className="text-green hover:underline">
+            developer@tariktunc.com
           </a>
         </p>
         <p className="text-slate-custom leading-relaxed mb-4">

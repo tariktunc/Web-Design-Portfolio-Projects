@@ -149,10 +149,10 @@ export default function AboutPage() {
             WhatsApp
           </a>
           <a
-            href="mailto:me@tariktunc.com"
+            href="mailto:developer@tariktunc.com"
             className="inline-flex items-center gap-2 rounded-lg border border-navy-lighter px-5 py-2.5 text-sm font-medium text-lightest-slate transition-colors hover:bg-navy-lighter/30"
           >
-            me@tariktunc.com
+            developer@tariktunc.com
           </a>
         </div>
       </section>

@@ -11,7 +11,7 @@ const socials = [
   { name: "GitHub", href: "https://github.com/tariktunc", icon: GitHubLogoIcon },
   { name: "LinkedIn", href: "https://linkedin.com/in/tarktunc", icon: LinkedInLogoIcon },
   { name: "Twitter", href: "https://twitter.com/tarkktunc", icon: TwitterLogoIcon },
-  { name: "Email", href: "mailto:me@tariktunc.com", icon: EnvelopeClosedIcon },
+  { name: "Email", href: "mailto:developer@tariktunc.com", icon: EnvelopeClosedIcon },
 ];
 
 export default function HomeContent() {

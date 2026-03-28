@@ -23,7 +23,7 @@ Tarık Tunç, Türkiye merkezli bir Full Stack Developer'dır. React, Next.js, T
 - Freelance Geliştirme: Blakfy.com üzerinden kurumsal ve bireysel projeler
 
 ## Contact
-- Email: me@tariktunc.com
+- Email: developer@tariktunc.com
 - LinkedIn: linkedin.com/in/tarktunc
 - GitHub: github.com/tariktunc
 - Twitter: twitter.com/tarkktunc
